@@ -1,0 +1,36 @@
+{
+ "site_aerial": {
+  "half_m": 350.0,
+  "px": [
+   2216,
+   2220
+  ],
+  "src_px_box": [
+   474,
+   475,
+   2690,
+   2695
+  ]
+ },
+ "context_aerial": {
+  "half_m": 500.0,
+  "px": [
+   2048,
+   2048
+  ]
+ },
+ "surround_aerial": {
+  "half_m": 4000,
+  "px": [
+   1024,
+   1024
+  ]
+ },
+ "horizon_aerial": {
+  "half_m": 15000,
+  "px": [
+   1024,
+   1024
+  ]
+ }
+}

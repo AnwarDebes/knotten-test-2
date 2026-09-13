@@ -1,0 +1,189 @@
+{
+ "crs_note": "local metres; x east, y north; origin 58.068057N 7.278401E; lat=58.068057+y/111132, lon=7.278401+x/58927.4",
+ "buildings": [
+  {
+   "id": "bld-office",
+   "kind": "office",
+   "status": "existing",
+   "name": {
+    "no": "Kontorbygget",
+    "en": "The office building"
+   },
+   "ring_local": [
+    [
+     175.69,
+     -100.8
+    ],
+    [
+     173.16,
+     -98.02
+    ],
+    [
+     174.16,
+     -97.13
+    ],
+    [
+     171.63,
+     -94.35
+    ],
+    [
+     162.15,
+     -103.13
+    ],
+    [
+     164.86,
+     -106.02
+    ],
+    [
+     165.39,
+     -105.58
+    ],
+    [
+     167.74,
+     -108.13
+    ],
+    [
+     167.45,
+     -108.35
+    ],
+    [
+     179.99,
+     -122.02
+    ],
+    [
+     188.35,
+     -114.35
+    ]
+   ],
+   "ground_z": 4.61,
+   "roof_z_max": 18.88,
+   "height_m": 14.3,
+   "lat": 58.0671098,
+   "lon": 7.2813201,
+   "utm32_east": 398607.02,
+   "utm32_north": 6437472.48,
+   "note": "R\u00f8dbergsveien 121. Footprint OSM, roof from Kartverket LiDAR (DOM). Measured-performance proof building."
+  },
+  {
+   "id": "bld-house",
+   "kind": "house",
+   "status": "existing",
+   "name": {
+    "no": "Boligen",
+    "en": "The residential house"
+   },
+   "ring_local": [
+    [
+     160.69,
+     -136.77
+    ],
+    [
+     161.95,
+     -138.81
+    ],
+    [
+     153.17,
+     -144.23
+    ],
+    [
+     157.61,
+     -151.41
+    ],
+    [
+     173.99,
+     -141.32
+    ],
+    [
+     171.97,
+     -138.06
+    ],
+    [
+     179.98,
+     -133.11
+    ],
+    [
+     176.29,
+     -127.16
+    ]
+   ],
+   "ground_z": 4.81,
+   "roof_z_max": 11.75,
+   "height_m": 6.9,
+   "lat": 58.0668075,
+   "lon": 7.2812366,
+   "utm32_east": 398601.24,
+   "utm32_north": 6437438.96,
+   "note": "R\u00f8dbergsveien 123. Footprint OSM, roof from Kartverket LiDAR (DOM)."
+  },
+  {
+   "id": "bld-office-ext",
+   "kind": "office",
+   "status": "planned",
+   "name": {
+    "no": "Tilbygg kontor",
+    "en": "Office extension"
+   },
+   "ring_local": [
+    [
+     149.51,
+     -96.59
+    ],
+    [
+     158.7,
+     -104.3
+    ],
+    [
+     164.49,
+     -97.41
+    ],
+    [
+     155.3,
+     -89.7
+    ]
+   ],
+   "ground_z": 6.59,
+   "roof_z_max": 13.09,
+   "height_m": 6.5,
+   "lat": 58.0671842,
+   "lon": 7.2810675,
+   "utm32_east": 398592.33,
+   "utm32_north": 6437481.14,
+   "note": "Planned (Sigve, 2026-09-08). Position and size provisional: attached to the west end of the office."
+  },
+  {
+   "id": "bld-workshop",
+   "kind": "workshop",
+   "status": "planned",
+   "name": {
+    "no": "Lager / verksted",
+    "en": "Warehouse / workshop"
+   },
+   "ring_local": [
+    [
+     138.04,
+     -129.01
+    ],
+    [
+     149.53,
+     -138.65
+    ],
+    [
+     155.96,
+     -130.99
+    ],
+    [
+     144.47,
+     -121.35
+    ]
+   ],
+   "ground_z": 5.33,
+   "roof_z_max": 11.33,
+   "height_m": 6.0,
+   "lat": 58.0668872,
+   "lon": 7.2808977,
+   "utm32_east": 398581.47,
+   "utm32_north": 6437448.34,
+   "note": "Planned (Sigve, 2026-09-08). Position and size provisional: directly behind (west of) the residential house."
+  }
+ ]
+}

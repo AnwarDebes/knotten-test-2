@@ -1,0 +1,164 @@
+{
+ "leads": [
+  {
+   "id": "ex-1",
+   "name": "Kari Eksempel",
+   "email": "kari@example.com",
+   "phone": "+47 900 00 001",
+   "purpose": "buy",
+   "plots": [
+    "plot-12",
+    "plot-14"
+   ],
+   "consent_updates": true,
+   "consent_investor": false,
+   "consent_research": true,
+   "source": "eksempel",
+   "created": "2026-09-12T00:56:23.961Z",
+   "status": "new",
+   "notes": []
+  },
+  {
+   "id": "ex-2",
+   "name": "Ola Eksempel",
+   "email": "ola@example.com",
+   "phone": "+47 900 00 002",
+   "purpose": "buy",
+   "plots": [
+    "plot-12"
+   ],
+   "consent_updates": true,
+   "consent_investor": false,
+   "consent_research": false,
+   "source": "eksempel",
+   "created": "2026-09-09T17:56:23.962Z",
+   "status": "contacted",
+   "notes": [
+    {
+     "at": "2026-09-10T17:56:23.962Z",
+     "by": "Sigve Simonsen",
+     "text": "Ringte. Vil se tomten i oktober, helst 12 eller 16."
+    }
+   ]
+  },
+  {
+   "id": "ex-3",
+   "name": "Nordfjord Invest (eksempel)",
+   "email": "post@example.com",
+   "phone": "",
+   "purpose": "invest",
+   "plots": [],
+   "consent_updates": true,
+   "consent_investor": true,
+   "consent_research": false,
+   "source": "eksempel",
+   "created": "2026-09-06T17:56:23.962Z",
+   "status": "qualified",
+   "notes": [
+    {
+     "at": "2026-09-07T17:56:23.962Z",
+     "by": "Sigve Simonsen",
+     "text": "Ba om dataromet etter NDA. Sendt utkast."
+    }
+   ]
+  },
+  {
+   "id": "ex-4",
+   "name": "Lindesnes kommune (eksempel)",
+   "email": "plan@example.com",
+   "phone": "",
+   "purpose": "partner",
+   "plots": [],
+   "consent_updates": true,
+   "consent_investor": false,
+   "consent_research": false,
+   "source": "eksempel",
+   "created": "2026-09-03T17:56:23.962Z",
+   "status": "contacted",
+   "notes": []
+  },
+  {
+   "id": "ex-5",
+   "name": "Per Eksempel",
+   "email": "per@example.com",
+   "phone": "+47 900 00 005",
+   "purpose": "curious",
+   "plots": [
+    "plot-05"
+   ],
+   "consent_updates": true,
+   "consent_investor": false,
+   "consent_research": true,
+   "source": "eksempel",
+   "created": "2026-08-31T17:56:23.963Z",
+   "status": "lost",
+   "notes": [
+    {
+     "at": "2026-09-02T17:56:23.964Z",
+     "by": "Sigve Simonsen",
+     "text": "Ville ha tomt på flaten med sjøutsikt. Finnes ikke."
+    }
+   ]
+  }
+ ],
+ "plots": {},
+ "news": [
+  {
+   "id": "n-2026-09-13",
+   "date": "2026-09-13",
+   "published": true,
+   "title": {
+    "no": "Utlegg v3: sjøutsikt fra alle tomtene på åsen",
+    "en": "Layout v3: a sea view from every plot on the hill"
+   },
+   "text": {
+    "no": "Tomtene er lagt om slik at alle de 25 tomtene på sørhellingen har målt sjøutsikt, 20 av dem med åpent hav. Tre tomter på flaten ved Rødbergsveien er uten sjøutsikt.",
+    "en": "The plots were relaid so that all 25 plots on the south slope have a measured sea view, 20 of them with open sea. Three plots on the flat by Rødbergsveien are without a sea view."
+   }
+  },
+  {
+   "id": "n-2026-09-04",
+   "date": "2026-09-04",
+   "published": true,
+   "title": {
+    "no": "Retning for energikonseptet",
+    "en": "Direction for the energy concept"
+   },
+   "text": {
+    "no": "Prosjekteier satte retningen: eget batteri og energistyring i hver bolig, bergvarme, optimaliserte tak pluss et fellesanlegg for sol, vind som supplement, og et robust, fleksibelt system framfor ett felt bygget rundt én teknologi.",
+    "en": "The project owner set the direction: a battery and energy management in every home, bedrock heat, optimised roofs plus a shared solar plant, wind as a supplement, and a robust, flexible system rather than a field built around one technology."
+   }
+  },
+  {
+   "id": "n-2026-08-25",
+   "date": "2026-08-25",
+   "published": true,
+   "title": {
+    "no": "Praksisperioden med Universitetet i Agder er i gang",
+    "en": "The internship with the University of Agder has started"
+   },
+   "text": {
+    "no": "Studenter arbeider i to spor fram til desember: energi og teknikk, og profilering og marked. Nettsiden er første leveranse.",
+    "en": "Students work in two tracks until December: energy and technology, and profile and market. The website is the first deliverable."
+   }
+  }
+ ],
+ "users": [
+  {
+   "email": "sigve.simonsen@hotmail.com",
+   "name": "Sigve Simonsen",
+   "role": "superadmin",
+   "added": "2026-09-13"
+  }
+ ],
+ "settings": {
+  "release_note": {
+   "no": "Tomtene slippes etter at reguleringsplanen er vedtatt.",
+   "en": "The plots are released once the zoning plan is adopted."
+  },
+  "contact_email": "sigve.simonsen@hotmail.com",
+  "contact_phone": "+47 954 95 152",
+  "weekly_digest": true
+ },
+ "activity": []
+}

@@ -1,0 +1,7 @@
+node_modules/
+.next/
+*.log
+.playwright-mcp/
+*.blend1
+blender/knotten_master_v1.blend
+.env*

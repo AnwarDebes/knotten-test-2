@@ -1,0 +1,128 @@
+# Knotten — Sjøutsikt i Rødberg · 3D and data package
+
+Site: the Knotten knoll at Rødberg, Vigeland, Lindesnes (Agder), by the Audna outlet into
+Snigsfjorden. Reference point **58.068057 N, 7.278401 E** = local origin (0, 0).
+
+Everything in this package is derived from measured data. Where something is a
+placeholder it is labelled `provisional` in the data and listed under *Assumptions* below.
+
+```
+knotten/
+  site/              THE WEBSITE + PORTAL (Next.js) — see site/README.md; `cd site && npm run dev`
+  specs/             the full platform specification — start at specs/00-overview.md
+  web/models/        GLB assets for three.js (see manifest.json)
+  web/textures/      aerial JPEGs used by the GLBs (also usable directly)
+  data/              plots.json, road.json, trees.json, clearing.json, schemas/
+  renders/           before/after stills, photo match, top-down plan, fly-in animation (anim/ + mp4)
+  blender/           knotten_master.blend (the heavy source-of-truth scene)
+  pipeline/          every script that produced this, re-runnable
+  source/            raw inputs (LiDAR rasters, DEMs, OSM, imagery)
+```
+
+## Renders
+
+| File | Camera | State |
+|---|---|---|
+| `site_before.png` / `site_after.png` | oblique over the field from the south | today / built |
+| `drone_before.png` / `drone_after.png` | high from the west ridge | today / built |
+| `knoll_view_after.png` | knoll top, first-floor height, down the sea corridor | built |
+| `grillbu_photo_match.png` | neighbour's grillbu, bearing 150° | today (compare with Sigve's photo) |
+| `farms_after.png` | low over Raudberg | built |
+| `plan_topdown_before.png` / `plan_topdown_after.png` | orthographic, 520 m square | for the plot map |
+| `anim/fly_0001..0072.png` + `knotten_flyin_720p.mp4` | fly-in over the fjord to the field | built |
+
+Known cosmetic issue: row roads follow the raw 1 m contour, so their edges are jagged; smooth the
+polylines (or use the real plan) before final renders. Trees are cones; heights/positions are measured.
+
+## Coordinate systems
+
+| Frame | Definition |
+|---|---|
+| **local** (all JSON) | metres; `x` = east, `y` = north, `z` = height above sea level; origin at the reference point |
+| **glTF / three.js** | Y-up: `three.x = local.x`, `three.y = local.z`, `three.z = -local.y` |
+| **WGS84** | `lat = 58.068057 + y / 111132`, `lon = 7.278401 + x / 58927.4` (given per record) |
+| **EPSG:25832** | UTM 32N, given per plot; grid convergence here is 1.461° |
+
+Sea level is `y = 0` in three.js. The knoll top is at 87.4 m, the reference point at 51.6 m.
+
+## Loading in three.js
+
+```js
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const draco = new DRACOLoader().setDecoderPath('/draco/');
+const loader = new GLTFLoader().setDRACOLoader(draco);
+
+for (const f of ['site_terrain', 'context_terrain', 'surround_terrain', 'horizon_terrain',
+                 'sea', 'river', 'existing_buildings', 'powerlines',
+                 'houses_proposed', 'roads_proposed']) {
+  loader.load(`/models/${f}.glb`, g => scene.add(g.scene));
+}
+
+// trees: one InstancedMesh per species, instance data from data/trees.json
+const { trees } = await (await fetch('/data/trees.json')).json();
+for (const species of ['spruce', 'pine', 'birch']) {
+  const tpl = (await loader.loadAsync(`/models/tree_${species}.glb`)).scene.children[0];
+  const list = trees.filter(t => t.species === species);
+  const inst = new THREE.InstancedMesh(tpl.geometry, tpl.material, list.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0);
+  list.forEach((t, i) => {
+    q.setFromAxisAngle(up, t.rot);
+    m.compose(new THREE.Vector3(t.x, t.z, -t.y), q, new THREE.Vector3(t.crown, t.h, t.crown));
+    inst.setMatrixAt(i, m);
+  });
+  scene.add(inst);
+}
+```
+
+**Before / after:** hide instances with `cleared: true` and show `houses_proposed` + `roads_proposed`.
+Both states share terrain, sun and horizon, so a wipe lines up exactly.
+
+**Per-plot cards:** `data/plots.json` — click `plot-NN` in `houses_proposed.glb`, look up the same id.
+
+## What is measured
+
+| Layer | Source | Resolution |
+|---|---|---|
+| Site + context terrain | Kartverket NHM DTM (national LiDAR), hoydedata.no | 1 m (web mesh 2 m / 5 m) |
+| Existing roofs | Kartverket NHM DOM, profile swept per footprint | 1 m |
+| Trees: position, height | canopy height model DOM − DTM, treetop detection | 1 m, 32 312 trees |
+| 8 km / 30 km horizon | AWS terrain tiles (terrarium) | 20 m / 80 m |
+| Ground colour | Esri World Imagery mosaic | 0.32 m/px |
+| Footprints, roads, power lines | OpenStreetMap | — |
+| Sun | NOAA solar position for the site | — |
+
+## Per-plot evidence (`data/plots.json`)
+
+For every plot: ground and floor level, slope/aspect, level-pad cut/fill, **sun hours on 21 Dec / 21 Mar / 21 Jun**
+(terrain-shaded, first and last sun in CET), **sea view** (degrees of bearing with water visible, whether
+open sea beyond 7 km is visible), and a 360° terrain horizon profile — the input the energy group needs
+for PV irradiance with real ridge shading.
+
+Headline from the provisional layout: 27 plots, open sea visible from 16, fjord/river from 20;
+winter-solstice sun 3.3–4.0 h on the top row.
+
+## Assumptions (replace when the real inputs arrive)
+
+1. **House layout is provisional.** Rows on the 78/68/58/48 m contours of the south-facing slope, 22 m
+   spacing, 11 × 8.5 m 1.5-storey houses — the *structure* of Sigve's sketch, not its geometry.
+   Swap in the georeferenced plan and re-run `pipeline/plan_layout.py`; every number regenerates.
+2. **Ramps between rows are straight placeholders.** `road.json` states, per ramp, the climb and the
+   length a 6 % road needs; where a straight ramp can't meet it, the real plan needs a hairpin.
+3. **Clearing extent** = bounding box of the rows + 15 m.
+4. **Sun hours** are terrain shading only — no shading between houses, no trees (field cleared).
+5. **Tree crowns are modelled** (cones); heights and positions are measured.
+6. **Site boundary** is not the legal parcel — needs gnr/bnr → Matrikkel.
+7. **Imagery licence:** Esri World Imagery is fine for study; for the public website use Norge i bilder
+   (needs a Geonorge login) or the project's own drone orthophoto, and rebuild `web/textures`.
+
+## Data licences
+Kartverket height data: CC BY 4.0 (© Kartverket). OpenStreetMap: ODbL (© OpenStreetMap contributors).
+AWS Terrain Tiles: public. Esri World Imagery: Esri terms of use — see assumption 7.
+
+## Re-running
+`pipeline/` in order: `fetch_area.py` → `prep_scene.py` → `prep_scatter.py` → `fetch_surround.py` →
+`fetch_horizon.py` → `fetch_kartverket.py` → `prep_kartverket.py` → `plan_layout.py` → then in Blender
+`build_final.py` (which runs `build_gjedeland_kv.py`). Host scripts need Python 3 + Pillow; Blender 5.2 with a
+GPU for the renders.

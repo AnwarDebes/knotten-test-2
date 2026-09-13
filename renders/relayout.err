@@ -1,0 +1,7 @@
+C:\Users\anwar\Downloads\knotten\pipeline\relayout_v2.py:52: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat.use_nodes = True
+Traceback (most recent call last):
+  File "C:\Users\anwar\Downloads\knotten\pipeline\relayout_v2.py", line 354, in <module>
+    strips = getattr(se, "strips", None) or se.sequences
+                                            ^^^^^^^^^^^^
+AttributeError: 'SequenceEditor' object has no attribute 'sequences'

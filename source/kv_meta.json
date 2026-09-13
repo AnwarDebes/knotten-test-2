@@ -1,0 +1,15 @@
+{
+  "crs": "EPSG:25832",
+  "east_min": 397800.45779456035,
+  "east_max": 399074.38993723487,
+  "north_min": 6436945.503700668,
+  "north_max": 6438219.201828151,
+  "width": 1274,
+  "height": 1274,
+  "pixel_m": 1.0,
+  "center_utm": [
+    398437.5195339109,
+    6437582.3055610685
+  ],
+  "source": "Kartverket NHM DTM/DOM 1 m (hoydedata.no)"
+}

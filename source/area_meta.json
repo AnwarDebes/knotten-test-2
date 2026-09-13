@@ -1,0 +1,63 @@
+{
+  "center": {
+    "lat": 58.068057,
+    "lon": 7.278401
+  },
+  "bbox": {
+    "lat_min": 58.06355784584098,
+    "lat_max": 58.072556154159024,
+    "lon_min": 7.2699089264904275,
+    "lon_max": 7.286893073509572
+  },
+  "size_m": [
+    1000.0,
+    1000.0
+  ],
+  "m_per_deg": {
+    "lat": 111132.0,
+    "lon": 58878.4352180193
+  },
+  "geocode": {
+    "center": {
+      "place_id": 159902577,
+      "licence": "Data \u00a9 OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 629893482,
+      "lat": "58.0701757",
+      "lon": "7.2800785",
+      "category": "highway",
+      "type": "unclassified",
+      "place_rank": 26,
+      "importance": 0.053383334859235486,
+      "addresstype": "road",
+      "name": "",
+      "display_name": "Gjedeland, Vigeland, Lindesnes, Agder, 4520, Norge",
+      "address": {
+        "hamlet": "Gjedeland",
+        "village": "Vigeland",
+        "municipality": "Lindesnes",
+        "county": "Agder",
+        "ISO3166-2-lvl4": "NO-42",
+        "postcode": "4520",
+        "country": "Norge",
+        "country_code": "no"
+      },
+      "extratags": null,
+      "boundingbox": [
+        "58.0689061",
+        "58.0779006",
+        "7.2578859",
+        "7.2826598"
+      ]
+    }
+  },
+  "texture": {
+    "file": "satellite.png",
+    "zoom": 18,
+    "width": 3166,
+    "height": 3172,
+    "source": "Esri World Imagery"
+  },
+  "elevation_source": "AWS Terrain Tiles (terrarium) z15",
+  "osm_elements": 299
+}
