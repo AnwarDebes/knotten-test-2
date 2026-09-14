@@ -104,6 +104,19 @@
  "plots": {},
  "news": [
   {
+   "id": "n-2026-09-14",
+   "date": "2026-09-14",
+   "published": true,
+   "title": {
+    "no": "Utlegg v5: terrasser, rekke under rekke, sjøutsikt fra alle 30",
+    "en": "Layout v5: terraces, row under row, a sea view from all 30"
+   },
+   "text": {
+    "no": "Tomtene ligger nå i terrasser over sørhellingen: en rekke på hvert nivå, hver rekke rett under den over, slik prosjekteier vil forme terrenget. Hver av de 30 tomtene er sjekket mot vannet med nabohusene stående; 28 ser åpent hav. Ingen tomter på flaten ved Rødbergsveien.",
+    "en": "The plots now sit in terraces across the south face: a row on every level, each row right under the one above, the way the project owner intends to shape the ground. Each of the 30 plots is checked against the water with the neighbouring houses standing; 28 see open sea. No plots on the flat by Rødbergsveien."
+   }
+  },
+  {
    "id": "n-2026-09-13",
    "date": "2026-09-13",
    "published": true,

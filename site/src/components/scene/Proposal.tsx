@@ -26,7 +26,7 @@ function box(P: (u: number, v: number, z: number) => [number, number, number], u
 
 function houseGeometry(p: Plot) {
   const { x, y, z_floor } = p.local;
-  const ground = z_floor - 1.0;
+  const ground = z_floor - (p.house.plinth_m ?? 1.0);
   const eaves = z_floor + p.house.eaves_m;
   const ridge = z_floor + p.house.ridge_m;
   const f = (p.house.facing_deg * Math.PI) / 180;

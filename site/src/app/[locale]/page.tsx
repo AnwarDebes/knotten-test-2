@@ -10,6 +10,9 @@ import Film from "@/components/ui/Film";
 import Stage from "@/components/Stage";
 import ProofSlider from "@/components/ui/ProofSlider";
 import Passport from "@/components/ui/Passport";
+import Src from "@/components/ui/Source";
+import TerrainCut from "@/components/ui/TerrainCut";
+import MapJourney from "@/components/ui/MapJourney";
 import { Figure } from "@/components/ui/Provenance";
 import { Words } from "@/components/ui/Motion";
 
@@ -19,19 +22,22 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
   const d = t(locale);
   const no = locale === "no";
   const { plots } = await loadPlots();
-  const hill = plots.filter((p) => p.zone !== "flat");
-  const withSea = hill.filter((p) => p.view.water_visible_deg > 0).length;
-  const openSea = hill.filter((p) => p.view.open_sea_visible).length;
-  const best = [...hill].sort((a, b) => b.sun.dec21.hours - a.sun.dec21.hours || b.view.water_visible_deg - a.view.water_visible_deg).slice(0, 3);
+  const withSea = plots.filter((p) => p.view.water_visible_deg > 0).length;
+  const openSea = plots.filter((p) => p.view.open_sea_visible).length;
+  const rows = new Set(plots.map((p) => p.row)).size;
+  const best = [...plots].sort((a, b) => b.sun.dec21.hours - a.sun.dec21.hours || b.view.water_visible_deg - a.view.water_visible_deg).slice(0, 3);
   const nb = (v: number) => v.toLocaleString(no ? "nb-NO" : "en-GB");
   const facts: string[] = no
-    ? [`${plots.length} tomter i modellen`, `${withSea} av ${hill.length} på åsen med sjøutsikt`, `${openSea} med åpent hav i sikt`, "87,4 meter over havet", "31 823 målte trær", "40 181 m² eiendom", "1 m laserterreng", "Rødberg, Lindesnes"]
-    : [`${plots.length} plots in the model`, `${withSea} of ${hill.length} on the hill with a sea view`, `${openSea} with open sea in view`, "87.4 metres above sea level", "31,823 measured trees", "40,181 m² parcel", "1 m laser terrain", "Rødberg, Lindesnes"];
+    ? [`${plots.length} tomter i ${rows} rekker`, `${withSea} av ${plots.length} med målt sjøutsikt`, `${openSea} med åpent hav i sikt`, "87,4 meter over havet", "31 823 målte trær", "40 181 m² eiendom", "1 m laserterreng", "Rødberg, Lindesnes"]
+    : [`${plots.length} plots in ${rows} rows`, `${withSea} of ${plots.length} with a measured sea view`, `${openSea} with open sea in view`, "87.4 metres above sea level", "31,823 measured trees", "40,181 m² parcel", "1 m laser terrain", "Rødberg, Lindesnes"];
   const photos: [string, string][] = no
-    ? [["photo_fjord_wide.webp", "Snigsfjorden fra åsen, sett mot sør. Audna kommer inn fra høyre."], ["photo_fjord_farm.webp", "Gården på Rødberg og elvesvingen rett nedenfor feltet."], ["photo_sea_glimpse.webp", "Glimtet av åpent hav mellom åsene, 164 til 189 grader fra toppen."], ["photo_sea_summer.webp", "Sommer over fjorden. Fotografiene er tatt fra nabotomten, litt lavere enn feltet."]]
-    : [["photo_fjord_wide.webp", "Snigsfjorden from the hill, looking south. The Audna comes in from the right."], ["photo_fjord_farm.webp", "The farm at Rødberg and the river bend right below the field."], ["photo_sea_glimpse.webp", "The glimpse of open sea between the hills, 164 to 189 degrees from the top."], ["photo_sea_summer.webp", "Summer over the fjord. The photographs were taken from the neighbouring plot, a little lower than the field."]];
+    ? [["photo_fjord_wide.webp", "Snigsfjorden fra åsen, sett mot sør. Audna kommer inn fra høyre."], ["photo_fjord_farm.webp", "Gården på Rødberg og elvesvingen rett nedenfor feltet."], ["photo_sea_summer.webp", "Sommer over fjorden, med havet i glipen mellom åsene."]]
+    : [["photo_fjord_wide.webp", "Snigsfjorden from the hill, looking south. The Audna comes in from the right."], ["photo_fjord_farm.webp", "The farm at Rødberg and the river bend right below the field."], ["photo_sea_summer.webp", "Summer over the fjord, with the sea in the gap between the hills."]];
   const yes = MEASURES.filter((m) => m.verdict === "yes"), maybe = MEASURES.filter((m) => m.verdict === "maybe"), noM = MEASURES.filter((m) => m.verdict === "no");
   const pvAdjusted = Math.round(BUDGET.pv.annual_kwh * 0.7 / 1000) * 1000;
+  const phases: [string, string, boolean][] = no
+    ? [["Regulering", "Pågår. Prosjektet starter før reguleringsplanen, så energikonsept og marked utvikles samtidig.", true], ["Energikonsept", "Energiregnskap, brønnpark og vurdering av tiltak foreligger som arbeidsgrunnlag. Teknisk rapport kommer.", false], ["Salg gjennom megler", "Tomter, priser og fremdrift oppgis når planen er vedtatt. Meld interesse for å få beskjed.", false], ["Bygging og måling", "Faktisk ytelse publiseres når boligene står, målt mot de eksisterende byggene.", false]]
+    : [["Zoning", "In progress. The project starts before the zoning plan, so the energy concept and the market are developed together.", true], ["Energy concept", "The energy budget, the borehole field and the assessment of measures exist as a working basis. The technical report follows.", false], ["Sale through an agent", "Plots, prices and schedule are given when the plan is adopted. Register interest to be told.", false], ["Building and measuring", "Actual performance is published when the homes stand, measured against the existing buildings.", false]];
 
   return (
     <>
@@ -44,8 +50,8 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
           <Words as="h1" className="display text-[clamp(40px,6.6vw,104px)] max-w-[13ch]" text={no ? "Norges mest energivennlige boligfelt." : "Norway's most energy-friendly housing field."} />
           <p className="lede max-w-[38ch] lg:pb-3 rise-in rise-in-2">
             {no
-              ? "Rundt 30 boliger på Knotten over Snigsfjorden i Lindesnes. Sjøutsikt fra hver tomt på åsen. Reisen under går fra fjorden og helt inn i stua."
-              : "About 30 homes on Knotten above Snigsfjorden in Lindesnes. A sea view from every plot on the hill. The journey below runs from the fjord all the way into the living room."}
+              ? `${plots.length} boliger i terrasser over sørhellingen på Knotten, rekke under rekke, over Snigsfjorden i Lindesnes. Sjøutsikt fra hver tomt, målt i terrenget. Reisen under går fra fjorden og helt inn i stua.`
+              : `${plots.length} homes in terraces across the south face of Knotten, row under row, above Snigsfjorden in Lindesnes. A sea view from every plot, measured in the terrain. The journey below runs from the fjord all the way into the living room.`}
           </p>
         </div>
         <div className="grid gap-4 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px] items-stretch">
@@ -56,7 +62,7 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
               <div className="marks !pt-2.5"><span /><em className="not-italic">{no ? "Flyturen, rendret fra samme modell" : "The fly-in, rendered from the same model"}</em><span /></div>
             </div>
             <div className="paper p-5 flex flex-col gap-5">
-              {[[`${plots.length}`, no ? `tomter, ${withSea} av ${hill.length} på åsen med målt sjøutsikt` : `plots, ${withSea} of ${hill.length} on the hill with a measured sea view`], [`${EED.boreholes}`, no ? "energibrønner, 106 m dype, dimensjonert for 35 år" : "boreholes, 106 m deep, dimensioned for 35 years"], ["87", no ? "meter over havet på toppen av Knotten" : "metres above sea level on the top of Knotten"]].map(([n, s]) => (
+              {[[`${plots.length}`, no ? `tomter i ${rows} rekker, ${withSea} av ${plots.length} med målt sjøutsikt` : `plots in ${rows} rows, ${withSea} of ${plots.length} with a measured sea view`], [`${EED.boreholes}`, no ? "energibrønner, 106 m dype, dimensjonert for 35 år" : "boreholes, 106 m deep, dimensioned for 35 years"], ["87", no ? "meter over havet på toppen av Knotten" : "metres above sea level on the top of Knotten"]].map(([n, s]) => (
                 <div key={s} className="grid grid-cols-[76px_1fr] items-baseline gap-3">
                   <div className="num text-[34px]">{n}</div>
                   <div className="text-[14px] leading-snug">{s}</div>
@@ -69,21 +75,49 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         <div className="marks"><span /><span /><em className="not-italic">{no ? "Reisen starter av seg selv. Klikk i modellen for å styre den, Escape gir siden tilbake." : "The journey starts on its own. Click the model to take control, Escape hands the page back."}</em><span /><span /></div>
       </section>
 
-      {/* 2. the place, photographed */}
+      {/* 2. the facts, each with its source */}
+      <section className="wrap mt-8 md:mt-12">
+        <div className="facts rise">
+          <div className="fact"><b>{no ? "Rundt 30" : "About 30"}</b><span>{no ? "tomter, alle planlagt med sjøutsikt" : "plots, all planned with a sea view"} <Src id="sigve30" locale={locale} /></span></div>
+          <div className="fact"><b>40 181 m²</b><span>{no ? "samlet tomteareal, gnr 355 bnr 10 og 368" : "parcel in all, cadastral 355/10 and 355/368"} <Src id="areal" locale={locale} /></span></div>
+          <div className="fact"><b>{no ? "Maks 6 %" : "Max 6 %"}</b><span>{no ? "stigning på veiene i feltet" : "grade on the roads in the field"} <Src id="vei" locale={locale} /></span></div>
+          <div className="fact"><b>{no ? "Regulering" : "Zoning"}</b><span>{no ? "pågår. Prosjektet starter før reguleringsplanen" : "in progress. The project starts before the zoning plan"} <Src id="regulering" locale={locale} /></span></div>
+        </div>
+      </section>
+
+      {/* 3. the place */}
+      <section className="wrap section-tight grid gap-8 lg:grid-cols-[5fr_7fr] items-center">
+        <div className="rise">
+          <div className="label mb-3">{no ? "Stedet" : "The place"}</div>
+          <h2 className="display text-[clamp(34px,4.6vw,64px)] max-w-[12ch]">{no ? "Fra elva og opp på Knotten." : "From the river up onto Knotten."}</h2>
+          <p className="lede mt-5 max-w-[46ch]">
+            {no
+              ? "Feltet ligger på en knaus rett vest for Rødbergsveien, der Audna vider seg ut i Snigsfjorden. Nederst, ved veien, er det flatt. Så stiger terrenget bratt, og fra rekkene oppover hellingen går siktlinjen sørover, ut fjorden og til åpent hav."
+              : "The field sits on a knoll just west of Rødbergsveien, where the Audna widens into Snigsfjorden. At the bottom, by the road, it is flat. Then the ground rises steeply, and from the rows up the slope the sight line runs south, out the fjord and to open sea."}
+          </p>
+          <p className="mt-4 text-[15px] text-ink-2 max-w-[48ch]">
+            {no ? "Terrengprofilen er tegnet i Norgeskart fra Spangereidveien til Knotten: 409,5 meter, fra 0 til 60 meter over havet." : "The terrain profile is drawn in Norgeskart from Spangereidveien to Knotten: 409.5 metres, from 0 to 60 metres above the sea."} <Src id="profil" locale={locale} />
+          </p>
+        </div>
+        <div className="rise rise-late"><TerrainCut locale={locale} /></div>
+      </section>
+
+      {/* 4. the place, photographed */}
       <section className="section-tight">
         <div className="wrap grid gap-4 md:grid-cols-[1fr_1fr] items-end mb-6">
           <h2 className="display text-[clamp(36px,5.4vw,80px)] max-w-[12ch] rise">{no ? "Slik ser det ut i dag." : "This is how it looks today."}</h2>
           <p className="lede max-w-[46ch] md:justify-self-end rise rise-late">
             {no
-              ? "Fire fotografier fra åsen, tatt av prosjekteier gjennom året. Modellen på forsiden står på samme sted og ser samme vei."
-              : "Four photographs from the hill, taken by the project owner through the year. The model on the front page stands in the same place and looks the same way."}
+              ? "Fotografier fra åsen, tatt av prosjekteier gjennom året fra nabotomten, litt lavere enn feltet. Modellen på forsiden står på samme sted og ser samme vei."
+              : "Photographs from the hill, taken by the project owner through the year from the neighbouring plot, a little lower than the field. The model on the front page stands in the same place and looks the same way."}
+            {" "}<Src id="foto" locale={locale} />
           </p>
         </div>
         <div className="wrap">
-          <div className="strip">
+          <div className="grid gap-4 md:grid-cols-3">
             {photos.map(([f, cap], i) => (
               <figure key={f} className="frame">
-                <img src={`/assets/incoming/web/${f}`} alt={cap} className="w-full aspect-[4/3] object-cover" loading={i < 2 ? "eager" : "lazy"} />
+                <img src={`/assets/incoming/web/${f}`} alt={cap} className="w-full aspect-[4/3] object-cover" loading={i === 0 ? "eager" : "lazy"} />
                 <figcaption className="provenance px-4 py-3">{cap}</figcaption>
               </figure>
             ))}
@@ -91,7 +125,18 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         </div>
       </section>
 
-      {/* 3. measured, not drawn */}
+      {/* 5. the maps behind the plan */}
+      <section className="wrap section-tight">
+        <div className="grid gap-4 md:grid-cols-[1fr_1fr] items-end mb-8">
+          <h2 className="display text-[clamp(34px,4.6vw,64px)] max-w-[12ch] rise">{no ? "Kartene bak planen." : "The maps behind the plan."}</h2>
+          <p className="lede max-w-[46ch] md:justify-self-end rise rise-late">
+            {no ? "Prosjekteiers egne kart, fra siktlinjen ut til havet og helt ned til den første skissen av boligrekkene. Bla nedover, så bytter kartet." : "The project owner's own maps, from the sight line out to the sea down to the first sketch of the rows. Scroll, and the map changes."}
+          </p>
+        </div>
+        <MapJourney locale={locale} />
+      </section>
+
+      {/* 6. measured, not drawn */}
       <section className="section-tight">
         <div className="marquee py-2">
           <div>
@@ -105,8 +150,9 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
             <h2 className="display text-[clamp(36px,5vw,72px)] max-w-[10ch]">{no ? "Målt, ikke tegnet." : "Measured, not drawn."}</h2>
             <p className="lede mt-5 max-w-[44ch]">
               {no
-                ? "Terrenget er Kartverkets laserskanning på én meter. Trærne er talt i det samme datasettet. Eiendomsgrensen er hentet fra Matrikkelen. Solen går sin ekte bane over den ekte åsen, og hver tomt er plassert der den faktisk ser vannet."
-                : "The terrain is Kartverket's one-metre laser scan. The trees are counted in the same dataset. The parcel boundary comes from the cadastre. The sun follows its real path over the real ridge, and every plot is placed where it actually sees the water."}
+                ? "Terrenget er Kartverkets laserskanning på én meter. Trærne er talt i det samme datasettet. Eiendomsgrensen er hentet fra Matrikkelen. Solen går sin ekte bane over den ekte åsen, og hver tomt i terrassene er sjekket mot vannet med nabohusene stående."
+                : "The terrain is Kartverket's one-metre laser scan. The trees are counted in the same dataset. The parcel boundary comes from the cadastre. The sun follows its real path over the real ridge, and every plot in the terraces is checked against the water with the neighbouring houses standing."}
+              {" "}<Src id="modell" locale={locale} />
             </p>
             <div className="mt-8 grid gap-x-8 gap-y-8 sm:grid-cols-2">
               <Figure a={assumption("knoll_top")} locale={locale} size="md" />
@@ -126,7 +172,7 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         </div>
       </section>
 
-      {/* 4. the energy concept, as it stands */}
+      {/* 7. the energy concept, as it stands */}
       <section className="wrap section-tight">
         <div className="panel overflow-hidden">
           <div className="grid lg:grid-cols-[1.1fr_1fr]">
@@ -137,12 +183,13 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
                   {no
                     ? "Energikonseptet utvikles sammen med Universitetet i Agder. Grunnlaget finnes allerede: et energiregnskap for hele feltet, en brønnpark dimensjonert i EED, og en vurdering av seksten tiltak. Tallene er foreløpige og står med kilde."
                     : "The energy concept is developed with the University of Agder. The basis already exists: an energy budget for the whole field, a borehole field dimensioned in EED, and an assessment of sixteen measures. The figures are provisional and carry their source."}
+                  {" "}<Src id="retning" locale={locale} />
                 </p>
               </div>
               <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 max-w-[560px]">
-                <div><div className="num text-[38px]">{nb(BUDGET.demand_total_kwh)}<span className="text-[14px] font-body font-normal opacity-60 ml-1.5">kWh/{no ? "år" : "yr"}</span></div><div className="mt-1.5 text-[15px]">{no ? "Energibehov, hele feltet" : "Energy demand, whole field"}</div><div className="provenance">{no ? "30 boliger, kontor og lager. Energiregnskap, arbeidsgrunnlag" : "30 homes, office and storage. Energy budget, working basis"}</div></div>
+                <div><div className="num text-[38px]">{nb(BUDGET.demand_total_kwh)}<span className="text-[14px] font-body font-normal opacity-60 ml-1.5">kWh/{no ? "år" : "yr"}</span></div><div className="mt-1.5 text-[15px]">{no ? "Energibehov, hele feltet" : "Energy demand, whole field"} <Src id="budsjett" locale={locale} /></div><div className="provenance">{no ? "30 boliger, kontor og lager. Energiregnskap, arbeidsgrunnlag" : "30 homes, office and storage. Energy budget, working basis"}</div></div>
                 <div><div className="num text-[38px]">{nb(pvAdjusted)}<span className="text-[14px] font-body font-normal opacity-60 ml-1.5">kWh/{no ? "år" : "yr"}</span></div><div className="mt-1.5 text-[15px]">{no ? "Solstrøm fra takene" : "Solar from the roofs"}</div><div className="provenance">{no ? `Regnearket sier ${nb(BUDGET.pv.annual_kwh)} med 31 % moduler; her nedjustert til 22 %` : `The spreadsheet says ${nb(BUDGET.pv.annual_kwh)} with 31 % modules; adjusted here to 22 %`}</div></div>
-                <div><div className="num text-[38px]">{nb(BUDGET.bedrock.delivered_kwh)}<span className="text-[14px] font-body font-normal opacity-60 ml-1.5">kWh/{no ? "år" : "yr"}</span></div><div className="mt-1.5 text-[15px]">{no ? "Varme fra berget" : "Heat from the bedrock"}</div><div className="provenance">{no ? `${EED.boreholes} brønner, ${EED.depth_m} m, årsvarmefaktor ${BUDGET.bedrock.scop}` : `${EED.boreholes} boreholes, ${EED.depth_m} m, seasonal factor ${BUDGET.bedrock.scop}`}</div></div>
+                <div><div className="num text-[38px]">{nb(BUDGET.bedrock.delivered_kwh)}<span className="text-[14px] font-body font-normal opacity-60 ml-1.5">kWh/{no ? "år" : "yr"}</span></div><div className="mt-1.5 text-[15px]">{no ? "Varme fra berget" : "Heat from the bedrock"} <Src id="eed" locale={locale} /></div><div className="provenance">{no ? `${EED.boreholes} brønner, ${EED.depth_m} m, årsvarmefaktor ${BUDGET.bedrock.scop}` : `${EED.boreholes} boreholes, ${EED.depth_m} m, seasonal factor ${BUDGET.bedrock.scop}`}</div></div>
                 <div><div className="num text-[38px]">{BUDGET.battery.total_kwh}<span className="text-[14px] font-body font-normal opacity-60 ml-1.5">kWh</span></div><div className="mt-1.5 text-[15px]">{no ? "Batteri i feltet" : "Battery in the field"}</div><div className="provenance">{no ? `${BUDGET.battery.per_home_kwh} kWh i hver bolig, lys og varme ved strømbrudd` : `${BUDGET.battery.per_home_kwh} kWh in every home, light and heat in an outage`}</div></div>
               </div>
               <div className="grid gap-3 text-[14px]">
@@ -171,7 +218,7 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         </div>
       </section>
 
-      {/* 5. passports */}
+      {/* 8. passports */}
       <section className="wrap section-tight">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] items-end">
           <div className="rise">
@@ -189,11 +236,11 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         </div>
       </section>
 
-      {/* 6. what is there today, and what is planned */}
+      {/* 9. what is there today, and what is planned */}
       <section className="wrap section-tight grid gap-8 lg:grid-cols-[1fr_1fr] items-center">
         <figure className="rise frame">
-          <img src="/assets/incoming/web/cadastral_map.webp" alt={no ? "Eiendomsgrense" : "Parcel boundary"} className="w-full" loading="lazy" />
-          <figcaption className="provenance px-4 py-3">{no ? "Eiendommen: gnr 355 bnr 10 og 368, 40 181 m². Kontorbygget og boligen nederst ved Rødbergsveien er der i dag." : "The parcel: cadastral 355/10 and 355/368, 40,181 m². The office and the house at the bottom by Rødbergsveien are there today."}</figcaption>
+          <img src="/assets/incoming/web/knotten_map.webp" alt={no ? "Knotten på eiendomskartet med de planlagte byggene i grønt" : "Knotten on the cadastral map with the planned buildings in green"} className="w-full" loading="lazy" />
+          <figcaption className="provenance px-4 py-3">{no ? "Knotten på eiendomskartet. Kontorbygget og boligen ved Rødbergsveien er der i dag; de to grønne byggene er planlagt." : "Knotten on the cadastral map. The office and the house by Rødbergsveien are there today; the two green buildings are planned."}</figcaption>
         </figure>
         <div className="rise rise-late">
           <h2 className="display text-[clamp(34px,4.6vw,64px)] max-w-[12ch]">{no ? "Bygg som allerede måler." : "Buildings that already measure."}</h2>
@@ -201,6 +248,7 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
             {no
               ? "Kontorbygget med 19 kontorer i dag og 28 når utvidelsen står, og boligen nedenfor, er en del av energibildet fra dag én. De har målere. Der modellen sier hva et tak burde gi, sier måleren hva det ga. Et tilbygg til kontoret og et lager- og verkstedbygg bak boligen er planlagt, og ligger i modellen."
               : "The office with 19 offices today and 28 when the extension stands, and the house below it, are part of the energy picture from day one. They have meters. Where the model says what a roof should yield, the meter says what it did. An extension to the office and a workshop behind the house are planned, and sit in the model."}
+            {" "}<Src id="kontor" locale={locale} />
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link className="btn btn-ghost" href={`/${locale}/energi/eksisterende`}>{no ? "Eksisterende bygg" : "Existing buildings"}</Link>
@@ -209,26 +257,18 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         </div>
       </section>
 
-      {/* 7. how the project runs */}
+      {/* 10. where the project stands */}
       <section className="wrap section-tight">
         <div className="grid gap-4 md:grid-cols-[1fr_1fr] items-end mb-8">
-          <h2 className="display text-[clamp(34px,4.6vw,64px)] max-w-[12ch] rise">{no ? "Teknikk og marked, samtidig." : "Technology and market, together."}</h2>
+          <h2 className="display text-[clamp(34px,4.6vw,64px)] max-w-[12ch] rise">{no ? "Hvor prosjektet står." : "Where the project stands."}</h2>
           <p className="lede max-w-[46ch] md:justify-self-end rise rise-late">
             {no
-              ? "Prosjektet starter før reguleringsplanen, så energikonseptet og salget utvikles sammen. Universitetet i Agder er med fra første dag."
-              : "The project starts before the zoning plan, so the energy concept and the sales are developed together. The University of Agder is in from day one."}
+              ? "Det som kan dokumenteres i dag, og det som må på plass før neste steg. Alt på denne siden oppdateres når planen og rapportene kommer."
+              : "What can be documented today, and what has to be in place before the next step. Everything on this page is updated when the plan and the reports arrive."}
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {(no
-            ? [["Spor 1: energi, teknikk og infrastruktur", "Energibehov for nye boliger, lokal produksjon, lagring og styring, eksisterende bygg som tillegg, robusthet ved strømbrudd, og et anbefalt konsept for første byggetrinn."], ["Spor 2: profilering, marked og visualisering", "Målgrupper, investor- og partneranalyse, salgsbudskap, referanseprosjekter, visuell profil, og de eksisterende byggene som del av historien."], ["Spor 3: den digitale plattformen", "Denne nettsiden, dokumentbanken, portalen med roller og energidashbordet. Samme målte modell fra første skisse til drift, og hvert tall sporbart til sin kilde."]]
-            : [["Track 1: energy, technology and infrastructure", "Energy demand for new homes, local production, storage and control, the existing buildings as an addition, resilience in an outage, and a recommended concept for the first building stage."], ["Track 2: profile, market and visualisation", "Target groups, investor and partner analysis, sales messages, reference projects, visual profile, and the existing buildings as part of the story."], ["Track 3: the digital platform", "This website, the document bank, the portal with roles and the energy dashboard. The same measured model from first sketch to operation, and every figure traceable to its source."]]
-          ).map(([h, p], i) => (
-            <div key={h} className="panel p-6 rise" style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="display text-[24px] leading-tight">{h}</div>
-              <p className="mt-3 text-[15px] text-bone-2">{p}</p>
-            </div>
-          ))}
+        <div className="phases rise">
+          {phases.map(([h, s, now]) => <div key={h} className={now ? "now" : ""}><b>{h}</b><span>{s}</span></div>)}
         </div>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link className="btn btn-ghost" href={`/${locale}/prosjektet`}>{no ? "Om prosjektet" : "About the project"}</Link>
@@ -237,7 +277,7 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         </div>
       </section>
 
-      {/* 8. invitation */}
+      {/* 11. invitation */}
       <section className="wrap pb-6">
         <div className="paper p-8 md:p-14 grid gap-8 md:grid-cols-[1fr_auto] items-center">
           <div className="rise">

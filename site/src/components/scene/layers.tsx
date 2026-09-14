@@ -44,20 +44,30 @@ export function Terrain({ shadows }: { shadows: boolean }) {
   );
 }
 
+/**
+ * The sea and the Audna: one water material for both, so the river reads as water and not as a
+ * brown patch. The river sheet sits 0.45 m over the sea and over the flat river-bed cells of the
+ * LiDAR, which used to z-fight and flicker at distance; the log depth buffer on the renderer plus a
+ * polygon offset on the water keeps it stable.
+ */
 export function Water() {
   const sea = useGLTF("/models/sea.glb");
   const river = useGLTF("/models/river.glb");
   useEffect(() => {
+    const water = (order: number) => new THREE.MeshStandardMaterial({ color: new THREE.Color("#3e5a6e"), roughness: 0.2, metalness: 0.08, envMapIntensity: 1.0, polygonOffset: true, polygonOffsetFactor: -order, polygonOffsetUnits: -order * 4 });
     sea.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
-      m.material = new THREE.MeshStandardMaterial({ color: new THREE.Color("#3e5a6e"), roughness: 0.18, metalness: 0.1, envMapIntensity: 1.0 });
+      m.material = water(1);
+      m.renderOrder = 1;
     });
     river.scene.traverse((o) => {
       const m = o as THREE.Mesh;
       if (!m.isMesh) return;
-      m.material = new THREE.MeshStandardMaterial({ color: new THREE.Color("#4a3f36"), roughness: 0.35, metalness: 0.05 });
+      m.material = water(2);
+      m.renderOrder = 2;
     });
+    river.scene.position.y = 0.25;
   }, [sea, river]);
   return (
     <group>

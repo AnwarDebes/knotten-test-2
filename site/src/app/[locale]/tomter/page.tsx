@@ -27,8 +27,8 @@ export default async function Plots({ params, searchParams }: { params: Promise<
       <PageHead
         title={d.nav.plots}
         lede={no
-          ? `${plots.length} tomter innenfor eiendomsgrensen: ${plots.filter((p) => p.zone !== "flat").length} langs kotene på sørhellingen, alle med målt sjøutsikt, og ${plots.filter((p) => p.zone === "flat").length} på flaten ved Rødbergsveien. Utlegget er foreløpig og byttes ut med den regulerte planen, men tallene per tomt er allerede regnet fra terrenget.`
-          : `${plots.length} plots inside the parcel boundary: ${plots.filter((p) => p.zone !== "flat").length} along the contours of the south slope, all with a measured sea view, and ${plots.filter((p) => p.zone === "flat").length} on the flat by Rødbergsveien. The layout is provisional and will be replaced by the regulated plan, but the numbers per plot are already computed from the terrain.`}
+          ? `${plots.length} tomter innenfor eiendomsgrensen, i terrasser over sørhellingen, en rekke på hvert nivå rett under den over, slik prosjekteier vil forme terrenget, alle med målt sjøutsikt. Utlegget er foreløpig og byttes ut med den regulerte planen, men tallene per tomt er allerede regnet fra terrenget.`
+          : `${plots.length} plots inside the parcel boundary, in terraces across the south face, a row on every level right under the one above, as the project owner intends to shape the ground, all with a measured sea view. The layout is provisional and will be replaced by the regulated plan, but the numbers per plot are already computed from the terrain.`}
         action={<Link className="btn btn-amber" href={`/${locale}/interesse`}>{d.cta.register}</Link>}
       />
       <Stage plots={plots} locale={locale} initialMode="plot" initialPlot={sorted[0].id} compact />

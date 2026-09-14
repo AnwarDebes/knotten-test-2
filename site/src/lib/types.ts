@@ -6,8 +6,8 @@ export type Plot = {
   zone?: "hill" | "flat";
   local: { x: number; y: number; z_ground: number; z_floor: number };
   lat: number; lon: number; utm32_east: number; utm32_north: number;
-  house: { width_m: number; depth_m: number; facing_deg: number; eaves_m: number; ridge_m: number; storeys?: number };
-  terrain: { slope_deg: number; aspect_deg: number; level_pad_cutfill_m3: number; dist_to_boundary_m?: number };
+  house: { width_m: number; depth_m: number; facing_deg: number; eaves_m: number; ridge_m: number; storeys?: number; plinth_m?: number };
+  terrain: { slope_deg: number; aspect_deg: number; level_pad_cutfill_m3: number; dist_to_boundary_m?: number; terrace_level_m?: number; cut_behind_m?: number };
   view: { water_visible_deg: number; water_bearings: [number, number] | null; open_sea_visible: boolean; open_sea_deg: number; farthest_water_m: number };
   sun: { dec21: SunDay; mar21: SunDay; jun21: SunDay };
   horizon_deg_by_bearing: number[];

@@ -14,16 +14,16 @@ export type Assumption = {
   label: { no: string; en: string };
 };
 
-export const ASSUMPTIONS_VERSION = "2026-09-C (foreløpig)";
+export const ASSUMPTIONS_VERSION = "2026-09-D (foreløpig)";
 
 export const ASSUMPTIONS: Assumption[] = [
   { key: "homes", value: 30, unit: "boliger", source: "Sigve Simonsen AS, prosjektbeskrivelse", date: "2026-09-05", label: { no: "Antall boliger", en: "Homes" } },
-  { key: "plots_modelled", value: 30, unit: "tomter", source: "Foreløpig utlegg v3 innenfor eiendomsgrensen, plassert for sjøutsikt, pipeline/plan_layout_v3.py", date: "2026-09-13", provisional: true, label: { no: "Tomter i modellen", en: "Plots in the model" } },
-  { key: "open_sea_plots", value: 22, unit: "tomter", source: "Siktanalyse per tomt, Kartverket DTM 1 m og 30 km horisont, med nabohusene stående", date: "2026-09-13", provisional: true, label: { no: "Tomter med åpent hav i sikt", en: "Plots with open sea in view" } },
-  { key: "sea_view_plots", value: 26, unit: "tomter", source: "Siktanalyse per tomt, alle 26 tomter på åsen", date: "2026-09-13", provisional: true, label: { no: "Tomter på åsen med sjøutsikt", en: "Hill plots with a sea view" } },
+  { key: "plots_modelled", value: 30, unit: "tomter", source: "Foreløpig utlegg v5: terrasser, en rekke på hvert nivå rett under den over, pipeline/plan_layout_v5.py", date: "2026-09-14", provisional: true, label: { no: "Tomter i modellen", en: "Plots in the model" } },
+  { key: "open_sea_plots", value: 28, unit: "tomter", source: "Siktanalyse per tomt, Kartverket DTM 1 m og 30 km horisont, med nabohusene stående", date: "2026-09-14", provisional: true, label: { no: "Tomter med åpent hav i sikt", en: "Plots with open sea in view" } },
+  { key: "sea_view_plots", value: 30, unit: "tomter", source: "Siktanalyse per tomt, alle 30 tomter, med nabohusene stående", date: "2026-09-14", provisional: true, label: { no: "Tomter med sjøutsikt", en: "Plots with a sea view" } },
   { key: "knoll_top", value: 87.4, unit: "moh.", source: "Kartverket NHM DTM 1 m", date: "2026-09-05", label: { no: "Toppen av Knotten", en: "Top of Knotten" } },
   { key: "trees_measured", value: 31823, unit: "trær", source: "Kartverket DOM minus DTM, tretoppdeteksjon", date: "2026-09-05", label: { no: "Trær målt på 1 km²", en: "Trees measured on 1 km²" } },
-  { key: "trees_cleared", value: 1553, unit: "trær", source: "Ryddeområde innenfor eiendomsgrensen, foreløpig", date: "2026-09-08", provisional: true, label: { no: "Trær som ryddes", en: "Trees cleared" } },
+  { key: "trees_cleared", value: 1049, unit: "trær", source: "Ryddet 14 m rundt husene, 6,5 m langs veiene og siktlinjen mot vannet fra hver stue, resten av skogen står, foreløpig", date: "2026-09-14", provisional: true, label: { no: "Trær som ryddes", en: "Trees cleared" } },
   { key: "sea_corridor_deg", value: 26, unit: "°", source: "Siktanalyse fra toppen, 164 til 189 grader", date: "2026-09-05", label: { no: "Siktkorridor mot åpent hav", en: "Corridor to open sea" } },
   { key: "parcel_m2", value: 40181, unit: "m²", source: "Kartverket Matrikkelen, gnr 355 bnr 10 og 368", date: "2026-09-08", label: { no: "Eiendommens areal", en: "Parcel area" } },
   { key: "energy_saving_pct", value: 55, unit: "%", low: 45, high: 70, source: "Plassholder inntil energigruppen leverer (kontrakt v1)", date: "2026-09-05", provisional: true, label: { no: "Energibesparelse mot TEK17", en: "Energy saving vs TEK17" } },

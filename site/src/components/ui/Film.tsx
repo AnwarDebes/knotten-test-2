@@ -52,7 +52,7 @@ export default function Film({ locale, className = "" }: { locale: Locale; class
           </button>
         </div>
       )}
-      <div className="absolute left-5 bottom-4 text-[12.5px] text-white/80">{no ? "Rendret fra den målte modellen. 14 sekunder." : "Rendered from the measured model. 14 seconds."}</div>
+      <div className="absolute left-5 bottom-4 text-[12.5px] text-white/80">{no ? "Rendret fra den målte modellen. 12 sekunder." : "Rendered from the measured model. 12 seconds."}</div>
     </div>
   );
 }

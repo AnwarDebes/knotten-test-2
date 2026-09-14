@@ -245,5 +245,7 @@
    76.8
   ]
  ],
- "note": "The whole hill parcel is the clearing extent (provisional). Trees inside are flagged cleared in trees.json."
+ "note": "Layout v5 clears only around the houses (14 m) and the roads (6.5 m); trees.json carries the flag per tree. The polygon is the hill parcel, kept for reference.",
+ "house_radius_m": 14.0,
+ "road_radius_m": 6.5
 }

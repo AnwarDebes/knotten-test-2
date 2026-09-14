@@ -28,6 +28,20 @@ bpy.ops.wm.open_mainfile(filepath=str(KN / "blender" / "knotten_master.blend"))
 scn = bpy.context.scene
 print("opened master; objects:", len(bpy.data.objects), flush=True)
 
+# the aerial textures were first loaded from a temp folder; point every missing image at the
+# copies in source/ (same file names) so the terrain renders with its imagery
+import os
+for img in bpy.data.images:
+    fp = bpy.path.abspath(img.filepath) if img.filepath else ""
+    if fp and not os.path.exists(fp):
+        alt = KN / "source" / os.path.basename(fp)
+        if alt.exists():
+            img.filepath = str(alt)
+            img.reload()
+            print("image repointed:", img.name, "->", alt, flush=True)
+        else:
+            print("image still missing:", img.name, fp, flush=True)
+
 SPECIES = {
     "spruce": {"color": (0.0115, 0.0225, 0.0105), "layers": 3, "seg": 7, "trunk_frac": 0.26},
     "pine":   {"color": (0.019, 0.032, 0.0125), "layers": 2, "seg": 7, "trunk_frac": 0.42},
@@ -178,7 +192,7 @@ for i, p in enumerate(plots):
     floor = p["local"]["z_floor"]
     w, d = p["house"]["width_m"], p["house"]["depth_m"]
     eaves, ridge = floor + p["house"]["eaves_m"], floor + p["house"]["ridge_m"]
-    ground = floor - 1.0
+    ground = floor - p["house"].get("plinth_m", 1.0)     # the terrace plinth on the downhill side
     face = math.radians(p["house"]["facing_deg"])          # the front faces the water
     ca, sa = math.cos(face), math.sin(face)
 

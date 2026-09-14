@@ -10,8 +10,8 @@ export default async function View({ params }: { params: Promise<{ locale: strin
   const locale = l as Locale;
   const no = locale === "no";
   const photos: [string, string][] = no
-    ? [["photo_fjord_wide.webp", "Snigsfjorden fra åsen, sett mot sør."], ["photo_fjord_farm.webp", "Gården på Rødberg og elvesvingen nedenfor feltet."], ["photo_sea_glimpse.webp", "Glimtet av åpent hav mellom åsene."], ["photo_sea_summer.webp", "Sommer over fjorden."]]
-    : [["photo_fjord_wide.webp", "Snigsfjorden from the hill, looking south."], ["photo_fjord_farm.webp", "The farm at Rødberg and the river bend below the field."], ["photo_sea_glimpse.webp", "The glimpse of open sea between the hills."], ["photo_sea_summer.webp", "Summer over the fjord."]];
+    ? [["photo_fjord_wide.webp", "Snigsfjorden fra åsen, sett mot sør."], ["photo_fjord_farm.webp", "Gården på Rødberg og elvesvingen nedenfor feltet."], ["photo_sea_summer.webp", "Sommer over fjorden."]]
+    : [["photo_fjord_wide.webp", "Snigsfjorden from the hill, looking south."], ["photo_fjord_farm.webp", "The farm at Rødberg and the river bend below the field."], ["photo_sea_summer.webp", "Summer over the fjord."]];
   return (
     <>
       <Nav locale={locale} />

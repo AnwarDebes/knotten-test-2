@@ -5,3 +5,5 @@ node_modules/
 *.blend1
 blender/knotten_master_v1.blend
 .env*
+__pycache__/
+renders/backup_layout_v3/

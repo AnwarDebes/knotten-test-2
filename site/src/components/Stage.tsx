@@ -311,7 +311,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
             </div>
           </div>
           {plot && mode === "plot" && !inside && (
-            <div className="hidden md:block absolute top-5 right-5 w-[min(92vw,340px)] max-h-[calc(100%-330px)] overflow-auto pointer-events-auto">
+            <div className="hidden md:block absolute top-4 right-4 w-[min(60vw,230px)] max-h-[calc(100%-300px)] overflow-auto pointer-events-auto">
               <Passport plot={plot} locale={locale} compact />
             </div>
           )}

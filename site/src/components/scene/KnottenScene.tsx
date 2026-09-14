@@ -189,8 +189,8 @@ export default function KnottenScene(props: SceneProps) {
       shadows={shadows}
       dpr={[1, quality === "lite" ? 1 : 1.5]}
       frameloop={paused ? "never" : "always"}
-      gl={{ antialias: quality !== "lite", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05, powerPreference: "high-performance" }}
-      camera={{ fov: 48, near: 0.5, far: 40000, position: presets.site.pos }}
+      gl={{ antialias: quality !== "lite", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05, powerPreference: "high-performance", logarithmicDepthBuffer: true }}
+      camera={{ fov: 48, near: 1, far: 40000, position: presets.site.pos }}
       onCreated={({ gl, scene }) => {
         gl.setClearColor("#b7c6ce");
         scene.fog = new THREE.Fog("#c5d3da", 900, 9000);
