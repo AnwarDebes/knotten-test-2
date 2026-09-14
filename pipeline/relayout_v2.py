@@ -365,7 +365,7 @@ if DO_ANIM:
         print("FRAME", f, round(time.time() - t0), "s", flush=True)
     scn.sequence_editor_create()
     se = scn.sequence_editor
-    strips = getattr(se, "strips", None) or se.sequences
+    strips = se.strips if hasattr(se, "strips") else se.sequences   # Blender 5.x names them strips
     strip = strips.new_image("fly", str(ANIM / "fly_0001.png"), 1, 1)
     for f in range(2, FRAMES + 1):
         strip.elements.append("fly_%04d.png" % f)
