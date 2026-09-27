@@ -13,6 +13,7 @@ export default async function Privacy({ params }: { params: Promise<{ locale: st
       <section className="wrap pb-24 prose">
         <h2>{no ? "Analyse" : "Analytics"}</h2>
         <p>{no ? "Trafikk måles uten informasjonskapsler og uten personopplysninger. Produkthendelser, for eksempel at et solpass ble åpnet, lagres med en anonym økt-ID." : "Traffic is measured without cookies and without personal data. Product events, for example a passport opened, are stored with an anonymous session id."}</p>
+        <p>{no ? "Velger du klassisk eller moderne utseende øverst på siden, huskes valget i en informasjonskapsel i ett år. Den brukes ikke til noe annet." : "If you choose the classic or modern appearance at the top of the page, the choice is remembered in a cookie for one year. It is used for nothing else."}</p>
         <h2>{no ? "Dine rettigheter" : "Your rights"}</h2>
         <p>{no ? "Du kan be om innsyn, eksport og sletting ved å skrive til sigve.simonsen@hotmail.com." : "You can request access, export and deletion by writing to sigve.simonsen@hotmail.com."}</p>
         <h2>{no ? "Portalen" : "The portal"}</h2>

@@ -7,9 +7,25 @@ Implements `../specs/` Release 1 in full, with the portal surfaces of Releases 2
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000  (redirects to /no)
+npm run dev        # http://localhost:3000  (Klassisk; Moderne at /no)
 npm run build && npm run start
 ```
+
+## Two designs, one site
+
+Sigve liked both designs, so the site carries both and the visitor chooses with the strip above the header ("Utseende: Klassisk | Moderne").
+
+| | Klassisk (default) | Moderne |
+|---|---|---|
+| Addresses | `/`, `/tomtene`, `/prosjektet`, ... (Norwegian only) | `/no/...`, `/en/...` |
+| Code | `src/app/(klassisk)`, `src/components/klassisk`, `src/lib/klassisk`, `public/img` | `src/app/(moderne)`, `src/components/ui`, `scene`, `charts`, `portal` |
+| Styles | `src/app/(klassisk)/globals.css`, plain CSS | `src/app/(moderne)/globals.css`, Tailwind 4 |
+
+- Each design is its own root layout (a route group), so their stylesheets never meet: switching is a full page load.
+- `src/lib/design.ts` maps every page to its twin in the other design; pages that exist in only one design open the closest match. Add a new page there too.
+- The switch (`src/components/DesignSwitch.tsx`) remembers the choice in the `knotten_design` cookie for a year; `src/proxy.ts` sends a visitor who chose Moderne from `/` to `/no`. Links to a specific page always open that page.
+- Shared by both: the interest form (`/api/leads`, the source says which design), the preview login and the portal with the admin CRM. `src/app/global-not-found.tsx` is the 404 for unknown addresses (Klassisk look); `src/app/(moderne)/not-found.tsx` covers missing Moderne pages.
+- If one design is chosen later: remove `DesignSwitch`, `design.ts`, `proxy.ts` and the other design's pages and components. The leads API, `src/lib` (store, auth) and the portal stay either way. Dropping Klassisk also means moving the front page back to `/` (or redirecting `/` to `/no`) and replacing `global-not-found.tsx`.
 
 ## What is where
 

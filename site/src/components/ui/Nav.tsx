@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
@@ -18,6 +18,9 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
   const other = locale === "no" ? "en" : "no";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // the menu sheet starts where the header ends, which is lower while the design strip above is in view
+  const header = useRef<HTMLElement>(null);
+  const [sheetTop, setSheetTop] = useState<number>();
   const session = useSession();
 
   useEffect(() => {
@@ -44,7 +47,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
   ];
 
   return (
-    <header className="sticky top-0 z-50 text-bone" style={{ height: "var(--nav-h)" }}>
+    <header ref={header} className="sticky top-0 z-50 text-bone" style={{ height: "var(--nav-h)" }}>
       <div className={`absolute inset-0 transition-opacity duration-300 ${scrolled && !open ? "opacity-100" : "opacity-0"} bg-bg/85`} style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }} />
       <div className="wrap relative h-full grid grid-cols-[auto_1fr_auto] items-center gap-6">
         <Link href={p("")} className="no-underline flex items-center" aria-label="Knotten" onClick={() => setOpen(false)}>
@@ -62,7 +65,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
             <Link href={p("/login")} className="btn btn-ghost btn-sm no-underline hidden sm:inline-flex">{d.nav.login}</Link>
           )}
           <Link className="btn btn-sm no-underline hidden sm:inline-flex" href={p("/interesse")}>{d.nav.interest}</Link>
-          <button className={`btn btn-sm btn-plain ${open ? "" : "btn-ghost"}`} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="menu">
+          <button className={`btn btn-sm btn-plain ${open ? "" : "btn-ghost"}`} onClick={() => { setSheetTop(header.current?.getBoundingClientRect().bottom); setOpen((o) => !o); }} aria-expanded={open} aria-controls="menu">
             {open ? d.nav.close : d.nav.menu}
             <span className="inline-flex gap-[3px] ml-1" aria-hidden>
               <span className="w-[5px] h-[5px] rounded-full bg-current" /><span className="w-[5px] h-[5px] rounded-full bg-current" />
@@ -72,7 +75,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
       </div>
 
       {open && (
-        <div id="menu" className="fixed inset-0 top-[var(--nav-h)] z-40 bg-bg text-bone overflow-auto">
+        <div id="menu" className="fixed inset-0 z-40 bg-bg text-bone overflow-auto" style={{ top: sheetTop ?? "var(--nav-h)" }}>
           <nav className="wrap py-8 md:py-12 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
             <div className="grid">
               {links.map(([href, label, hint], i) => (

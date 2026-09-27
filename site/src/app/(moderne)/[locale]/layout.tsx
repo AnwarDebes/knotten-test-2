@@ -3,6 +3,7 @@ import { isLocale } from "@/lib/i18n";
 import Footer from "@/components/ui/Footer";
 import Chat from "@/components/ui/Chat";
 import Motion from "@/components/ui/Motion";
+import DesignSwitch from "@/components/DesignSwitch";
 
 export function generateStaticParams() {
   return [{ locale: "no" }, { locale: "en" }];
@@ -13,6 +14,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   if (!isLocale(locale)) notFound();
   return (
     <>
+      <DesignSwitch current="moderne" locale={locale} />
       <main className="flex-1">{children}</main>
       <Footer locale={locale} />
       <Chat locale={locale} />

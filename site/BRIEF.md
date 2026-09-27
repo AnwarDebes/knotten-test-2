@@ -36,6 +36,10 @@ This file exists so nothing is lost across context compaction. Read it fully bef
   by Rødbergsveien. pipeline/plan_layout_v3.py (MIN_SPACING 15, EDGE_MARGIN 12, flats fill to TOTAL 30).
 
 ## State of the build (update as you go)
+- Two designs (2026-09-27): Sigve liked both, so the Klassisk design (was the separate knotten-web repo) now lives in
+  this site as the DEFAULT at / (src/app/(klassisk)), and this design is "Moderne" at /no and /en (src/app/(moderne)).
+  A strip above both headers, "Utseende: Klassisk | Moderne", switches to the matching page (src/lib/design.ts) and a
+  cookie makes / remember the choice (src/proxy.ts). Leads, login and the portal are shared. See README "Two designs".
 - Round 6 (2026-09-14, after the user's morning feedback): LIGHT palette from the logo (cool white, navy ink #17283a,
   fjord blue, pine, amber sun), no dark page. Motion.tsx: scroll progress bar, pointer ring, .rise reveals via
   IntersectionObserver, Words headline reveal. Ambient is CSS-only gradients (no motes; the user disliked them).

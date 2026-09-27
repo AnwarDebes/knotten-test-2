@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
-import { t } from "@/lib/i18n";
+import { isLocale, t } from "@/lib/i18n";
 import { loadPlots } from "@/lib/data";
 import { assumption } from "@/lib/assumptions";
 import { BUDGET, DIRECTION, EED, MEASURES } from "@/lib/energyPlan";
@@ -18,6 +19,8 @@ import { Words } from "@/components/ui/Motion";
 
 export default async function Landing({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  // /tomten or any other one-word address lands here; the layout's own check runs alongside, not before
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const d = t(locale);
   const no = locale === "no";

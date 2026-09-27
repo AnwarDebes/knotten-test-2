@@ -15,7 +15,7 @@ export default function InterestForm({ locale, plots, preselect }: { locale: Loc
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         name: f.get("name"), email: f.get("email"), phone: f.get("phone"), purpose: f.get("purpose"),
-        plots: f.getAll("plots"), consent_updates: !!f.get("consent_updates"), consent_investor: !!f.get("consent_investor"), consent_research: !!f.get("consent_research"), source: "web",
+        plots: f.getAll("plots"), consent_updates: !!f.get("consent_updates"), consent_investor: !!f.get("consent_investor"), consent_research: !!f.get("consent_research"), source: "web (moderne)",
       }),
     });
     if (res.ok) setState("done");

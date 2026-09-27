@@ -14,6 +14,9 @@ export async function POST(req: Request) {
   }
   if (!body.consent_updates) return NextResponse.json({ error: "consent_required" }, { status: 400 });
   const purpose = ["buy", "invest", "partner", "curious"].includes(body.purpose) ? body.purpose : "curious";
+  // the Klassisk form has a message box; it lands as the lead's first note
+  const message = String(body.message ?? "").trim().slice(0, 2000);
+  const created = new Date().toISOString();
   await updateStore("web", `new lead ${String(body.email).slice(0, 60)}`, (s) => {
     s.leads.push({
       id: newId("lead"),
@@ -26,9 +29,9 @@ export async function POST(req: Request) {
       consent_investor: !!body.consent_investor,
       consent_research: !!body.consent_research,
       source: String(body.source ?? "web").slice(0, 60),
-      created: new Date().toISOString(),
+      created,
       status: "new",
-      notes: [],
+      notes: message ? [{ at: created, by: "Nettsiden", text: message }] : [],
     });
   });
   revalidatePath("/", "layout");

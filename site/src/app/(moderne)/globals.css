@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* the Klassisk design has its own plain stylesheet; keep its class names out of this one */
+@source not "../(klassisk)";
+@source not "../../components/klassisk";
+@source not "../../lib/klassisk";
 
 /*
   Knotten, the colours of the logo: a cool white sky, navy ink for the wordmark, the fjord in two
@@ -176,6 +180,15 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 .seg > button { padding: .5rem .9rem; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--ink-2); transition: background .18s ease, color .18s ease; white-space: nowrap; }
 .seg > button:hover { color: var(--ink); }
 .seg > button[aria-selected="true"] { background: var(--ink); color: #fff; }
+
+/* the design strip above the header (components/DesignSwitch.tsx); Klassisk dresses the same markup its own way */
+.dbar { position: relative; z-index: 51; border-bottom: 1px solid var(--line); font-size: 13px; }
+.dbar-in { display: flex; justify-content: flex-end; align-items: center; gap: 10px; min-height: 36px; }
+.dbar-label { color: var(--muted); }
+.dbar-seg { display: inline-flex; padding: 2px; border-radius: 999px; background: rgba(23, 40, 58, .08); gap: 2px; }
+.dbar-seg > * { padding: .22rem .8rem; border-radius: 999px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: background .18s ease, color .18s ease; }
+.dbar-seg > a:hover { color: var(--ink); background: rgba(255, 255, 255, .7); }
+.dbar-seg > [aria-current] { background: var(--ink); color: #fff; }
 
 .chip {
   display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .7rem; border-radius: 999px; font-size: 12.5px; font-weight: 500;
