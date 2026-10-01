@@ -40,7 +40,7 @@ export default function Footer({ locale }: { locale: Locale }) {
             <span className="inline-flex items-center gap-3 text-ink"><Logo height={40} wordmark={false} /><span>{CONTACT.company}</span></span>
             <span>{CONTACT.place}</span>
             <span>{CONTACT.phone_intl}</span>
-            <span className="lg:ml-auto max-w-[60ch]">{d.footer.data} {no ? "Forutsetninger" : "Assumptions"} {ASSUMPTIONS_VERSION}.</span>
+            <span className="lg:ml-auto max-w-[60ch]">{d.footer.data} {no ? "Forutsetninger" : "Assumptions"} {ASSUMPTIONS_VERSION} ({no ? "foreløpig" : "provisional"}).</span>
           </div>
         </div>
       </div>

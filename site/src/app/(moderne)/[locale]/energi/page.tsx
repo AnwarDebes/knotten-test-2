@@ -5,9 +5,29 @@ import PageHead from "@/components/ui/PageHead";
 import Stage from "@/components/Stage";
 import { loadPlots } from "@/lib/data";
 import { BUDGET, DOCS, EED, MEASURES, DIRECTION, STATUS_SOLAR, dateLong, fmt } from "@/lib/facts";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/energi", {
+  no: { title: "Energi", description: "Energikonseptet for Knotten: retningen fra prosjekteier, energiregnskapet for hele feltet, brønnparken og vurderingen av hvert tiltak, med kilde og dato." },
+  en: { title: "Energy", description: "The energy concept for Knotten: the direction from the project owner, the energy budget for the whole field, the borehole field and the assessment of every measure, with source and date." },
+});
+
+/** One figure in the energy budget: the number, its unit, what it is and where it comes from. */
+function Fig({ v, unit, label, note }: { v: string; unit?: string; label: string; note?: string }) {
+  return (
+    <div>
+      <div className="num text-[40px] md:text-[46px]">{v}{unit && <span className="text-[14px] font-body font-normal opacity-70 ml-1.5">{unit}</span>}</div>
+      <div className="mt-1.5 text-[15px]">{label}</div>
+      {note && <div className="provenance">{note}</div>}
+    </div>
+  );
+}
 
 export default async function Energy({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   const { plots } = await loadPlots();
@@ -15,13 +35,7 @@ export default async function Energy({ params }: { params: Promise<{ locale: str
   const verdict = { yes: no ? "Ja" : "Yes", maybe: no ? "Kanskje" : "Maybe", no: no ? "Nei" : "No" };
   const verdictClass = { yes: "chip-pine", maybe: "chip-amber", no: "" };
   const cat = { production: no ? "Produksjon" : "Production", storage: no ? "Lagring og varme" : "Storage and heat", efficiency: no ? "Bygget" : "The building", control: no ? "Styring" : "Control" };
-  const Fig = ({ v, unit, label, note }: { v: string; unit?: string; label: string; note?: string }) => (
-    <div>
-      <div className="num text-[40px] md:text-[46px]">{v}{unit && <span className="text-[14px] font-body font-normal opacity-60 ml-1.5">{unit}</span>}</div>
-      <div className="mt-1.5 text-[15px]">{label}</div>
-      {note && <div className="provenance">{note}</div>}
-    </div>
-  );
+  const perYear = no ? "kWh/år" : "kWh/year";
 
   return (
     <>
@@ -48,10 +62,10 @@ export default async function Energy({ params }: { params: Promise<{ locale: str
             <p className="small mt-4 text-granite max-w-[44ch]">{BUDGET.notes[locale]}</p>
           </div>
           <div className="panel p-7 md:p-9 grid gap-x-8 gap-y-8 sm:grid-cols-2 rise rise-late">
-            <Fig v={nb(BUDGET.demand_total_kwh)} unit="kWh/år" label={no ? "Energibehov, el og varme" : "Energy demand, power and heat"} note={no ? `${BUDGET.homes} boliger à ${nb(BUDGET.el_per_home_kwh)} kWh el og ${nb(BUDGET.heat_per_home_kwh)} kWh varme, kontor ${nb(BUDGET.office_kwh)}, lager ${nb(BUDGET.storage_kwh)}` : `${BUDGET.homes} homes at ${nb(BUDGET.el_per_home_kwh)} kWh power and ${nb(BUDGET.heat_per_home_kwh)} kWh heat, office ${nb(BUDGET.office_kwh)}, storage ${nb(BUDGET.storage_kwh)}`} />
-            <Fig v={nb(BUDGET.pv.annual_kwh)} unit="kWh/år" label={no ? "Solstrøm fra takene" : "Solar from the roofs"} note={no ? `${nb(BUDGET.pv.roof_total_m2)} m² tak, ${BUDGET.pv.installed_kwp} kWp, ${BUDGET.pv.yield_kwh_per_kwp} kWh/kWp. Arket sier selv at tallet er om lag 30 % for høyt; statusoppsummeringen anslår om lag ${nb(Math.round(STATUS_SOLAR.annual_kwh / 1000) * 1000)} fra ${nb(STATUS_SOLAR.area_m2)} m²` : `${nb(BUDGET.pv.roof_total_m2)} m² of roof, ${BUDGET.pv.installed_kwp} kWp, ${BUDGET.pv.yield_kwh_per_kwp} kWh/kWp. The sheet itself says the figure is about 30 % too high; the status summary estimates about ${nb(Math.round(STATUS_SOLAR.annual_kwh / 1000) * 1000)} from ${nb(STATUS_SOLAR.area_m2)} m²`} />
-            <Fig v={nb(BUDGET.bedrock.delivered_kwh)} unit="kWh/år" label={no ? "Varme fra bergvarmeanlegget" : "Heat from the bedrock plant"} note={no ? `${nb(BUDGET.bedrock.extracted_kwh)} kWh fra brønnene, årsvarmefaktor ${nb(BUDGET.bedrock.scop)}` : `${nb(BUDGET.bedrock.extracted_kwh)} kWh from the boreholes, seasonal factor ${nb(BUDGET.bedrock.scop)}`} />
-            <Fig v={nb(BUDGET.wind.annual_kwh)} unit="kWh/år" label={no ? "Vind, hvis det bygges" : "Wind, if built"} note={no ? `${BUDGET.wind.turbines} turbiner à ${BUDGET.wind.kw_each} kW, kapasitetsfaktor ${BUDGET.wind.capacity_factor_pct} %, krever vindmåling` : `${BUDGET.wind.turbines} turbines at ${BUDGET.wind.kw_each} kW, capacity factor ${BUDGET.wind.capacity_factor_pct} %, needs a wind measurement`} />
+            <Fig v={nb(BUDGET.demand_total_kwh)} unit={perYear} label={no ? "Energibehov, el og varme" : "Energy demand, power and heat"} note={no ? `${BUDGET.homes} boliger à ${nb(BUDGET.el_per_home_kwh)} kWh el og ${nb(BUDGET.heat_per_home_kwh)} kWh varme, kontor ${nb(BUDGET.office_kwh)}, lager ${nb(BUDGET.storage_kwh)}` : `${BUDGET.homes} homes at ${nb(BUDGET.el_per_home_kwh)} kWh power and ${nb(BUDGET.heat_per_home_kwh)} kWh heat, office ${nb(BUDGET.office_kwh)}, storage ${nb(BUDGET.storage_kwh)}`} />
+            <Fig v={nb(BUDGET.pv.annual_kwh)} unit={perYear} label={no ? "Solstrøm fra takene" : "Solar from the roofs"} note={no ? `${nb(BUDGET.pv.roof_total_m2)} m² tak, ${BUDGET.pv.installed_kwp} kWp, ${BUDGET.pv.yield_kwh_per_kwp} kWh/kWp. Arket sier selv at tallet er om lag 30 % for høyt; statusoppsummeringen anslår om lag ${nb(Math.round(STATUS_SOLAR.annual_kwh / 1000) * 1000)} fra ${nb(STATUS_SOLAR.area_m2)} m²` : `${nb(BUDGET.pv.roof_total_m2)} m² of roof, ${BUDGET.pv.installed_kwp} kWp, ${BUDGET.pv.yield_kwh_per_kwp} kWh/kWp. The sheet itself says the figure is about 30 % too high; the status summary estimates about ${nb(Math.round(STATUS_SOLAR.annual_kwh / 1000) * 1000)} from ${nb(STATUS_SOLAR.area_m2)} m²`} />
+            <Fig v={nb(BUDGET.bedrock.delivered_kwh)} unit={perYear} label={no ? "Varme fra bergvarmeanlegget" : "Heat from the bedrock plant"} note={no ? `${nb(BUDGET.bedrock.extracted_kwh)} kWh fra brønnene, årsvarmefaktor ${nb(BUDGET.bedrock.scop)}` : `${nb(BUDGET.bedrock.extracted_kwh)} kWh from the boreholes, seasonal factor ${nb(BUDGET.bedrock.scop)}`} />
+            <Fig v={nb(BUDGET.wind.annual_kwh)} unit={perYear} label={no ? "Vind, hvis det bygges" : "Wind, if built"} note={no ? `${BUDGET.wind.turbines} turbiner à ${BUDGET.wind.kw_each} kW, kapasitetsfaktor ${BUDGET.wind.capacity_factor_pct} %, krever vindmåling` : `${BUDGET.wind.turbines} turbines at ${BUDGET.wind.kw_each} kW, capacity factor ${BUDGET.wind.capacity_factor_pct} %, needs a wind measurement`} />
             <Fig v={String(BUDGET.battery.total_kwh)} unit="kWh" label={no ? "Batteri, hele feltet" : "Battery, whole field"} note={no ? `${BUDGET.battery.per_home_kwh} kWh i hver bolig, ${BUDGET.battery.round_trip_pct} % rundtur` : `${BUDGET.battery.per_home_kwh} kWh in every home, ${BUDGET.battery.round_trip_pct} % round trip`} />
             <Fig v={BUDGET.prices.buy_nok.toFixed(2).replace(".", no ? "," : ".")} unit="kr/kWh" label={no ? "Kjøpspris strøm i regnskapet" : "Purchase price in the budget"} note={no ? `Salg ${nb(BUDGET.prices.sell_nok)} kr/kWh, ${nb(BUDGET.prices.co2_kg_per_kwh)} kg CO₂/kWh` : `Sale ${nb(BUDGET.prices.sell_nok)} kr/kWh, ${nb(BUDGET.prices.co2_kg_per_kwh)} kg CO₂/kWh`} />
             <div className="sm:col-span-2 provenance">{no ? "Energiregnskap, forutsetninger for månedlig regnskap, energisporet, september 2026. Fullt regneark i dokumentbanken." : "Energy budget, assumptions for the monthly budget, the energy track, September 2026. Full spreadsheet in the document bank."}</div>

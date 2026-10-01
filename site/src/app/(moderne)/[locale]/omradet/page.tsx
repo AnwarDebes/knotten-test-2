@@ -3,9 +3,18 @@ import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import Incoming from "@/components/ui/Incoming";
 import { FACT, fmt } from "@/lib/facts";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/omradet", {
+  no: { title: "Området", description: "En skogkledd knaus over Audna, nær der elva renner ut i Sniksfjorden. Vigeland, med skole, butikker og E39, ligger noen få kilometer nordøst." },
+  en: { title: "The area", description: "A wooded knoll above the Audna, near where the river flows into Sniksfjorden. Vigeland, with school, shops and the E39, is a few kilometres north-east." },
+});
 
 export default async function Area({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   const nb = (v: number) => fmt(v, no ? "no" : "en");

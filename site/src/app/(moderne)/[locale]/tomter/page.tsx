@@ -1,15 +1,23 @@
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
-import { t } from "@/lib/i18n";
+import { isLocale, t } from "@/lib/i18n";
 import { loadPlots, loadCommercial } from "@/lib/data";
 import { plotName, rowLabel, sunLabel } from "@/lib/format";
 import { FACT, word } from "@/lib/facts";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import Stage from "@/components/Stage";
+import { pageMeta } from "@/lib/meta";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/tomter", {
+  no: { title: "Tomtene", description: `Rundt ${FACT.plots} tomter i ${word(FACT.rows)} rekker på Knotten, med solpass for hver: sol gjennom året, sjø i sikt, høyde og helning.` },
+  en: { title: "Plots", description: `About ${FACT.plots} plots in ${word(FACT.rows, "en")} rows on Knotten, each with a sun passport: sun through the year, water in view, elevation and slope.` },
+});
 
 export default async function Plots({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ sort?: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const { sort = "dec" } = await searchParams;
   const locale = l as Locale;
   const d = t(locale);

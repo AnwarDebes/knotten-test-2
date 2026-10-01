@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { track } from "@/components/Track";
 import { CONTACT } from "@/lib/facts";
 
 /** Each "interessert som" choice and the purpose the project's lead records use for it. */
@@ -19,6 +20,8 @@ const ROLES: [string, "buy" | "invest" | "partner" | "curious"][] = [
 export default function InterestForm({ plot }: { plot?: string }) {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [err, setErr] = useState("");
+  const started = useRef(false);
+  const start = () => { if (!started.current) { started.current = true; track("form_start"); } };
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -33,7 +36,7 @@ export default function InterestForm({ plot }: { plot?: string }) {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          name: f.get("name"), email: f.get("email"), phone: f.get("phone"), purpose, plots: [], message: note,
+          name: f.get("name"), email: f.get("email"), phone: f.get("phone"), purpose, plots: [], message: note, website: f.get("website"),
           consent_updates: !!f.get("consent"), consent_investor: purpose === "invest", consent_research: false, source: "web (klassisk)",
         }),
       });
@@ -45,7 +48,7 @@ export default function InterestForm({ plot }: { plot?: string }) {
     setState("error");
   }
   return (
-    <form className="form" onSubmit={submit}>
+    <form className="form" onSubmit={submit} onFocus={start}>
       <label>Navn<input type="text" id="f-name" name="name" autoComplete="name" placeholder="Fornavn Etternavn" /></label>
       <label>E-post<input type="email" id="f-mail" name="email" autoComplete="email" placeholder="navn@eksempel.no" required /></label>
       <label>
@@ -57,6 +60,7 @@ export default function InterestForm({ plot }: { plot?: string }) {
       <label>Telefon (valgfritt)<input type="tel" id="f-tel" name="phone" autoComplete="tel" /></label>
       {plot && <label className="full">Tomt<input type="text" id="f-plot" name="plot" defaultValue={`Tomt ${plot}`} readOnly /></label>}
       <label className="full">Melding<textarea id="f-msg" name="message" rows={4} placeholder="Hva vil du vite mer om?" /></label>
+      <label className="sr" aria-hidden>Nettside<input type="text" name="website" tabIndex={-1} autoComplete="off" /></label>
       <label className="consent full">
         <input type="checkbox" id="f-consent" name="consent" required />
         <span className="small">Jeg samtykker til at Sigve Simonsen AS lagrer opplysningene for å kontakte meg om Knotten. Du kan trekke samtykket når som helst.</span>
@@ -66,7 +70,7 @@ export default function InterestForm({ plot }: { plot?: string }) {
         {state === "sent" && <span className="small" style={{ alignSelf: "center" }}>Sendt. Takk, interessen din er registrert.</span>}
         {state === "error" && (
           <span className="small no" style={{ alignSelf: "center" }}>
-            {err === "invalid_email" ? "Sjekk e-postadressen." : err === "consent_required" ? "Kryss av for samtykket for å sende." : `Det gikk ikke å sende. Prøv igjen, eller skriv til ${CONTACT.email}.`}
+            {err === "invalid_email" ? "Sjekk e-postadressen." : err === "consent_required" ? "Kryss av for samtykket for å sende." : err === "too_many" ? "Mange meldinger fra denne adressen på kort tid. Vent noen minutter og prøv igjen." : `Det gikk ikke å sende. Prøv igjen, eller skriv til ${CONTACT.email}.`}
           </span>
         )}
       </div>

@@ -7,6 +7,15 @@ import { BUDGET, PV_KWP_PER_HOME, fmt } from "@/lib/facts";
  * Scenario explorer: the response curves are stand-ins with the shape the energy track will
  * replace (a small table, not a black box). The starting values are the energy budget's.
  */
+function Slider({ label, value, min, max, step, unit, set }: { label: string; value: number; min: number; max: number; step: number; unit: string; set: (v: number) => void }) {
+  return (
+    <label className="block text-[14px]">
+      <div className="flex justify-between"><span>{label}</span><span className="font-semibold">{value} {unit}</span></div>
+      <input className="w-full accent-[var(--fjord)]" type="range" min={min} max={max} step={step} value={value} onChange={(e) => set(+e.target.value)} />
+    </label>
+  );
+}
+
 export default function Scenario({ locale, homes }: { locale: Locale; homes: number }) {
   const no = locale === "no";
   const [price, setPrice] = useState(BUDGET.prices.buy_nok);      // NOK/kWh incl. grid
@@ -29,17 +38,11 @@ export default function Scenario({ locale, homes }: { locale: Locale; homes: num
     const payback = saving > 0 ? netPremium / saving : Infinity;
     const co2 = ((selfUse + exportKwh) * BUDGET.prices.co2_kg_per_kwh) / 1000;            // t/yr with the energy budget's emission factor
     return { production, selfUse, importKwh, exportKwh, saving, netPremium, payback, co2, selfSufficiency: selfUse / demand };
-  }, [price, pv, battery, v2h]);
+  }, [price, pv, battery, v2h, subsidy]);
   const nok = (v: number) => Math.round(v).toLocaleString(no ? "nb-NO" : "en-GB");
-  const Slider = ({ label, value, min, max, step, unit, set }: { label: string; value: number; min: number; max: number; step: number; unit: string; set: (v: number) => void }) => (
-    <label className="block text-[14px]">
-      <div className="flex justify-between"><span>{label}</span><span className="font-semibold">{value} {unit}</span></div>
-      <input className="w-full" type="range" min={min} max={max} step={step} value={value} onChange={(e) => set(+e.target.value)} />
-    </label>
-  );
   return (
     <div className="grid gap-8 lg:grid-cols-[360px_1fr]">
-      <div className="bg-bone border line rounded-[2px] p-5 grid gap-4">
+      <div className="panel p-5 grid gap-4">
         <Slider label={no ? "Strømpris inkl. nett" : "Electricity price incl. grid"} value={price} min={0.5} max={3} step={0.05} unit="kr/kWh" set={setPrice} />
         <Slider label={no ? "Solceller per bolig" : "PV per home"} value={pv} min={0} max={16} step={1} unit="kWp" set={setPv} />
         <Slider label={no ? "Batteri per bolig" : "Battery per home"} value={battery} min={0} max={30} step={1} unit="kWh" set={setBattery} />
@@ -52,11 +55,11 @@ export default function Scenario({ locale, homes }: { locale: Locale; homes: num
           [no ? "Sparte kostnader per bolig" : "Saving per home", `${nok(r.saving)} kr/${no ? "år" : "yr"}`],
           [no ? "Hele feltet" : "Whole field", `${nok(r.saving * homes)} kr/${no ? "år" : "yr"}`],
           [no ? "Merkostnad etter støtte" : "Premium after subsidy", `${nok(r.netPremium)} kr`],
-          [no ? "Tilbakebetaling" : "Payback", isFinite(r.payback) ? `${r.payback.toFixed(1)} ${no ? "år" : "yrs"}` : ""],
+          [no ? "Tilbakebetaling" : "Payback", isFinite(r.payback) ? `${r.payback.toFixed(1).replace(".", no ? "," : ".")} ${no ? "år" : "yrs"}` : (no ? "ingen" : "none")],
           [no ? "Unngått CO₂, feltet" : "CO₂ avoided, field", `${(r.co2 * homes).toFixed(0)} t/${no ? "år" : "yr"}`],
         ].map(([l, v]) => (
           <div key={l}>
-            <div className="num text-[36px] leading-none">{v}</div>
+            <div className="num text-[32px] leading-none">{v}</div>
             <div className="text-[14px] mt-1">{l}</div>
           </div>
         ))}

@@ -10,13 +10,31 @@ const KWP = PV_KWP_PER_HOME;               // per home: 279 kWp for 1 200 m² of
 const BATTERY = BUDGET.battery.per_home_kwh; // kWh per home, the energy budget's chosen input
 const HUB = 400;          // kWh shared, provisional
 
-function loadProfile(hour: number, month: number) {
+/** Household load in kW at an hour of a month: morning and evening peaks, heating adds a base in winter. */
+export function loadProfile(hour: number, month: number) {
   // kW: morning and evening peaks, winter heating adds a base
   const winter = month <= 2 || month >= 11 ? 1.0 : month <= 4 || month >= 9 ? 0.6 : 0.3;
   const base = 0.35 + 0.9 * winter;
   const morning = Math.exp(-((hour - 7.5) ** 2) / 2.2) * 1.4;
   const evening = Math.exp(-((hour - 18.5) ** 2) / 3.0) * 2.0;
   return base + morning + evening;
+}
+
+/**
+ * The same household load, varied per home the way real households differ: morning and evening
+ * peaks up to an hour and a half earlier or later, a quarter less or more use, and one home in
+ * four with someone at home in the daytime. Deterministic per home, so every view agrees; the
+ * field's total stays about the same as 30 identical homes.
+ */
+export function homeLoad(hour: number, month: number, home: number) {
+  const r = (k: number) => { const x = Math.sin((home + 1) * 12.9898 * k + k * 78.233) * 43758.5453; return x - Math.floor(x); };
+  const winter = month <= 2 || month >= 11 ? 1.0 : month <= 4 || month >= 9 ? 0.6 : 0.3;
+  const base = 0.35 + 0.9 * winter;
+  const m = (r(1) - 0.5) * 3, e = (r(2) - 0.5) * 3;
+  const morning = Math.exp(-((hour - 7.5 - m) ** 2) / 2.2) * 1.4;
+  const evening = Math.exp(-((hour - 18.5 - e) ** 2) / 3.0) * 2.0;
+  const daytime = r(4) < 0.25 ? 0.45 * Math.exp(-((hour - 12.5) ** 2) / 8) : 0;
+  return (0.75 + r(3) * 0.5) * (base + morning + evening + daytime);
 }
 
 export function pvForPlot(plot: Plot, date: Date) {

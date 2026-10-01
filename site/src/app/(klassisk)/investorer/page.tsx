@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageHead from "@/components/klassisk/PageHead";
 import Reveal from "@/components/klassisk/Reveal";
-import { Src } from "@/components/klassisk/Source";
 import { FINAL_PHASE, weeks } from "@/lib/facts";
 
 export const metadata: Metadata = { title: "Investorer og kommune" };
@@ -43,7 +42,7 @@ export default function Investorer() {
               <div className="eyebrow">Slik jobber vi med tall</div>
               <h2>Ingen påstander uten kilde</h2>
               <p className="measure">Investorer spør om forventede besparelser, driftskostnader over tid og skalerbarhet. Svarene våre er anslag med kilde og spenn, ikke løfter, til feltet står og kan måles.</p>
-              <div className="cta-row"><Link className="btn ghost" href="/kilder">Se kildelisten</Link></div>
+              <div className="cta-row"><Link className="btn ghost" href="/kilder">Se kildelisten</Link><Link className="btn ghost" href={`/logg-inn?next=${encodeURIComponent("/no/portal/investor")}`}>Logg inn i datarommet</Link></div>
             </div>
             <div className="stack">
               <div className="eyebrow">Hva som kommer</div>

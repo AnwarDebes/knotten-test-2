@@ -1,29 +1,16 @@
-import { Newsreader, Figtree } from "next/font/google";
+import { serif, sans } from "./fonts";
 import Header from "./Header";
 import Footer from "./Footer";
 import Contours from "./Contours";
 import TerrainProgress from "./TerrainProgress";
 import SourceProvider from "./Source";
 import DesignSwitch from "@/components/DesignSwitch";
+import Track from "@/components/Track";
 
-const serif = Newsreader({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
-  display: "swap",
-});
-const sans = Figtree({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600"],
-  variable: "--font-sans",
-  display: "swap",
-});
-
-/** The whole Klassisk page around the content. Used by the Klassisk layout and by the site's 404 page. */
+/** The whole Klassisk page around the content, used by the Klassisk layout. */
 export default function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="no" className={`${serif.variable} ${sans.variable}`}>
+    <html lang="no" data-scroll-behavior="smooth" className={`${serif.variable} ${sans.variable}`}>
       <body suppressHydrationWarning>
         <Contours />
         <SourceProvider>
@@ -32,6 +19,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <main>{children}</main>
           <Footer />
           <TerrainProgress />
+          <Track design="klassisk" />
         </SourceProvider>
       </body>
     </html>

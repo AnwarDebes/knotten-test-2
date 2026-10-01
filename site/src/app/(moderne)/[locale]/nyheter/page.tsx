@@ -2,12 +2,21 @@ import type { Locale } from "@/lib/i18n";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import { loadNews } from "@/lib/data";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/nyheter", {
+  no: { title: "Nyheter", description: "Det som har skjedd i prosjektet, etter hvert som det skjer." },
+  en: { title: "News", description: "What has happened in the project, as it happens." },
+});
 
 export const dynamic = "force-dynamic";
 
 /** What the administrator has published, newest first. */
 export default async function News({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   const items = await loadNews();

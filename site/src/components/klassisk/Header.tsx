@@ -2,7 +2,9 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useSession } from "@/lib/session-client";
+import { toModerne } from "@/lib/design";
 
 const NAV = [
   ["/", "Forside"],
@@ -17,7 +19,13 @@ const NAV = [
 export default function Header() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
-  useEffect(() => setOpen(false), [path]);
+  const session = useSession();
+  // close the menu when the page changes (adjusting state during render, not in an effect)
+  const [shownFor, setShownFor] = useState(path);
+  if (shownFor !== path) {
+    setShownFor(path);
+    setOpen(false);
+  }
   return (
     <header className="top">
       <div className="wrap">
@@ -36,9 +44,10 @@ export default function Header() {
           <div className="tools">
             <span className="lang" aria-label="Språk">
               <span className="on">NO</span>
-              <span>EN</span>
+              {/* English exists in the Moderne design only; EN opens the same page there */}
+              <a href={toModerne(path ?? "/").replace(/^\/no(?=\/|$)/, "/en")} hrefLang="en" lang="en" title="English (modern design)">EN</a>
             </span>
-            <Link className="btn ghost sm" href="/logg-inn">Logg inn</Link>
+            {session ? <Link className="btn ghost sm" href="/no/portal">Portalen</Link> : <Link className="btn ghost sm" href="/logg-inn">Logg inn</Link>}
             <Link className="btn sm" href="/kontakt">Meld interesse</Link>
           </div>
         </nav>

@@ -2,13 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import type { Locale } from "@/lib/i18n";
-import { t } from "@/lib/i18n";
+import { isLocale, t } from "@/lib/i18n";
 import { loadPlots, loadPlot, loadCommercial, loadSettings } from "@/lib/data";
 import { plotName, rowLabel, sunLabel } from "@/lib/format";
 import Nav from "@/components/ui/Nav";
 import Stage from "@/components/Stage";
 import Passport from "@/components/ui/Passport";
 import HorizonChart from "@/components/charts/HorizonChart";
+import { withAlternates } from "@/lib/meta";
 
 export async function generateStaticParams() {
   const { plots } = await loadPlots();
@@ -17,19 +18,21 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; id: string }> }): Promise<Metadata> {
   const { id, locale } = await params;
+  if (!isLocale(locale)) notFound();
   const p = await loadPlot(id);
-  if (!p) return {};
   const no = locale === "no";
-  return {
-    title: `${plotName(id, no)}. Knotten`,
+  if (!p) return { title: no ? "Fant ikke siden" : "Page not found" };
+  return withAlternates(`/tomter/${id}`, no ? "no" : "en", {
+    title: plotName(id, no),
     description: no
-      ? `Sol 21. desember: ${p.sun.dec21.hours} timer. Sjø i sikt: ${p.view.water_visible_deg} grader. ${p.view.open_sea_visible ? "Åpent hav i sikt." : ""}`
-      : `Sun 21 December: ${p.sun.dec21.hours} h. Water in view: ${p.view.water_visible_deg} degrees. ${p.view.open_sea_visible ? "Open sea visible." : ""}`,
-  };
+      ? `Sol 21. desember: ${p.sun.dec21.hours.toLocaleString("nb-NO", { maximumFractionDigits: 1 })} timer. Sjø i sikt: ${p.view.water_visible_deg} grader.${p.view.open_sea_visible ? " Åpent hav i sikt." : ""}`
+      : `Sun 21 December: ${p.sun.dec21.hours.toLocaleString("en-GB", { maximumFractionDigits: 1 })} hours. Water in view: ${p.view.water_visible_deg} degrees.${p.view.open_sea_visible ? " Open sea visible." : ""}`,
+  });
 }
 
 export default async function PlotPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale: l, id } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   const d = t(locale);
@@ -75,7 +78,7 @@ export default async function PlotPage({ params }: { params: Promise<{ locale: s
           <table className="table mt-8">
             <tbody>
               <tr><th>{no ? "Koordinater" : "Coordinates"}</th><td>{plot.lat.toFixed(6)}, {plot.lon.toFixed(6)} (UTM32 {plot.utm32_east.toFixed(0)} E, {plot.utm32_north.toFixed(0)} N)</td></tr>
-              <tr><th>{no ? "Gulvnivå" : "Floor level"}</th><td>{plot.local.z_floor.toFixed(1)} moh.</td></tr>
+              <tr><th>{no ? "Gulvnivå" : "Floor level"}</th><td>{plot.local.z_floor.toFixed(1)} {no ? "moh." : "m a.s.l."}</td></tr>
               <tr><th>{no ? "Sol 21. mars" : "Sun 21 March"}</th><td>{plot.sun.mar21.hours} h, {sunLabel(plot.sun.mar21.first_sun_cet)} {no ? "til" : "to"} {sunLabel(plot.sun.mar21.last_sun_cet)}</td></tr>
               <tr><th>{no ? "Lengste sikt over vann" : "Farthest water in view"}</th><td>{(plot.view.farthest_water_m / 1000).toFixed(1)} km</td></tr>
               <tr><th>{no ? "Hus i modellen" : "House in the model"}</th><td>{plot.house.width_m} × {plot.house.depth_m} m, {no ? "gesims" : "eaves"} {plot.house.eaves_m} m, {no ? "møne" : "ridge"} {plot.house.ridge_m} m ({no ? "plassholder" : "placeholder"})</td></tr>

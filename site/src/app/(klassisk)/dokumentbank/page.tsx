@@ -3,15 +3,16 @@ import Link from "next/link";
 import PageHead from "@/components/klassisk/PageHead";
 import Reveal from "@/components/klassisk/Reveal";
 import { DOCS, EED, dateNo, type Access } from "@/lib/facts";
+import { portalDocPath } from "@/lib/docRegister";
 
 export const metadata: Metadata = { title: "Dokumentbank" };
 
-type Doc = { t: string; m: string; date: string; type: string; access: "Offentlig" | "Innlogging"; href?: string };
+type Doc = { key?: string; t: string; m: string; date: string; type: string; access: "Offentlig" | "Innlogging"; href?: string };
 
 /** Date, access and file come from the shared document register; title and description are Klassisk's own. */
 const doc = (id: keyof typeof DOCS, t: string, m: string, type: string, href?: string): Doc => {
   const d: { date: string; access: Access; file?: string } = DOCS[id];
-  return { t, m, type, date: dateNo(d.date), access: d.access === "login" ? "Innlogging" : "Offentlig", href: href ?? d.file };
+  return { key: id, t, m, type, date: dateNo(d.date), access: d.access === "login" ? "Innlogging" : "Offentlig", href: href ?? d.file };
 };
 
 const GROUPS: { name: string; docs: Doc[] }[] = [
@@ -46,7 +47,7 @@ const GROUPS: { name: string; docs: Doc[] }[] = [
 export default function Dokumentbank() {
   return (
     <>
-      <PageHead title="Dokumentbank" crumb="Dokumentbank" aside={<Link className="btn ghost" href="/logg-inn">Logg inn for interne dokumenter</Link>}>
+      <PageHead title="Dokumentbank" crumb="Dokumentbank" aside={<Link className="btn ghost" href={`/logg-inn?next=${encodeURIComponent("/no/portal/dokumenter")}`}>Logg inn for interne dokumenter</Link>}>
         <p>Rapporter, kart, bilder og notater samlet på ett sted. Offentlige dokumenter kan lastes ned av alle. Arbeidsdokumenter krever innlogging.</p>
       </PageHead>
       <section className="sec" style={{ paddingTop: 0 }}>
@@ -56,7 +57,7 @@ export default function Dokumentbank() {
               <div key={g.name}>
                 <div className="grp">{g.name}</div>
                 {g.docs.map((d) => (
-                  <Link key={d.t} className="doc" href={d.access === "Innlogging" ? "/logg-inn" : d.href ?? "#"}>
+                  <Link key={d.t} className="doc" href={d.access === "Innlogging" && d.key ? `/logg-inn?next=${encodeURIComponent(portalDocPath(d.key))}` : d.href ?? "#"}>
                     <span className="ic">{d.type}</span>
                     <span><span className="t">{d.t}</span><br /><span className="m">{d.m}</span></span>
                     <span className="m">{d.date}</span>

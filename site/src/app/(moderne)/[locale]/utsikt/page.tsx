@@ -4,9 +4,18 @@ import PageHead from "@/components/ui/PageHead";
 import ProofSlider from "@/components/ui/ProofSlider";
 import { Figure } from "@/components/ui/Provenance";
 import { assumption } from "@/lib/facts";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/utsikt", {
+  no: { title: "Utsikten", description: "Fra Knotten går blikket sørover langs Audna, ut Sniksfjorden og videre til åpent hav, regnet ut fra terrenget i hver grad rundt horisonten." },
+  en: { title: "The view", description: "From Knotten the eye runs south along the Audna, out Sniksfjorden and on to open sea, computed from the terrain in every degree around the horizon." },
+});
 
 export default async function View({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   const photos: [string, string][] = no

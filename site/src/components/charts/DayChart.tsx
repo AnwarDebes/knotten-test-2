@@ -23,7 +23,7 @@ export default function DayChart({ frames, locale }: { frames: { pv: number; loa
       <div className="flex flex-wrap gap-4 text-[13px] mt-1">
         <span><span className="inline-block w-3 h-[2px] align-middle mr-1" style={{ background: "#d9a441" }} />PV</span>
         <span><span className="inline-block w-3 h-[2px] align-middle mr-1" style={{ background: "#2b3a45" }} />{no ? "Forbruk" : "Load"}</span>
-        <span><span className="inline-block w-3 h-[2px] align-middle mr-1 border-t border-dashed" style={{ borderColor: "#5f7d6a" }} />SOC (0 til 100 %)</span>
+        <span><span className="inline-block w-3 h-[2px] align-middle mr-1 border-t border-dashed" style={{ borderColor: "#5f7d6a" }} />{no ? "SOC (0 til 100 %)" : "SOC (0 to 100 %)"}</span>
       </div>
     </div>
   );

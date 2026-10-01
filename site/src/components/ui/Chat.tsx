@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 
-type Msg = { from: "you" | "ai"; text: string };
+type Msg = { from: "you" | "ai"; text: string; links?: { href: string; label: string }[]; source?: string };
 
 /** The mark of Knotten AI: a small sun that turns slowly, amber into fjord blue. */
 export function Orb({ size = 22 }: { size?: number }) {
@@ -14,9 +15,9 @@ export function Orb({ size = 22 }: { size?: number }) {
 }
 
 /**
- * Knotten AI: a floating assistant that is a preview today. It answers with a fixed, honest line
- * and points to the interest form. When the project's real data is in place it gets a model behind
- * it that answers from the plots, the energy figures and the documents.
+ * Knotten AI: a floating assistant that answers from the project's own data (/api/ask): the plots,
+ * sun and view, the energy concept, the power price and the weather right now, the road, the area
+ * and the release. It links to where each answer is shown, and says so when it does not know.
  */
 export default function Chat({ locale }: { locale: Locale }) {
   const no = locale === "no";
@@ -26,16 +27,12 @@ export default function Chat({ locale }: { locale: Locale }) {
   const [typing, setTyping] = useState(false);
   const list = useRef<HTMLDivElement>(null);
   const greeting = no
-    ? "Hei. Jeg er Knotten AI. Snart kan du spørre meg om tomter, sol, utsikt, energi og dokumenter. I dag er jeg en forhåndsvisning uten sanntidsdata."
-    : "Hi. I am Knotten AI. Soon you can ask me about plots, sun, view, energy and documents. Today I am a preview without live data.";
-  const canned = no
-    ? "Kun forhåndsvisning. Jeg svarer ikke ennå og bruker ingen sanntidsdata. Meld interesse eller kontakt teamet i mellomtiden."
-    : "Preview only. I do not answer yet and use no live data. Register interest or contact the team in the meantime.";
+    ? "Hei. Jeg er Knotten AI. Spør meg om tomtene, sol og utsikt, energien, strømprisen eller været nå, eller når tomtene slippes. Jeg svarer fra prosjektets egne data."
+    : "Hi. I am Knotten AI. Ask me about the plots, sun and view, the energy, the power price or the weather right now, or when the plots are released. I answer from the project's own data.";
   const suggestions = no
-    ? ["Hvilken tomt har mest vintersol?", "Hvor mange tomter har sjøutsikt?", "Når slippes tomtene?"]
-    : ["Which plot has the most winter sun?", "How many plots have a sea view?", "When are the plots released?"];
-
-  useEffect(() => { if (open && msgs.length === 0) setMsgs([{ from: "ai", text: greeting }]); }, [open, msgs.length, greeting]);
+    ? ["Hvilken tomt har mest vintersol?", "Hvor mange tomter har sjøutsikt?", "Når slippes tomtene?", "Hva koster strømmen nå?"]
+    : ["Which plot has the most winter sun?", "How many plots have a sea view?", "When are the plots released?", "What does power cost now?"];
+  const all: Msg[] = [{ from: "ai", text: greeting }, ...msgs];
   useEffect(() => { list.current?.scrollTo({ top: list.current.scrollHeight, behavior: "smooth" }); }, [msgs, typing]);
   useEffect(() => {
     if (!open) return;
@@ -44,13 +41,21 @@ export default function Chat({ locale }: { locale: Locale }) {
     return () => window.removeEventListener("keydown", key);
   }, [open]);
 
-  const ask = (q: string) => {
+  const ask = async (q: string) => {
     const t = q.trim();
     if (!t || typing) return;
     setMsgs((m) => [...m, { from: "you", text: t }]);
     setText("");
     setTyping(true);
-    setTimeout(() => { setTyping(false); setMsgs((m) => [...m, { from: "ai", text: canned }]); }, 900);
+    try {
+      const res = await fetch("/api/ask", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ q: t, locale }) });
+      const a = (await res.json()) as { text?: string; links?: Msg["links"]; source?: string };
+      setMsgs((m) => [...m, { from: "ai", text: a.text ?? (no ? "Noe gikk galt. Prøv igjen." : "Something went wrong. Try again."), links: a.links, source: a.source }]);
+    } catch {
+      setMsgs((m) => [...m, { from: "ai", text: no ? "Jeg fikk ikke kontakt akkurat nå. Prøv igjen om litt." : "I could not connect just now. Try again shortly." }]);
+    } finally {
+      setTyping(false);
+    }
   };
 
   return (
@@ -72,18 +77,26 @@ export default function Chat({ locale }: { locale: Locale }) {
             <Orb size={26} />
             <div>
               <div className="font-medium text-[15px] leading-none">Knotten AI</div>
-              <div className="text-[12px] text-muted mt-1">{no ? "Forhåndsvisning, ingen sanntidsdata" : "Preview, no live data"}</div>
+              <div className="text-[12px] text-muted mt-1">{no ? "Svarer fra prosjektets egne data" : "Answers from the project's own data"}</div>
             </div>
             <button className="ml-auto w-9 h-9 rounded-full grid place-items-center hover:bg-ink/10" onClick={() => setOpen(false)} aria-label={no ? "Lukk" : "Close"}>
               <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
             </button>
           </div>
           <div ref={list} className="px-4 py-4 grid gap-2.5 max-h-[340px] overflow-auto text-[14.5px]">
-            {msgs.map((m, i) => (
-              <div key={i} className={`max-w-[86%] rounded-2xl px-3.5 py-2.5 leading-snug ${m.from === "ai" ? "bg-bg-2 text-ink rounded-tl-md" : "bg-ink text-white justify-self-end rounded-tr-md"}`}>{m.text}</div>
+            {all.map((m, i) => (
+              <div key={i} className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 leading-snug ${m.from === "ai" ? "bg-bg-2 text-ink rounded-tl-md" : "bg-ink text-white justify-self-end rounded-tr-md"}`}>
+                {m.text}
+                {m.links && m.links.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {m.links.map((l) => <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="chip chip-fjord no-underline !text-[12px] hover:!bg-[var(--sky)]">{l.label}</Link>)}
+                  </div>
+                )}
+                {m.source === "ai" && <div className="text-[11.5px] text-muted mt-1.5">{no ? "Skrevet av en språkmodell ut fra prosjektets fakta." : "Written by a language model from the project's facts."}</div>}
+              </div>
             ))}
             {typing && <div className="dots px-3.5 py-2.5 bg-bg-2 rounded-2xl rounded-tl-md justify-self-start"><span /><span /><span /></div>}
-            {msgs.length <= 1 && (
+            {msgs.length === 0 && (
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {suggestions.map((s) => <button key={s} className="chip hover:bg-ink/20 transition-colors" onClick={() => ask(s)}>{s}</button>)}
               </div>

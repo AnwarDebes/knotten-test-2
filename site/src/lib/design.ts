@@ -20,6 +20,7 @@ const KLASSISK_TO_MODERNE: Record<string, string> = {
   "/dokumentbank": "/dokumenter",
   "/kontakt": "/interesse",
   "/logg-inn": "/login",
+  "/logg-inn/passord": "/login",
   "/personvern": "/personvern",
   // only in Klassisk: the closest Moderne page
   "/kart": "/omradet",

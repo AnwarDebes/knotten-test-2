@@ -16,10 +16,10 @@ export function Figure({ a, locale, size = "lg" }: { a: Assumption; locale: Loca
   return (
     <div>
       <div className={`num ${size === "lg" ? "text-[56px] md:text-[72px]" : "text-[38px]"} leading-none`}>
-        {v}<span className="text-[0.38em] ml-2 font-body font-normal opacity-60">{a.unit}</span>
+        {v}<span className="text-[0.38em] ml-2 font-body font-normal opacity-70">{a.unit[locale]}</span>
       </div>
       <div className="mt-2 text-[15.5px]">{a.label[locale]}</div>
-      <Provenance source={a.source} date={a.date} provisional={a.provisional} locale={locale} />
+      <Provenance source={a.source[locale]} date={a.date} provisional={a.provisional} locale={locale} />
     </div>
   );
 }

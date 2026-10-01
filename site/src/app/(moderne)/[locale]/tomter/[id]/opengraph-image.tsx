@@ -20,7 +20,7 @@ export default async function Image({ params }: { params: Promise<{ locale: stri
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", background: "#17212a", color: "#f6f4ee", padding: 56, fontFamily: "Georgia, serif" }}>
-        <div style={{ fontSize: 28, opacity: 0.8 }}>KNOTTEN · Sjøutsikt i Rødberg</div>
+        <div style={{ fontSize: 28, opacity: 0.8 }}>{`KNOTTEN · ${no ? "Sjøutsikt i Rødberg" : "Sea view at Rødberg"}`}</div>
         <div style={{ fontSize: 96, marginTop: 12 }}>{name}</div>
         {p && (
           <div style={{ display: "flex", gap: 56, marginTop: 40 }}>

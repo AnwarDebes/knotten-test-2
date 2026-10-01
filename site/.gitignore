@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 data/leads.json
 .playwright-mcp/
+
+# the portal's accounts, password hashes, uploaded files and statistics: never in git
+data/private/

@@ -1,13 +1,13 @@
 import { promises as fs } from "fs";
 import path from "path";
-import type { Role } from "./auth-shared";
 import { CONTACT } from "./facts";
+import { mutate, readJSON, STORAGE, writeJSON } from "./server/kv";
 
 /**
- * The project's working records: leads, plot status and prices, news, users and settings.
- * Preview storage is one JSON file (site/data/crm.json), read and written by the admin's server
- * actions. Production swaps this module for Supabase tables with the same shapes; every function
- * here is the adapter surface, nothing else in the site touches the file.
+ * The project's working records: leads, plot status and prices, news, settings and the activity
+ * log. Stored through lib/server/kv (a JSON file locally, Redis on Vercel); every function here is
+ * the adapter surface, nothing else in the site touches the records. Accounts and passwords live
+ * apart, in lib/server/accounts.
  */
 export type LeadStatus = "new" | "contacted" | "qualified" | "won" | "lost";
 export type Lead = {
@@ -24,26 +24,39 @@ export type Lead = {
   created: string;
   status: LeadStatus;
   notes: { at: string; by: string; text: string }[];
+  /** When someone from the project first answered (status moved on from new, or a note was written). */
+  replied?: string;
+  /** Not a real interested party (supplier, job seeker, spam): kept, but not counted in the figures. */
+  excluded?: boolean;
 };
 export type PlotStatus = "unreleased" | "available" | "reserved" | "sold";
 export type PlotState = { id: string; status: PlotStatus; price_nok?: number; note?: string; updated?: string };
 export type NewsItem = { id: string; date: string; title: { no: string; en: string }; text: { no: string; en: string }; published: boolean };
-export type User = { email: string; name: string; role: Exclude<Role, "public">; added: string };
-export type Settings = { release_note: { no: string; en: string }; contact_email: string; contact_phone: string; weekly_digest: boolean };
-export type Activity = { at: string; by: string; what: string };
-export type Store = { leads: Lead[]; plots: Record<string, PlotState>; news: NewsItem[]; users: User[]; settings: Settings; activity: Activity[] };
-
 /**
- * Where the records live. Locally: site/data/crm.json. On Vercel the project folder is read-only,
- * so the file goes to /tmp: it works for a demo and survives while the instance is warm, but a
- * real deployment must move this to Vercel Blob, KV or Supabase (same shapes, this file only).
+ * Targets for the business success criteria the project owner asked for (registrations, conversion,
+ * investor interest, website engagement, stakeholder participation). Empty until the owner sets
+ * them: the website plan sets targets after two months of real traffic, not before.
  */
-const ON_VERCEL = !!process.env.VERCEL;
-const DIR = ON_VERCEL ? "/tmp/knotten" : path.join(process.cwd(), "data");
-const FILE = path.join(DIR, "crm.json");
+export type KpiTargets = {
+  registrations_month?: number;
+  conversion_pct?: number;
+  reply_hours?: number;
+  investor_conversations?: number;
+  visitors_month?: number;
+  form_completion_pct?: number;
+  active_stakeholders?: number;
+};
+export type Settings = { release_note: { no: string; en: string }; contact_email: string; contact_phone: string; weekly_digest: boolean; digest_lang?: "no" | "en"; kpi: KpiTargets };
+export type Activity = { at: string; by: string; what: string };
+export type Store = { leads: Lead[]; plots: Record<string, PlotState>; news: NewsItem[]; settings: Settings; activity: Activity[] };
+
+/** The first lead form wrote site/data/leads.json; its leads are taken over once. */
 const LEGACY = path.join(process.cwd(), "data", "leads.json");
+export const KPI_KEYS = ["registrations_month", "conversion_pct", "reply_hours", "investor_conversations", "visitors_month", "form_completion_pct", "active_stakeholders"] as const;
 
 export const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "qualified", "won", "lost"];
+/** The steps of the market plan's conversion measure: registered, contacted, meeting, reservation. */
+export const LEAD_LABEL: Record<LeadStatus, { no: string; en: string }> = { new: { no: "Ny", en: "New" }, contacted: { no: "Kontaktet", en: "Contacted" }, qualified: { no: "Møte avtalt", en: "Meeting set" }, won: { no: "Reservert eller kjøpt", en: "Reserved or bought" }, lost: { no: "Tapt", en: "Lost" } };
 export const PLOT_STATUSES: PlotStatus[] = ["unreleased", "available", "reserved", "sold"];
 
 /** Five made-up people so the owner can see how the pipeline works before the form is in use. Removed with one click in the admin. */
@@ -66,49 +79,45 @@ const SEED: Store = {
     { id: "n-2026-09-04", date: "2026-09-04", published: true, title: { no: "Foreløpig retning for energikonseptet", en: "Preliminary direction for the energy concept" }, text: { no: "Prosjekteier ga en foreløpig retning for energikonseptet: eget batteri og energistyring i hver bolig med mulig tilgang til felles lager, mikronett undersøkes uten å være en forutsetning, sandbatteri holdes åpent (senere lagt bort), sol på boligene pluss et fellesanlegg på om lag 600 paneler, og vind vurderes som supplement. Målet er et robust og fleksibelt system, ikke et felt bygget rundt én teknologi.", en: "The project owner gave a preliminary direction for the energy concept: a battery and energy management in every home with possible access to shared storage, a microgrid investigated without being a prerequisite, the sand battery kept open (since dropped), solar on the homes plus a shared plant of about 600 panels, and wind evaluated as a supplement. The aim is a robust, flexible system, not a field built around one technology." } },
     { id: "n-2026-08-25", date: "2026-08-25", published: true, title: { no: "Praksisperioden med Universitetet i Agder er i gang", en: "The internship with the University of Agder has started" }, text: { no: "Studenter fra Universitetet i Agder arbeider i to fagspor, energi og teknikk, og profilering og marked, med en digital plattform som samler arbeidet.", en: "Students from the University of Agder work in two tracks, energy and technology, and profile and market, with a digital platform bringing the work together." } },
   ],
-  users: [
-    { email: "sigve.simonsen@hotmail.com", name: "Sigve Simonsen", role: "superadmin", added: "2026-09-13" },
-  ],
-  settings: { release_note: { no: "Tomtene slippes etter at reguleringsplanen er vedtatt.", en: "The plots are released once the zoning plan is adopted." }, contact_email: CONTACT.email, contact_phone: CONTACT.phone_intl, weekly_digest: true },
+  settings: { release_note: { no: "Tomtene slippes etter at reguleringsplanen er vedtatt.", en: "The plots are released once the zoning plan is adopted." }, contact_email: CONTACT.email, contact_phone: CONTACT.phone_intl, weekly_digest: true, kpi: {} },
   activity: [],
 };
 
-let lock: Promise<unknown> = Promise.resolve();
+function complete(s: Partial<Store> & { users?: unknown }): Store {
+  const { users: _legacy, ...rest } = s;
+  void _legacy;
+  return { ...SEED, ...rest, settings: { ...SEED.settings, ...(rest.settings ?? {}), kpi: { ...(rest.settings?.kpi ?? {}) } } };
+}
 
-export async function readStore(): Promise<Store> {
-  try {
-    const raw = await fs.readFile(FILE, "utf-8");
-    const s = JSON.parse(raw) as Partial<Store>;
-    return { ...SEED, ...s, settings: { ...SEED.settings, ...(s.settings ?? {}) } };
-  } catch {
-    // first run: take over any leads the old form wrote
-    const store: Store = { ...SEED, leads: [...EXAMPLE_LEADS] };
+async function firstRun(): Promise<Store> {
+  // first run: take over any leads the old form wrote
+  const store: Store = { ...SEED, leads: [...EXAMPLE_LEADS] };
+  if (STORAGE === "file") {
     try {
       const old = JSON.parse(await fs.readFile(LEGACY, "utf-8")) as Omit<Lead, "id" | "status" | "notes">[];
       store.leads.push(...old.map((l, i) => ({ id: `lead-${Date.parse(l.created) || i}`, status: "new" as const, notes: [], ...l })));
     } catch { /* nothing to migrate */ }
-    await writeRaw(store);
-    return store;
   }
+  await writeJSON("crm", store);
+  return store;
 }
 
-async function writeRaw(store: Store) {
-  await fs.mkdir(path.dirname(FILE), { recursive: true });
-  await fs.writeFile(FILE, JSON.stringify(store, null, 1), "utf-8");
+export async function readStore(): Promise<Store> {
+  const s = await readJSON<Partial<Store>>("crm");
+  return s ? complete(s) : firstRun();
 }
 
 /** Read, change, write, one at a time. Returns what the mutator returns. */
 export async function updateStore<T>(by: string, what: string, fn: (s: Store) => T | Promise<T>): Promise<T> {
-  const run = async () => {
-    const s = await readStore();
+  return mutate<Store, T>("crm", () => ({ ...SEED, leads: [...EXAMPLE_LEADS] }), async (raw) => {
+    const s = complete(raw);
     const out = await fn(s);
     s.activity = [{ at: new Date().toISOString(), by, what }, ...s.activity].slice(0, 200);
-    await writeRaw(s);
+    // write the completed shape back into the object the storage layer will save
+    for (const k of Object.keys(raw) as (keyof Store | "users")[]) delete (raw as Record<string, unknown>)[k];
+    Object.assign(raw, s);
     return out;
-  };
-  const p = lock.then(run, run);
-  lock = p.catch(() => undefined);
-  return p;
+  });
 }
 
 export function newId(prefix: string) {

@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react-hooks/immutability -- react-three-fiber's own pattern: three.js materials, geometry and loaded scenes are changed in effects and useFrame, outside React's render */
 import { useEffect } from "react";
 import * as THREE from "three";
 import { useGLTF } from "@react-three/drei";

@@ -3,6 +3,8 @@ import PageHead from "@/components/klassisk/PageHead";
 import Reveal from "@/components/klassisk/Reveal";
 import { Src } from "@/components/klassisk/Source";
 import { FACT } from "@/lib/facts";
+import { beforeAfter, meters, type Building } from "@/lib/server/records";
+import MeterChart from "@/components/klassisk/MeterChart";
 
 export const metadata: Metadata = { title: "Eksisterende bygg" };
 
@@ -18,7 +20,41 @@ function EmptyChart({ title }: { title: string }) {
   );
 }
 
-export default function Bygg() {
+/** Measured data for a building, or nothing until the owner has loaded it and chosen to publish it. */
+function Measured({ b, title, text }: { b?: Building; title: string; text: string }) {
+  if (!b || !b.public || b.readings.length === 0) {
+    return (
+      <>
+        <div>
+          <span className="tag blue">Kommer</span>
+          <h3>{title}</h3>
+          <p className="small" style={{ marginTop: 8 }}>{text}</p>
+        </div>
+        <EmptyChart title={title} />
+      </>
+    );
+  }
+  const nf = (v: number) => Math.round(v).toLocaleString("nb-NO");
+  const first = b.readings[0].month, last = b.readings[b.readings.length - 1].month;
+  return (
+    <>
+      <div>
+        <span className="tag green">Målt</span>
+        <h3>{title}</h3>
+        <p className="small" style={{ marginTop: 8 }}>{`Målt forbruk per måned fra ${first} til ${last}. Kilde: ${b.source ?? "måleverdier"}.`}</p>
+        {b.upgrades.map((u) => {
+          const ba = beforeAfter(b.readings, u.date);
+          return <p key={u.id} className="small" style={{ marginTop: 8 }}><strong>{u.title}</strong>{` (${u.date})`}{ba ? `: ${ba.change_pct > 0 ? "+" : ""}${ba.change_pct.toFixed(0)} % de ${ba.pairs} månedene etter mot før, ${nf(ba.after)} mot ${nf(ba.before)} kWh. Ikke temperaturkorrigert.` : ": før og etter vises når det finnes målinger på begge sider."}</p>;
+        })}
+      </div>
+      <MeterChart b={b} />
+    </>
+  );
+}
+
+export default async function Bygg() {
+  const { buildings } = await meters.read();
+  const office = buildings.find((x) => x.id === "office"), house = buildings.find((x) => x.id === "house");
   return (
     <>
       <PageHead title="Eksisterende bygg" crumb="Eksisterende bygg">
@@ -33,20 +69,10 @@ export default function Bygg() {
           </Reveal>
 
           <Reveal className="meter" delay={100}>
-            <div>
-              <span className="tag blue">Kommer</span>
-              <h3>Strømforbruk, kontorbygget</h3>
-              <p className="small" style={{ marginTop: 8 }}>Historisk forbruk vises her når målingene er hentet inn. Så kan vi sammenligne før og etter utvidelsen, og vise faktisk ytelse i stedet for løfter.</p>
-            </div>
-            <EmptyChart title="Kontorbygget" />
+            <Measured b={office} title="Strømforbruk, kontorbygget" text="Historisk forbruk vises her når målingene er hentet inn. Så kan vi sammenligne før og etter utvidelsen, og vise faktisk ytelse i stedet for løfter." />
           </Reveal>
           <Reveal className="meter" delay={160}>
-            <div>
-              <span className="tag blue">Kommer</span>
-              <h3>Strømforbruk, bolighuset</h3>
-              <p className="small" style={{ marginTop: 8 }}>Et vanlig hus i dag, målt time for time. Referansen for hva de nye boligene skal slå.</p>
-            </div>
-            <EmptyChart title="Bolighuset" />
+            <Measured b={house} title="Strømforbruk, bolighuset" text="Et vanlig hus i dag, målt time for time. Referansen for hva de nye boligene skal slå." />
           </Reveal>
           <p className="small" style={{ marginTop: 20, maxWidth: "70ch" }}>Målingene leses fra strømmålernes HAN-port eller hentes fra Elhub. Nettsiden viser data, den styrer ingenting i byggene.</p>
         </div>

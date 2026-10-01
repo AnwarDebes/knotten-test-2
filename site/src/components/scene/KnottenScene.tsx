@@ -1,5 +1,6 @@
 "use client";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+/* eslint-disable react-hooks/immutability -- react-three-fiber's own pattern: the camera, the controls and the renderer are three.js objects, changed in useFrame outside React's render */
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -177,8 +178,8 @@ export default function KnottenScene(props: SceneProps) {
   const clearedGroup = useRef<THREE.Group>(null);
   const proposalGroup = useRef<THREE.Group>(null);
   const registry = useRef<PlotRegistry>(new Map());
-  const [shadows, setShadows] = useState(false);
-  useEffect(() => { setShadows(quality === "full" && !(window.innerWidth < 900 || navigator.maxTouchPoints > 1)); }, [quality]);
+  // the scene only renders in the browser (Stage loads it with ssr: false), so the screen can be read directly
+  const shadows = useMemo(() => quality === "full" && !(window.innerWidth < 900 || navigator.maxTouchPoints > 1), [quality]);
   const plot = useMemo(() => plots.find((p) => p.id === selectedPlot) ?? null, [plots, selectedPlot]);
   const presets = useMemo(() => framePresets(plots), [plots]);
   const showOverlay = state === "lived" && !!frame;

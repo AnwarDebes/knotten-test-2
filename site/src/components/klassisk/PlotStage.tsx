@@ -57,7 +57,7 @@ export default function PlotStage() {
         <div className="scompass" aria-hidden="true">
           <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#fff" stroke="#D4DCE4" /><path d="M20 6l6 16-6-4-6 4z" fill="#14263D" /><path d="M20 34l-6-16 6 4 6-4z" fill="#C9D3DC" /><text x="20" y="4" textAnchor="middle" fontSize="7" fill="#14263D" fontWeight="700">N</text></svg>
         </div>
-        <div className="strip" role="tablist" aria-label="Scener">
+        <div className="strip" role="group" aria-label="Scener">
           {STRIP.map((b) => (
             <button key={b.label} type="button" aria-pressed={scene === b.scene && row === b.row} onClick={() => go(b.scene, b.row)}>
               <span className={`th ${b.scene === "plan" && !b.row ? "th-plan" : b.scene === "plan" ? "th-row" : b.scene === "omgivelser" ? "" : ""}`}>

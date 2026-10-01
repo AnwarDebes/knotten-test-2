@@ -2,17 +2,26 @@ import type { Locale } from "@/lib/i18n";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import { DOCS, FACT, type Access } from "@/lib/facts";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/dokumenter", {
+  no: { title: "Dokumenter", description: "Det prosjektet har laget så langt, med dato og hvem som eier det. Rapportene fra energisporet og markedssporet legges her når de leveres." },
+  en: { title: "Documents", description: "What the project has produced so far, with date and owner. The reports from the energy and market tracks are added here when delivered." },
+});
 
 /** The document bank: what the project has produced so far, with date, owner and format. */
 export default async function Documents({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   /** Date, access and file come from the shared document register; title, description and owner are Moderne's own. */
   const doc = (id: keyof typeof DOCS, title: string, what: string, owner: string, type: string) => {
     const d: { date: string; access: Access; file?: string } = DOCS[id];
     const login = d.access === "login";
-    return { title, what: login ? `${what} ${no ? "Krever innlogging." : "Login required."}` : what, date: d.date, owner, href: login ? `/${locale}/login` : d.file ?? `/${locale}/dokumenter`, type };
+    return { title, what: login ? `${what} ${no ? "Krever innlogging." : "Login required."}` : what, date: d.date, owner, href: login ? `/${locale}/portal/dokumenter?dok=${id}` : d.file ?? `/${locale}/dokumenter`, type };
   };
   const docs: { title: string; what: string; date: string; owner: string; href: string; type: string }[] = no
     ? [

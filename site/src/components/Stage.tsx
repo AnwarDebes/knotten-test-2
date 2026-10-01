@@ -110,6 +110,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
   // the journey is shown in June light at three in the afternoon; the passports keep telling the December truth
   const start = useCallback(() => { setArmed(true); setPhase("playing"); setDial({ month: 6, hour: 15 }); goTo("fjord"); }, [goTo]);
   // as the hero, the journey begins on its own once the model is in (capable desktops only; others get the poster and a button)
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- starts when two outside events have both happened: the stage came into view and the model finished loading
   useEffect(() => { if (hero && journey && armed && ready && phase === "invite") start(); }, [hero, journey, armed, ready, phase, start]);
   const explore = () => { setPhase("explore"); setInside(false); setMode("wipe"); setSelected(null); setPreset("site"); setState("built"); };
 

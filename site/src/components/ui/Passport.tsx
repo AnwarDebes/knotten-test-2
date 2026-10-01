@@ -13,7 +13,7 @@ function SunRow({ label, day, small = false }: { label: string; day: Plot["sun"]
           <div className={small ? "text-[12.5px]" : "text-[14.5px]"}>{label}</div>
           <div className="provenance">{sunLabel(day.first_sun_cet)} til {sunLabel(day.last_sun_cet)}</div>
         </div>
-        <div className={`num leading-none ${small ? "text-[19px]" : "text-[28px]"}`}>{day.hours.toFixed(1)}<span className="text-[12px] font-body opacity-60 ml-1">h</span></div>
+        <div className={`num leading-none ${small ? "text-[19px]" : "text-[28px]"}`}>{day.hours.toFixed(1)}<span className="text-[12px] font-body opacity-70 ml-1">h</span></div>
       </div>
       <div className="mt-2 h-[3px] rounded bg-ink/10 overflow-hidden"><div className="h-full bg-amber" style={{ width: `${pct * 100}%` }} /></div>
     </div>
@@ -30,7 +30,7 @@ export default function Passport({ plot, locale, compact = false }: { plot: Plot
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className={`display leading-none ${compact ? "text-[20px]" : "text-[30px]"}`}>{plotName(plot.id, no)}</div>
-          <div className="provenance mt-1.5">{plot.zone === "flat" ? P.flat : `${P.row} ${rowLabel(plot)}`}, {plot.local.z_ground.toFixed(0)} moh.</div>
+          <div className="provenance mt-1.5">{plot.zone === "flat" ? P.flat : `${P.row} ${rowLabel(plot)}`}, {plot.local.z_ground.toFixed(0)} {no ? "moh." : "m a.s.l."}</div>
         </div>
         <div className="text-right">
           <div className={`num leading-none ${compact ? "text-[20px]" : "text-[30px]"}`}>{plot.view.water_visible_deg}°</div>

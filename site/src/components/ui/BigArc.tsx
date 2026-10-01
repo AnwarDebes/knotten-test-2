@@ -30,7 +30,6 @@ export default function BigArc({ horizon, locale, className = "" }: { horizon: n
     }
     const arcPath = samples.length ? `M${samples.map((s) => `${x(s.az).toFixed(1)},${y(s.el).toFixed(1)}`).join(" L")}` : "";
     return { hzLine: `M${hz.join(" L")}`, arcPath, samples };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [horizon]);
 
   const onMove = (e: React.PointerEvent) => {

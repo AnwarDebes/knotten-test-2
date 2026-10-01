@@ -4,10 +4,19 @@ import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import Incoming from "@/components/ui/Incoming";
 import { CONTACT, FACT, INTERNSHIP, WORK_PLAN, fmt, weeks } from "@/lib/facts";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/prosjektet", {
+  no: { title: "Prosjektet", description: "Et eget eid byggefelt på Knotten i Rødberg med lavt energibehov, lokal energiproduksjon, energilagring og gode løsninger for trygghet og beredskap." },
+  en: { title: "The project", description: "A self-owned building field on Knotten at Rødberg with low energy demand, local energy production, energy storage and good solutions for safety and preparedness." },
+});
 
 /** The project as the owner set it up: the direction, the two student tracks, the plan and what counts as success. */
 export default async function Project({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   const principles = no

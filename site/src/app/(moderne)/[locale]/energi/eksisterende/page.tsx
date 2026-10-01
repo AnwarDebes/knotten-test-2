@@ -1,16 +1,27 @@
 import type { Locale } from "@/lib/i18n";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
-import ConsumptionChart from "@/components/charts/ConsumptionChart";
+import { MeterView } from "@/components/portal/MeterView";
+import { meters } from "@/lib/server/records";
 import { BUDGET, FACT, fmt } from "@/lib/facts";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/energi/eksisterende", {
+  no: { title: "Eksisterende bygg", description: "To bygg på eiendommen står i dag, og to er planlagt. Målt forbruk blir et sammenligningsgrunnlag for de nye boligene." },
+  en: { title: "Existing buildings", description: "Two buildings on the property stand today, and two are planned. Their measured consumption becomes a basis of comparison for the new homes." },
+});
 
 export default async function Existing({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   const nb = (v: number) => fmt(v, no ? "no" : "en");
   const range = `±${BUDGET.office_storage_range_pct} %`;
   const extension = FACT.offices_after - FACT.offices_now;
+  const { buildings: measured } = await meters.read();
   const buildings: { name: string; status: string; text: string; figure: string; note: string }[] = no
     ? [
         { name: "Kontorbygget", status: "Står i dag", text: `Ved Rødbergsveien. ${FACT.offices_now} kontorer i dag, ${FACT.offices_after} når utvidelsen står. Faktisk strømforbruk hentes inn for dagens bygg, deles på ferdige kontorer og skaleres til ${FACT.offices_after}, med felleslastene skilt ut.`, figure: `${nb(BUDGET.office_kwh)} kWh/år`, note: `Arbeidsforutsetning i energiregnskapet, ${range}. Byttes ut med målt forbruk.` },
@@ -47,14 +58,22 @@ export default async function Existing({ params }: { params: Promise<{ locale: s
         ))}
       </section>
       <section className="wrap pb-16 grid gap-12 lg:grid-cols-2">
-        <div>
-          <h2 className="display text-[32px]">{no ? "Kontorbygget" : "The office"}</h2>
-          <div className="mt-4"><ConsumptionChart seed={3} locale={locale} /></div>
-        </div>
-        <div>
-          <h2 className="display text-[32px]">{no ? "Boligen" : "The house"}</h2>
-          <div className="mt-4"><ConsumptionChart seed={7} locale={locale} /></div>
-        </div>
+        {measured.map((m) => (
+          <div key={m.id}>
+            <h2 className="display text-[32px]">{m.name[locale]}</h2>
+            {m.public && m.readings.length > 0 ? (
+              <div className="mt-4 panel p-4 md:p-5">
+                <MeterView b={m} locale={locale} />
+                <div className="provenance mt-3">{no ? `Målt forbruk, ${m.readings[0].month} til ${m.readings[m.readings.length - 1].month}. Kilde: ${m.source ?? "måleverdier"}.` : `Measured consumption, ${m.readings[0].month} to ${m.readings[m.readings.length - 1].month}. Source: ${m.source ?? "meter values"}.`}</div>
+              </div>
+            ) : (
+              <div className="mt-4 panel p-6 grid gap-2">
+                <span className="chip chip-amber justify-self-start">{no ? "Ikke koblet til ennå" : "Not connected yet"}</span>
+                <p className="text-[15px] text-bone-2">{no ? "Målt forbruk per måned, årstall og effekten av hvert tiltak vises her når målerdataene er lagt inn." : "Measured consumption per month, yearly totals and the effect of each upgrade show here once the meter data is in."}</p>
+              </div>
+            )}
+          </div>
+        ))}
       </section>
       <section className="wrap pb-24">
         <div className="panel p-7 max-w-[70ch]">
@@ -65,7 +84,7 @@ export default async function Existing({ params }: { params: Promise<{ locale: s
             <li>{no ? "Graddagskorrigering, så vær ikke forveksles med besparelse." : "Degree-day correction, so weather is not mistaken for saving."}</li>
             <li>{no ? "Målt forbruk mot modellen: grunnlaget for å sammenligne med de nye boligene." : "Measured consumption against the model: the basis for comparing with the new homes."}</li>
           </ol>
-          <p className="provenance mt-4">{no ? "Grafene over er eksempeldata for å vise formen. De byttes ut ved tilkobling." : "The charts above are sample data to show the shape. They are replaced on connection."}</p>
+          <p className="provenance mt-4">{no ? "Målingene legges inn i prosjektportalen og vises her når prosjekteier velger det." : "The readings are added in the project portal and shown here when the project owner chooses to."}</p>
         </div>
       </section>
     </>

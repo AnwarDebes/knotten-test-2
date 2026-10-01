@@ -3,9 +3,18 @@ import type { Locale } from "@/lib/i18n";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import { CONTACT, FACT, INTERNSHIP } from "@/lib/facts";
+import { pageMeta } from "@/lib/meta";
+import { isLocale } from "@/lib/i18n";
+import { notFound } from "next/navigation";
+
+export const generateMetadata = pageMeta("/kontakt", {
+  no: { title: "Kontakt", description: "Spørsmål om tomtene, prosjektet eller samarbeid går rett til daglig leder." },
+  en: { title: "Contact", description: "Questions about the plots, the project or partnerships go straight to the Managing Director." },
+});
 
 export default async function Contact({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: l } = await params;
+  if (!isLocale(l)) notFound();
   const locale = l as Locale;
   const no = locale === "no";
   return (

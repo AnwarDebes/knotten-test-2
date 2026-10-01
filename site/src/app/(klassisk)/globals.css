@@ -4,7 +4,7 @@
   --paper-3: #e3e9ef;
   --ink: #14263d;
   --ink-2: #4a5a6e;
-  --ink-3: #7c8a9b;
+  --ink-3: #5c6979; /* 4.5:1 or better on every paper colour (WCAG AA, universell utforming) */
   --fjord: #5d8db0;
   --fjord-deep: #2f5f85;
   --fjord-pale: #d7e4ee;
@@ -79,7 +79,8 @@ main, footer, header { position: relative; z-index: 1; }
 .nav a:hover, .nav a[aria-current="page"] { color: var(--ink); background: var(--paper-2); }
 .tools { display: flex; gap: 10px; align-items: center; margin-left: 8px; }
 .lang { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; font-size: 0.8rem; font-weight: 600; }
-.lang span { padding: 5px 9px; color: var(--ink-3); }
+.lang span, .lang a { padding: 5px 9px; color: var(--ink-3); text-decoration: none; }
+.lang a:hover { color: var(--ink); }
 .lang span.on { background: var(--ink); color: #fff; }
 .btn { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; padding: 12px 20px; border-radius: 999px; border: 1px solid transparent; background: var(--ink); color: #fff; text-decoration: none; font-weight: 500; cursor: pointer; transition: transform 0.25s var(--ease), background 0.25s; }
 .btn:hover { background: var(--fjord-deep); transform: translateY(-1px); }
@@ -235,7 +236,7 @@ main, footer, header { position: relative; z-index: 1; }
 footer.site { background: var(--ink); color: #c9d5e2; padding-block: 56px 32px; }
 footer.site .wrap { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
 footer.site .flogo { display: flex; align-items: center; gap: 14px; color: #fff; text-decoration: none; }
-footer.site h4 { margin: 0 0 12px; font-family: var(--font-sans), sans-serif; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; color: #8fa5bd; font-weight: 600; }
+footer.site h3 { margin: 0 0 12px; font-family: var(--font-sans), sans-serif; font-size: 0.82rem; line-height: inherit; letter-spacing: 0.06em; text-transform: uppercase; color: #8fa5bd; font-weight: 600; }
 footer.site a { color: #dce6f0; text-decoration: none; display: block; padding: 4px 0; font-size: 0.95rem; }
 footer.site a:hover { color: #fff; text-decoration: underline; }
 footer.site .note { font-size: 0.85rem; color: #8fa5bd; max-width: 44ch; margin-top: 18px; line-height: 1.5; }
@@ -356,6 +357,7 @@ td:first-child { color: var(--ink); font-weight: 600; }
 .login { min-height: calc(100vh - 72px - var(--bar-h)); display: grid; grid-template-columns: 1fr 1fr; }
 .login .side { position: relative; background: var(--fjord-pale); overflow: hidden; }
 .login .side img { width: 100%; height: 100%; object-fit: cover; }
+.login .side .hero-cap { left: 18px; right: 18px; bottom: 12px; line-height: 1.4; }
 .login .box { padding: clamp(32px, 6vw, 96px) var(--gutter); max-width: 560px; }
 .roles { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .roles span { font-size: 0.75rem; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--ink-3); }
@@ -505,3 +507,17 @@ td:first-child { color: var(--ink); font-weight: 600; }
 .owner { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); font-weight: 500; font-size: 1rem; }
 .owner svg { flex: none; }
 .owner.light { color: #dce6f0; font-size: 0.9rem; }
+
+/* login forms (components/klassisk/AuthForms.tsx) */
+.auth-form { grid-template-columns: 1fr 1fr; }
+.auth-msg { padding: 12px 14px; border-radius: 10px; font-size: 0.95rem; line-height: 1.45; }
+.auth-msg.err { background: #fbeeea; color: #8a2f1d; border: 1px solid #efc9bf; }
+.auth-msg.ok { background: #eaf2ec; color: #2f4f38; border: 1px solid #c6dccb; }
+.auth-form .pw { position: relative; display: block; }
+.auth-form .pw input { width: 100%; padding-right: 64px; }
+.auth-form .pw button { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--ink-3); font: inherit; font-size: 0.82rem; padding: 4px 8px; border-radius: 999px; cursor: pointer; }
+.auth-form .pw button:hover { color: var(--ink); background: var(--paper-2); }
+.auth-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.linkish { border: 0; background: none; padding: 0; font: inherit; font-size: 0.9rem; color: var(--fjord-deep); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.linkish:hover { color: var(--ink); }
+.btn[disabled] { opacity: .65; cursor: progress; transform: none; }

@@ -16,7 +16,7 @@ export default function Footer() {
           </p>
         </div>
         <div>
-          <h4>Prosjektet</h4>
+          <h3>Prosjektet</h3>
           <Link href="/">Forside</Link>
           <Link href="/prosjektet">Om prosjektet</Link>
           <Link href="/tomtene">Tomtene</Link>
@@ -26,7 +26,7 @@ export default function Footer() {
           <Link href="/galleri">Bilder</Link>
         </div>
         <div>
-          <h4>For deg</h4>
+          <h3>For deg</h3>
           <Link href="/investorer">Investorer og kommune</Link>
           <Link href="/dokumentbank">Dokumentbank</Link>
           <Link href="/kilder">Kilder og forutsetninger</Link>
@@ -34,7 +34,7 @@ export default function Footer() {
           <Link href="/logg-inn">Logg inn</Link>
         </div>
         <div>
-          <h4>Kontakt</h4>
+          <h3>Kontakt</h3>
           <span style={{ display: "block", padding: "4px 0 8px", fontSize: ".95rem" }}>{`Prosjekteier: ${CONTACT.company}`}</span>
           <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
           <a href={`tel:${CONTACT.tel}`}>{CONTACT.phone}</a>

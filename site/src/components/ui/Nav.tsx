@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import { useSession } from "@/lib/session-client";
@@ -23,6 +24,16 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
   const header = useRef<HTMLElement>(null);
   const [sheetTop, setSheetTop] = useState<number>();
   const session = useSession();
+  const router = useRouter();
+  // the same page in the other language; the query and the anchor come along when clicked
+  const otherHref = (usePathname() ?? `/${locale}`).replace(/^\/(no|en)(?=\/|$)/, `/${other}`);
+  const switchLang = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setOpen(false);
+    const rest = window.location.search + window.location.hash;
+    if (!rest || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    router.push(otherHref + rest);
+  };
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 40);
@@ -60,6 +71,15 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
         </p>
 
         <div className="justify-self-end flex items-center gap-2">
+          <span className="lang-seg" role="group" aria-label={no ? "Språk" : "Language"}>
+            {(["no", "en"] as const).map((l) =>
+              l === locale ? (
+                <span key={l} className="on" aria-current="true" lang={l}>{l.toUpperCase()}</span>
+              ) : (
+                <Link key={l} href={otherHref} onClick={switchLang} hrefLang={l} lang={l} aria-label={l === "en" ? "Read this page in English" : "Les denne siden på norsk"}>{l.toUpperCase()}</Link>
+              ),
+            )}
+          </span>
           {session ? (
             <Link href={p("/portal")} className="btn btn-ghost btn-sm no-underline hidden sm:inline-flex">{session.name || ROLE_LABEL[session.role][locale]}</Link>
           ) : (
@@ -95,7 +115,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
                 )}
                 <Link className="btn no-underline" href={p("/interesse")} onClick={() => setOpen(false)}>{d.nav.interest}</Link>
               </div>
-              <Link href={`/${other}`} className="no-underline text-granite hover:text-bone">{other === "en" ? "Read this in English" : "Les dette på norsk"}</Link>
+              <Link href={otherHref} onClick={switchLang} hrefLang={other} lang={other} className="no-underline text-granite hover:text-bone">{other === "en" ? "Read this in English" : "Les dette på norsk"}</Link>
               <p className="text-granite max-w-[36ch] mt-6">{`${CONTACT.place}. ${CONTACT.company}.`}</p>
             </div>
           </nav>
