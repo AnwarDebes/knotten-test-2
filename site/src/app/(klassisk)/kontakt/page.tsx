@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PageHead from "@/components/klassisk/PageHead";
 import InterestForm from "@/components/klassisk/InterestForm";
 import OwnerLogo from "@/components/klassisk/OwnerLogo";
+import { CONTACT } from "@/lib/facts";
 
 export const metadata: Metadata = { title: "Meld interesse" };
 
@@ -17,13 +18,13 @@ export default async function Kontakt({ searchParams }: { searchParams: Promise<
           <div className="stack">
             <OwnerLogo />
             <div className="contact">
-              <b>Sigve Simonsen AS</b>
+              <b>{CONTACT.company}</b>
               <span>Prosjekteier</span>
-              <span>Rødbergsveien 121, 4520 Lindesnes</span>
-              <a href="mailto:sigve.simonsen@hotmail.com">sigve.simonsen@hotmail.com</a>
-              <a href="tel:+4795495152">954 95 152</a>
+              <span>{CONTACT.place}</span>
+              <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+              <a href={`tel:${CONTACT.tel}`}>{CONTACT.phone}</a>
             </div>
-            <p className="small measure">Opplysningene du sender lagres av Sigve Simonsen AS for å følge opp interessen din, og for ingenting annet. Du kan be om innsyn eller sletting når som helst.</p>
+            <p className="small measure">{`Opplysningene du sender lagres av ${CONTACT.company} for å følge opp interessen din, og for ingenting annet.`} Du kan be om innsyn eller sletting når som helst.</p>
           </div>
           <InterestForm plot={tomt} />
         </div>

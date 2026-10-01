@@ -1,3 +1,5 @@
+import { FACT, fmt } from "@/lib/facts";
+
 /** Principle cross-section from open sea to Knotten. Not to scale. */
 export default function TerrainCut() {
   return (
@@ -31,7 +33,7 @@ export default function TerrainCut() {
           <text x="600" y="262" fill="#fff" fontWeight="600">Knotten</text>
           <text x="600" y="278" fill="#DCE8E0" fontSize="10">Boligrekker mot sør</text>
           <text x="640" y="70" fill="#7A5410" fontSize="10">Felles solanlegg bak feltet</text>
-          <text x="404" y="318" fill="#4A5A6E" fontSize="10">Terrengprofil 409,5 m, 0 til 60 moh</text>
+          <text x="404" y="318" fill="#4A5A6E" fontSize="10">{`Terrengprofil ${fmt(FACT.profile_m)} m, 0 til ${FACT.knotten_m} moh`}</text>
           <text x="80" y="200" fill="#2F5F85" fontSize="10" fontStyle="italic">siktlinje</text>
         </g>
       </svg>

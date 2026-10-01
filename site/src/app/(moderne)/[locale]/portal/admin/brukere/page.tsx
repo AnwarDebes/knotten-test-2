@@ -16,7 +16,7 @@ export default async function Users({ params }: { params: Promise<{ locale: stri
   if (role !== "superadmin") return <Gate locale={locale} role={role} need={["admin"]} />;
   const store = await readStore();
   const roles = ["user", "admin", "superadmin"] as const;
-  const help = { user: no ? "Ser portalen: datarom, energi, tvilling." : "Sees the portal: data room, energy, twin.", admin: no ? "Alt over, pluss interessenter, tomter, priser, nyheter og innstillinger." : "All of the above, plus leads, plots, prices, news and settings.", superadmin: no ? "Alt over, pluss brukere og roller." : "All of the above, plus users and roles." };
+  const help = { user: no ? "Ser alle områdene i portalen unntatt administrasjon." : "Sees every portal area except administration.", admin: no ? "Alt over, pluss interessenter, tomter, priser, nyheter og innstillinger." : "All of the above, plus leads, plots, prices, news and settings.", superadmin: no ? "Alt over, pluss brukere og roller." : "All of the above, plus users and roles." };
   return (
     <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
       <div>

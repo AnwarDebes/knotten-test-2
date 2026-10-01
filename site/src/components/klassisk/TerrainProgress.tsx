@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { FACT } from "@/lib/facts";
 
 const PATH = "M3 40H78C90 40 96 36 102 28C110 18 118 8 147 5";
 const SECTION_LABELS: Record<string, string> = {
@@ -68,7 +69,7 @@ export default function TerrainProgress() {
         <path d={PATH} fill="none" stroke="#D4DCE4" strokeWidth="1.5" strokeLinecap="round" />
         <path ref={fill} d={PATH} fill="none" stroke="#2F5F85" strokeWidth="1.5" strokeLinecap="round" />
         <circle ref={dot} cx="3" cy="40" r="3" fill="#14263D" stroke="#fff" strokeWidth="1.2" />
-        <g fontSize="6" fill="#7C8A9B"><text x="3" y="33">0 moh</text><text x="123" y="15">60 moh</text></g>
+        <g fontSize="6" fill="#7C8A9B"><text x="3" y="33">0 moh</text><text x="123" y="15">{`${FACT.knotten_m} moh`}</text></g>
       </svg>
       <span className="proflbl"><span>Elva</span><b>{label || "Knotten"}</b><span>Knotten</span></span>
     </div>

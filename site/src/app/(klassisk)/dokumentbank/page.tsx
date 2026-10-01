@@ -2,36 +2,44 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageHead from "@/components/klassisk/PageHead";
 import Reveal from "@/components/klassisk/Reveal";
+import { DOCS, EED, dateNo, type Access } from "@/lib/facts";
 
 export const metadata: Metadata = { title: "Dokumentbank" };
 
-type Doc = { t: string; m: string; date: string; type: string; access: "Offentlig" | "Innlogging" };
+type Doc = { t: string; m: string; date: string; type: string; access: "Offentlig" | "Innlogging"; href?: string };
+
+/** Date, access and file come from the shared document register; title and description are Klassisk's own. */
+const doc = (id: keyof typeof DOCS, t: string, m: string, type: string, href?: string): Doc => {
+  const d: { date: string; access: Access; file?: string } = DOCS[id];
+  return { t, m, type, date: dateNo(d.date), access: d.access === "login" ? "Innlogging" : "Offentlig", href: href ?? d.file };
+};
+
 const GROUPS: { name: string; docs: Doc[] }[] = [
   {
     name: "Prosjekteier",
     docs: [
-      { t: "Foreløpig retning for energikonseptet", m: "Svar på spørsmål fra energisporet, norsk og engelsk", date: "4. sep 2026", type: "PDF", access: "Offentlig" },
-      { t: "Arbeidsopplegg for spor 1 og 2", m: "Roller, arbeidspakker, faser og sluttleveranser", date: "sep 2026", type: "PDF", access: "Innlogging" },
-      { t: "Utsikt fra Knotten byggefelt", m: "Fire bilder av utsikten mot fjorden og havet", date: "sep 2026", type: "PDF", access: "Offentlig" },
-      { t: "Kart og terrengprofil", m: "Eiendomskart, markert prosjektområde, siktlinje og terrengprofil fra Norgeskart", date: "sep 2026", type: "PNG", access: "Offentlig" },
+      doc("direction", "Foreløpig retning for energikonseptet", "Svar på spørsmål fra energisporet, norsk og engelsk", "PDF"),
+      doc("work", "Arbeidsopplegg for spor 1 og 2", "Roller, arbeidspakker, faser og sluttleveranser", "PDF"),
+      doc("view_photos", "Utsikt fra Knotten byggefelt", "Fire bilder av utsikten mot fjorden og havet", "PDF"),
+      doc("maps", "Kart og terrengprofil", "Eiendomskart, markert prosjektområde, siktlinje og terrengprofil fra Norgeskart", "PNG", "/kart"),
     ],
   },
   {
     name: "Energisporet",
     docs: [
-      { t: "Statusoppsummering, elektro og teknikk", m: "Metode, foreløpige tall og hva som mangler", date: "31. aug 2026", type: "PDF", access: "Innlogging" },
-      { t: "Energiregnskap, arbeidsversjon", m: "Forutsetninger, produksjon, lagring og nøkkeltall for året", date: "13. sep 2026", type: "XLSX", access: "Innlogging" },
-      { t: "Sammenligning av tiltak", m: "Kostnad, robusthet, energi og anbefaling per tiltak", date: "28. aug 2026", type: "PDF", access: "Innlogging" },
-      { t: "Grunnvarmeanalyse i Earth Energy Designer", m: "Grunnlast, brønnkonfigurasjon og væsketemperaturer over 35 år", date: "sep 2026", type: "PNG", access: "Innlogging" },
+      doc("status", "Statusoppsummering, elektro og teknikk", "Metode, foreløpige tall og hva som mangler", "PDF"),
+      doc("budget", "Energiregnskap, arbeidsversjon", "Forutsetninger, produksjon, lagring og nøkkeltall for året", "XLSX"),
+      doc("measures", "Sammenligning av tiltak", "Kostnad, robusthet, energi og anbefaling per tiltak", "PDF"),
+      doc("eed", "Grunnvarmeanalyse i Earth Energy Designer", `Grunnlast, brønnkonfigurasjon og væsketemperaturer over ${EED.years} år`, "PNG"),
     ],
   },
   {
     name: "Markedssporet",
-    docs: [{ t: "Marked, merkevare og kommersialisering", m: "Målgrupper, posisjonering, støtteordninger og plan", date: "27. aug 2026", type: "PDF", access: "Innlogging" }],
+    docs: [doc("market", "Marked, merkevare og kommersialisering", "Målgrupper, posisjonering, støtteordninger og plan", "PDF")],
   },
   {
     name: "Nettsiden",
-    docs: [{ t: "Kilder og forutsetninger", m: "Én rad per tall: verdi, enhet, kilde, dato, ansvarlig og usikkerhet", date: "løpende", type: "WEB", access: "Offentlig" }],
+    docs: [{ t: "Kilder og forutsetninger", m: "Én rad per tall: verdi, enhet, kilde, dato, ansvarlig og usikkerhet", date: "løpende", type: "WEB", access: "Offentlig", href: "/kilder" }],
   },
 ];
 
@@ -48,7 +56,7 @@ export default function Dokumentbank() {
               <div key={g.name}>
                 <div className="grp">{g.name}</div>
                 {g.docs.map((d) => (
-                  <Link key={d.t} className="doc" href={d.t === "Kilder og forutsetninger" ? "/kilder" : d.access === "Innlogging" ? "/logg-inn" : "#"}>
+                  <Link key={d.t} className="doc" href={d.access === "Innlogging" ? "/logg-inn" : d.href ?? "#"}>
                     <span className="ic">{d.type}</span>
                     <span><span className="t">{d.t}</span><br /><span className="m">{d.m}</span></span>
                     <span className="m">{d.date}</span>

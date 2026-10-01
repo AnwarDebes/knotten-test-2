@@ -19,14 +19,14 @@ export default function ConsumptionChart({ seed, locale }: { seed: number; local
         {[0.25, 0.5, 0.75].map((f) => <line key={f} x1={padL} x2={W - 8} y1={y(max * f)} y2={y(max * f)} stroke="rgba(23,33,42,.12)" />)}
         {[0.25, 0.5, 0.75].map((f) => <text key={f} x={padL - 4} y={y(max * f) + 4} fontSize="11" textAnchor="end" fill="#6b7680">{Math.round(max * f / 100) / 10}k</text>)}
         <rect x={x(3)} y={padT} width={x(12) - x(3)} height={H - padT - padB} fill="rgba(217,164,65,.10)" />
-        <text x={x(3) + 6} y={padT + 14} fontSize="11" fill="#b7842a">{no ? "varmepumpe installert" : "heat pump installed"}</text>
+        <text x={x(3) + 6} y={padT + 14} fontSize="11" fill="#b7842a">{no ? "eksempel på et tiltak" : "example of a measure"}</text>
         {y1.map((v, m) => <rect key={`a${m}`} x={x(m) + 3} y={y(v)} width={bw / 2 - 4} height={y(0) - y(v)} fill="#9fb3bf" />)}
         {y2.map((v, m) => <rect key={`b${m}`} x={x(m) + bw / 2} y={y(v)} width={bw / 2 - 4} height={y(0) - y(v)} fill="#2b3a45" />)}
         {MONTHS[locale].map((mo, m) => <text key={mo} x={x(m) + bw / 2} y={H - 8} fontSize="11" textAnchor="middle" fill="#6b7680">{mo}</text>)}
       </svg>
       <div className="flex gap-4 text-[13px] mt-1">
-        <span><span className="inline-block w-3 h-3 align-middle mr-1" style={{ background: "#9fb3bf" }} />2024</span>
-        <span><span className="inline-block w-3 h-3 align-middle mr-1" style={{ background: "#2b3a45" }} />2025</span>
+        <span><span className="inline-block w-3 h-3 align-middle mr-1" style={{ background: "#9fb3bf" }} />{no ? "Eksempel, år 1" : "Example, year 1"}</span>
+        <span><span className="inline-block w-3 h-3 align-middle mr-1" style={{ background: "#2b3a45" }} />{no ? "Eksempel, år 2" : "Example, year 2"}</span>
         <span className="provenance ml-auto">kWh/{no ? "mnd" : "month"} · {no ? "eksempeldata" : "sample data"}</span>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { t } from "@/lib/i18n";
 import type { Plot, SceneState } from "@/lib/types";
 import { frameFor } from "@/lib/energy";
 import { DEFAULT_DATE } from "@/lib/solar";
+import { plotNo } from "@/lib/format";
 import Dial, { type DialValue } from "./ui/Dial";
 import Passport from "./ui/Passport";
 import type { CameraPreset } from "./scene/KnottenScene";
@@ -224,7 +225,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
               <div className="display text-[26px] md:text-[30px] mt-1">{J.steps[step].title}</div>
               <p className="mt-1.5 text-[14.5px] text-white/85">{J.steps[step].text}</p>
               {step === "plot" && plot && (
-                <div className="mt-2 text-[13px] text-white/75">{plot.id.replace("plot-", S.plot + " ")}: {plot.sun.dec21.hours.toFixed(1)} h {no ? "sol 21. desember" : "sun 21 December"}, {plot.view.water_visible_deg}° {no ? "sjø i sikt" : "water in view"}</div>
+                <div className="mt-2 text-[13px] text-white/75">{S.plot} {plotNo(plot.id)}: {plot.sun.dec21.hours.toFixed(1)} h {no ? "sol 21. desember" : "sun 21 December"}, {plot.view.water_visible_deg}° {no ? "sjø i sikt" : "water in view"}</div>
               )}
               <div className="mt-3 flex flex-wrap gap-2">
                 {phase === "playing" ? (
@@ -271,7 +272,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
                     <div className="flex flex-wrap gap-1 max-h-[112px] overflow-auto">
                       {plots.map((p) => (
                         <button key={p.id} onClick={() => { setSelected(p.id); }} className={`chip !px-2 transition-colors ${selected === p.id ? "!bg-amber !text-ink" : p.view.open_sea_visible ? "!bg-white/20 hover:!bg-white/30" : "hover:!bg-white/20"}`} title={p.view.open_sea_visible ? (no ? "åpent hav" : "open sea") : ""}>
-                          {p.id.replace("plot-", "")}
+                          {plotNo(p.id)}
                         </button>
                       ))}
                     </div>
@@ -296,7 +297,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
                 )}
                 {plot && (
                   <div className="md:hidden flex items-center gap-3 text-[14px]">
-                    <span>{S.plot} {plot.id.replace("plot-", "")}: {plot.sun.dec21.hours.toFixed(1)} h {no ? "sol 21. des" : "sun 21 Dec"}</span>
+                    <span>{S.plot} {plotNo(plot.id)}: {plot.sun.dec21.hours.toFixed(1)} h {no ? "sol 21. des" : "sun 21 Dec"}</span>
                     <Link href={`/${locale}/tomter/${plot.id}`} className="underline">{d.cta.passport}</Link>
                   </div>
                 )}

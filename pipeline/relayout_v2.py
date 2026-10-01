@@ -369,6 +369,8 @@ if DO_ANIM:
     strip = strips.new_image("fly", str(ANIM / "fly_0001.png"), 1, 1)
     for f in range(2, FRAMES + 1):
         strip.elements.append("fly_%04d.png" % f)
+    if hasattr(scn.render.image_settings, "media_type"):
+        scn.render.image_settings.media_type = "VIDEO"                 # Blender 5.x: video formats sit under media_type
     scn.render.image_settings.file_format = "FFMPEG"
     scn.render.ffmpeg.format = "MPEG4"
     scn.render.ffmpeg.codec = "H264"

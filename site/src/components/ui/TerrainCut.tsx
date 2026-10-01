@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n";
+import { FACT, fmt } from "@/lib/facts";
 
 /**
  * A principle cross-section from open sea to the top of Knotten, not to scale: the sea, the
@@ -31,13 +32,13 @@ export default function TerrainCut({ locale }: { locale: Locale }) {
         <path d="M400 300h340" stroke="#6a7b89" strokeWidth="1" /><path d="M400 295v10M740 295v10" stroke="#6a7b89" strokeWidth="1" />
         <g fontSize="11" fill="#17283a" fontFamily="system-ui, sans-serif">
           <text x="14" y="182" fill="#2f6688" fontWeight="600">{no ? "Åpent hav" : "Open sea"}</text>
-          <text x="260" y="182">Snigsfjorden</text>
+          <text x="260" y="182">Sniksfjorden</text>
           <text x="404" y="262">{no ? "Audnas utløp" : "The Audna outlet"}</text>
           <text x="466" y="222" fontSize="10" fill="#3a4d60">{no ? "Bolighus og kontor i dag" : "House and office today"}</text>
           <text x="600" y="262" fill="#fff" fontWeight="600">Knotten</text>
           <text x="600" y="278" fill="#dce8e0" fontSize="10">{no ? "Boligrekker mot sør" : "Rows facing south"}</text>
           <text x="640" y="70" fill="#7a5312" fontSize="10">{no ? "Felles solanlegg bak feltet" : "Shared solar behind the field"}</text>
-          <text x="404" y="318" fill="#3a4d60" fontSize="10">{no ? "Terrengprofil 409,5 m, 0 til 60 moh" : "Terrain profile 409.5 m, 0 to 60 m"}</text>
+          <text x="404" y="318" fill="#3a4d60" fontSize="10">{no ? `Terrengprofil ${fmt(FACT.profile_m)} m, 0 til ${FACT.knotten_m} moh` : `Terrain profile ${fmt(FACT.profile_m, "en")} m, 0 to ${FACT.knotten_m} m`}</text>
           <text x="80" y="200" fill="#2f6688" fontSize="10" fontStyle="italic">{no ? "siktlinje" : "sight line"}</text>
         </g>
       </svg>

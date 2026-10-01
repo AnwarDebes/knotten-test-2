@@ -1,12 +1,13 @@
 /**
- * The living-field model. Release 1: a transparent, deterministic estimate per plot from the real
- * terrain horizon and the sun. Release 3 swaps this for live meter frames with the same shape.
+ * The living-field model: a transparent, deterministic estimate per plot from the real terrain
+ * horizon and the sun. Live meter frames with the same shape can replace it later.
  */
 import type { EnergyFrame, Plot } from "./types";
 import { solarPosition, knottenTime } from "./solar";
+import { BUDGET, PV_KWP_PER_HOME } from "./facts";
 
-const KWP = 8;            // per home, provisional (assumptions.pv_kwp_per_home)
-const BATTERY = 10;       // kWh per home, provisional
+const KWP = PV_KWP_PER_HOME;               // per home: 279 kWp for 1 200 m² of roof in the energy budget, 30 m² per home
+const BATTERY = BUDGET.battery.per_home_kwh; // kWh per home, the energy budget's chosen input
 const HUB = 400;          // kWh shared, provisional
 
 function loadProfile(hour: number, month: number) {

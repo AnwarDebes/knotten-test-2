@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n";
-import { SOURCES, type SourceId } from "@/lib/sources";
+import { SOURCES, type SourceId } from "@/lib/facts";
 
 /**
  * The small "Kilde" chip after a figure. Opens a card with the source's own words and the document

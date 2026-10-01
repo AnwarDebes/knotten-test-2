@@ -1,5 +1,5 @@
 import type { Locale } from "@/lib/i18n";
-import type { Assumption } from "@/lib/assumptions";
+import type { Assumption } from "@/lib/facts";
 
 export function Provenance({ source, date, provisional, locale }: { source: string; date: string; provisional?: boolean; locale: Locale }) {
   return (

@@ -1,3 +1,5 @@
+import { FACT, word } from "./facts";
+
 export type Locale = "no" | "en";
 export const LOCALES: Locale[] = ["no", "en"];
 
@@ -8,7 +10,7 @@ const dict = {
     hero: {
       line1: "Stå på tomten",
       line2: "før den finnes.",
-      sub: "Rundt 30 energivennlige boliger på en skogkledd knaus over Snigsfjorden. Terrenget er Kartverkets laserdata, solen er den ekte, og alt kan sjekkes.",
+      sub: `Rundt ${FACT.plots} energivennlige boliger på en skogkledd knaus over Sniksfjorden. Terrenget er Kartverkets laserdata, solen er den ekte, og alt kan sjekkes.`,
       arcTitle: "Solen over Knotten, 21. desember",
       arcSub: "Den korteste dagen, regnet mot den målte horisonten fra tomt 1.",
       firstSun: "første sol",
@@ -18,10 +20,10 @@ const dict = {
       wipe: { title: "I dag og etterpå", sub: "Dra i skillet. Samme kamera, samme sol, samme horisont. Bare feltet forandrer seg." },
       stand: { title: "Stå på din tomt", sub: "Velg en tomt. Kameraet går ned i stuehøyde. Drei solen gjennom døgnet og året." },
       proof: { title: "Fotografi mot modell", sub: "Naboens grillbu, samme punkt, samme retning. Når horisonten stemmer, stemmer resten." },
-      field: { title: "Feltet som lever", sub: "Energien tegnet på landskapet: produksjon på takene, forbruk i vinduene, deling langs veien." },
+      field: { title: "Feltet som lever", sub: "Energien tegnet på landskapet: produksjon på takene, forbruk i vinduene, mulig deling langs veien." },
     },
-    stage: { open: "Åpne modellen", opening: "Bygger terrenget", loading: "Laster", ready: "Modellen er klar", lite: "Lett modus", lost: "Grafikkortet ga opp. Prøv lett modus.", retry: "Prøv lett modus", flyin: "Se flyturen", closeFlyin: "Lukk", hint: "Dra for å se rundt. Rull for å zoome.", plot: "Tomt", grid: "Slå av nettet", gridOff: "Nettet er av. Feltet går på lager", cameras: { fjord: "Fra fjorden", site: "Feltet", drone: "Fra vest", knoll: "Fra toppen", plan: "Ovenfra" }, sunHint: "Sol og dato" },
-    journey: { start: "Start reisen", stop: "Stopp", next: "Neste", explore: "Utforsk selv", steps: { fjord: { title: "Fra fjorden", text: "Snigsfjorden sett innover mot Rødberg. Knotten er knausen midt i bildet, der Audna møter fjorden." }, field: { title: "Feltet", text: "30 tomter i terrasser over sørhellingen: en rekke på hvert nivå, hver rekke rett under den over, slik prosjekteier vil forme terrenget. Hver tomt har målt sjøutsikt." }, plot: { title: "Din tomt", text: "Kameraet står i stuehøyde på tomten. Det gule båndet på horisonten er der vannet er synlig, sterkest der det er åpent hav." }, inside: { title: "Inne i huset", text: "Stua med glassveggen mot fjorden. Det du ser gjennom vinduet er det målte terrenget, ikke et bilde." } } },
+    stage: { open: "Åpne modellen", opening: "Bygger terrenget", loading: "Laster", ready: "Modellen er klar", lite: "Lett modus", lost: "Grafikkortet ga opp. Prøv lett modus.", retry: "Prøv lett modus", flyin: "Se flyturen", closeFlyin: "Lukk", hint: "Dra for å se rundt. Rull for å zoome.", plot: "Tomt", grid: "Slå av nettet", gridOff: "Nettet er av. Illustrasjon av drift på lager", cameras: { fjord: "Fra fjorden", site: "Feltet", drone: "Fra vest", knoll: "Fra toppen", plan: "Ovenfra" }, sunHint: "Sol og dato" },
+    journey: { start: "Start reisen", stop: "Stopp", next: "Neste", explore: "Utforsk selv", steps: { fjord: { title: "Fra fjorden", text: "Sniksfjorden sett innover mot Rødberg. Knotten er knausen midt i bildet, nær der Audna renner ut i fjorden." }, field: { title: "Feltet", text: `${FACT.plots} tomter i ${word(FACT.rows)} rekker i modellen: A, B og C over hverandre i sørhellingen og D på knausen Knotten, der terrenget gir utsikt. Ønsket er sjøutsikt fra alle tomtene, men det er ikke sikkert at det går fra alle.` }, plot: { title: "Din tomt", text: "Kameraet står i stuehøyde på tomten. Det gule båndet på horisonten er der vannet er synlig, sterkest der det er åpent hav." }, inside: { title: "Inne i huset", text: "Stua med glassveggen mot fjorden. Det du ser gjennom vinduet er det målte terrenget, ikke et bilde." } } },
     states: { today: "I dag", cleared: "Ryddet", built: "Bygget", lived: "Bebodd" },
     dial: { month: "Måned", hour: "Klokka", sunUp: "Sol over terrenget", sunDown: "Sol bak terrenget" },
     passport: { title: "Solpass", sunDec: "Sol 21. desember", sunMar: "Sol 21. mars", sunJun: "Sol 21. juni", first: "første sol", last: "siste sol", seaDeg: "Sjø i sikt", openSea: "Åpent hav", yes: "ja", no: "nei", elevation: "Høyde", slope: "Helning", cutfill: "Planering", share: "Del solpasset", row: "Rekke", flat: "Flaten ved Rødbergsveien" },
@@ -34,14 +36,14 @@ const dict = {
       password: "Passord",
       role: "Rolle",
       roles: { user: "Bruker", admin: "Administrator", superadmin: "Superadministrator" },
-      roleHelp: { user: "Ser datarom, energi og tvillingen.", admin: "Ser alt, og styrer innhold og interessenter.", superadmin: "Ser alt, og styrer roller og tilganger." },
+      roleHelp: { user: "Ser alle områdene i portalen unntatt administrasjon.", admin: "Ser alt, og styrer innhold og interessenter.", superadmin: "Ser alt, og styrer roller og tilganger." },
       submit: "Logg inn",
       demo: "Forhåndsvisning. Ingen passord sjekkes, og ingenting lagres utover en informasjonskapsel i sju dager.",
       signedInAs: "Logget inn som",
       goPortal: "Gå til portalen",
       signOut: "Logg ut",
     },
-    footer: { rights: "Sigve Simonsen AS", data: "Data: Kartverket (CC BY 4.0), OpenStreetMap (ODbL), MET Norge. Flyfoto i modellen: Esri World Imagery (studie).", privacy: "Personvern" },
+    footer: { rights: "Sigve Simonsen AS", data: "Data: Kartverket (CC BY 4.0), Norkart, OpenStreetMap (ODbL), AWS Terrain Tiles. Flyfoto i modellen: Esri World Imagery (studie).", privacy: "Personvern" },
   },
   en: {
     nav: { plots: "Plots", view: "The view", energy: "Energy", area: "The area", project: "The project", investor: "Investors", contact: "Contact", login: "Log in", interest: "Register interest", menu: "Menu", close: "Close", portal: "Portal", logout: "Log out" },
@@ -49,7 +51,7 @@ const dict = {
     hero: {
       line1: "Stand on your plot",
       line2: "before it exists.",
-      sub: "About 30 energy-friendly homes on a wooded knoll above Snigsfjorden. The terrain is national LiDAR, the sun is the real one, and everything can be checked.",
+      sub: `About ${FACT.plots} energy-friendly homes on a wooded knoll above Sniksfjorden. The terrain is national LiDAR, the sun is the real one, and everything can be checked.`,
       arcTitle: "The sun over Knotten, 21 December",
       arcSub: "The shortest day, computed against the measured horizon from plot 1.",
       firstSun: "first sun",
@@ -59,10 +61,10 @@ const dict = {
       wipe: { title: "Today and after", sub: "Drag the divider. Same camera, same sun, same horizon. Only the field changes." },
       stand: { title: "Stand on your plot", sub: "Pick a plot. The camera drops to living-room height. Turn the sun through the day and the year." },
       proof: { title: "Photograph against model", sub: "The neighbour's grill hut, same point, same bearing. When the horizon lines up, so does the rest." },
-      field: { title: "The living field", sub: "Energy drawn on the landscape: production on the roofs, consumption in the windows, sharing along the road." },
+      field: { title: "The living field", sub: "Energy drawn on the landscape: production on the roofs, consumption in the windows, possible sharing along the road." },
     },
-    stage: { open: "Open the model", opening: "Building the terrain", loading: "Loading", ready: "The model is ready", lite: "Lite mode", lost: "The graphics card gave up. Try lite mode.", retry: "Try lite mode", flyin: "Watch the fly-in", closeFlyin: "Close", hint: "Drag to look around. Scroll to zoom.", plot: "Plot", grid: "Cut the grid", gridOff: "Grid is off. Running on storage", cameras: { fjord: "From the fjord", site: "The field", drone: "From the west", knoll: "From the top", plan: "From above" }, sunHint: "Sun and date" },
-    journey: { start: "Start the journey", stop: "Stop", next: "Next", explore: "Explore yourself", steps: { fjord: { title: "From the fjord", text: "Snigsfjorden looking in towards Rødberg. Knotten is the knoll in the middle, where the Audna meets the fjord." }, field: { title: "The field", text: "30 plots in terraces across the south face: a row on every level, each row right under the one above, the way the project owner intends to shape the ground. Every plot has a measured sea view." }, plot: { title: "Your plot", text: "The camera stands at living-room height on the plot. The amber band on the horizon is where water is visible, strongest where it is open sea." }, inside: { title: "Inside the house", text: "The living room with the glass wall towards the fjord. What you see through the window is the measured terrain, not a picture." } } },
+    stage: { open: "Open the model", opening: "Building the terrain", loading: "Loading", ready: "The model is ready", lite: "Lite mode", lost: "The graphics card gave up. Try lite mode.", retry: "Try lite mode", flyin: "Watch the fly-in", closeFlyin: "Close", hint: "Drag to look around. Scroll to zoom.", plot: "Plot", grid: "Cut the grid", gridOff: "Grid is off. An illustration of running on storage", cameras: { fjord: "From the fjord", site: "The field", drone: "From the west", knoll: "From the top", plan: "From above" }, sunHint: "Sun and date" },
+    journey: { start: "Start the journey", stop: "Stop", next: "Next", explore: "Explore yourself", steps: { fjord: { title: "From the fjord", text: "Sniksfjorden looking in towards Rødberg. Knotten is the knoll in the middle, near where the Audna flows into the fjord." }, field: { title: "The field", text: `${FACT.plots} plots in ${word(FACT.rows, "en")} rows in the model: A, B and C one above the other on the south face and D on the Knotten knoll, where the ground gives a view. The aim is a sea view from every plot, but it is not certain every plot will get one.` }, plot: { title: "Your plot", text: "The camera stands at living-room height on the plot. The amber band on the horizon is where water is visible, strongest where it is open sea." }, inside: { title: "Inside the house", text: "The living room with the glass wall towards the fjord. What you see through the window is the measured terrain, not a picture." } } },
     states: { today: "Today", cleared: "Cleared", built: "Built", lived: "Lived-in" },
     dial: { month: "Month", hour: "Time", sunUp: "Sun above the terrain", sunDown: "Sun behind the terrain" },
     passport: { title: "Sun passport", sunDec: "Sun 21 December", sunMar: "Sun 21 March", sunJun: "Sun 21 June", first: "first sun", last: "last sun", seaDeg: "Water in view", openSea: "Open sea", yes: "yes", no: "no", elevation: "Elevation", slope: "Slope", cutfill: "Levelling", share: "Share the passport", row: "Row", flat: "The flat by Rødbergsveien" },
@@ -75,14 +77,14 @@ const dict = {
       password: "Password",
       role: "Role",
       roles: { user: "User", admin: "Administrator", superadmin: "Super administrator" },
-      roleHelp: { user: "Sees the data room, energy and the twin.", admin: "Sees everything, and manages content and leads.", superadmin: "Sees everything, and manages roles and access." },
+      roleHelp: { user: "Sees every portal area except administration.", admin: "Sees everything, and manages content and leads.", superadmin: "Sees everything, and manages roles and access." },
       submit: "Log in",
       demo: "Preview. No password is checked and nothing is stored beyond a cookie for seven days.",
       signedInAs: "Logged in as",
       goPortal: "Go to the portal",
       signOut: "Log out",
     },
-    footer: { rights: "Sigve Simonsen AS", data: "Data: Kartverket (CC BY 4.0), OpenStreetMap (ODbL), MET Norway. Aerial imagery in the model: Esri World Imagery (study).", privacy: "Privacy" },
+    footer: { rights: "Sigve Simonsen AS", data: "Data: Kartverket (CC BY 4.0), Norkart, OpenStreetMap (ODbL), AWS Terrain Tiles. Aerial imagery in the model: Esri World Imagery (study).", privacy: "Privacy" },
   },
 } as const;
 

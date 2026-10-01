@@ -245,7 +245,9 @@
    76.8
   ]
  ],
- "note": "Layout v5 clears only around the houses (14 m) and the roads (6.5 m); trees.json carries the flag per tree. The polygon is the hill parcel, kept for reference.",
+ "note": "Layout v6 clears around the houses (14 m), the road (6.5 m) and the footpath (2.5 m), and the trees in each living room's line of sight to the water; trees.json carries the flag per tree. The polygon is the hill parcel, kept for reference.",
  "house_radius_m": 14.0,
- "road_radius_m": 6.5
+ "road_radius_m": 6.5,
+ "path_radius_m": 2.5,
+ "view_corridor_trees": 84
 }

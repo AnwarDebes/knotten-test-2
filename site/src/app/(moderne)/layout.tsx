@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Cinzel, Geist } from "next/font/google";
 import "./globals.css";
+import { FACT } from "@/lib/facts";
 
 const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -28,7 +29,7 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: "Knotten. Sjøutsikt i Rødberg",
   description:
-    "Rundt 30 energivennlige boliger på en skogkledd knaus over Snigsfjorden i Lindesnes. Terrenget er målt, solen er ekte. Stå på tomten før den finnes.",
+    `Rundt ${FACT.plots} energivennlige boliger på en skogkledd knaus over Audna, nær Sniksfjorden i Lindesnes. Terrenget er målt, solen er ekte. Stå på tomten før den finnes.`,
 };
 
 export const viewport: Viewport = {

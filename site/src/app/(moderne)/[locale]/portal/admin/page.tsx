@@ -3,6 +3,7 @@ import type { Locale } from "@/lib/i18n";
 import { getSession } from "@/lib/auth";
 import { readStore, LEAD_STATUSES } from "@/lib/store";
 import { loadPlots } from "@/lib/data";
+import { plotName } from "@/lib/format";
 import { removeExamples } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -111,7 +112,7 @@ export default async function AdminHome({ params }: { params: Promise<{ locale: 
             <div className="mt-5 grid gap-2.5">
               {wanted.map(([id, n]) => (
                 <div key={id} className="grid grid-cols-[72px_1fr_32px] items-center gap-3 text-[14px]">
-                  <Link href={`/${locale}/tomter/${id}`}>{id.replace("plot-", no ? "Tomt " : "Plot ")}</Link>
+                  <Link href={`/${locale}/tomter/${id}`}>{plotName(id, no)}</Link>
                   <div className="h-[8px] rounded-full bg-bone/10 overflow-hidden"><div className="h-full bg-amber rounded-full" style={{ width: `${(n / maxWanted) * 100}%` }} /></div>
                   <div className="num text-[18px] text-right">{n}</div>
                 </div>

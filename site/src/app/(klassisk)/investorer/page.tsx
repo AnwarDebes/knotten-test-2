@@ -3,6 +3,7 @@ import Link from "next/link";
 import PageHead from "@/components/klassisk/PageHead";
 import Reveal from "@/components/klassisk/Reveal";
 import { Src } from "@/components/klassisk/Source";
+import { FINAL_PHASE, weeks } from "@/lib/facts";
 
 export const metadata: Metadata = { title: "Investorer og kommune" };
 
@@ -10,7 +11,7 @@ export default function Investorer() {
   return (
     <>
       <PageHead title="Investorer og kommune" crumb="Investorer og kommune" aside={<Link className="btn" href="/kontakt">Be om investormateriale</Link>}>
-        <p>Knotten skal bli et nasjonalt referanseprosjekt. Det krever at alt som sies kan dokumenteres. Her er hva vi kan vise i dag, og hva som kommer.</p>
+        <p>Ambisjonen er at Knotten blir et nasjonalt referanseprosjekt. Det krever at alt som sies kan dokumenteres. Her er hva vi kan vise i dag, og hva som kommer.</p>
       </PageHead>
       <section className="sec">
         <div className="wrap">
@@ -20,7 +21,7 @@ export default function Investorer() {
               <ul>
                 <li>Forventede energibesparelser, med forutsetningene synlige for hvert tall</li>
                 <li>Driftskostnader over tid, per bolig og for feltet samlet</li>
-                <li>Skalerbarhet: konseptet er tenkt gjenbrukt i andre felt</li>
+                <li>Skalerbarhet: om konseptet kan gjenbrukes i andre felt, er et av spørsmålene prosjektet skal belyse</li>
                 <li>Innovasjonsverdi og aktuelle støtteordninger</li>
                 <li>ESG og bærekraftseffekt, målt når feltet står</li>
               </ul>
@@ -31,7 +32,7 @@ export default function Investorer() {
                 <li>Underlag til reguleringsprosessen, samlet på ett sted</li>
                 <li>Forbruk og effekttopper, og hva det betyr for lokalnettet</li>
                 <li>Robusthet ved strømbrudd for boliger og næring</li>
-                <li>Et datasett fra de eksisterende byggene som finnes nå</li>
+                <li>Et datasett fra de eksisterende byggene, når målingene er hentet inn</li>
                 <li>Studentarbeid og rapporter i dokumentbanken</li>
               </ul>
             </div>
@@ -46,8 +47,8 @@ export default function Investorer() {
             </div>
             <div className="stack">
               <div className="eyebrow">Hva som kommer</div>
-              <h2>Neste steg for plattformen</h2>
-              <p className="measure">Time for time-simulering av hele feltet mot reelle strømpriser. Privat område for investorer og kommune. Sanntidsdata fra kontorbygget. Energidashbord for beboerne når boligene står.</p>
+              <h2>Rapportene i sluttfasen</h2>
+              <p className="measure">{`Energisporet leverer en teknisk energirapport og markedssporet en markeds- og investorrapport i sluttfasen, ${weeks(FINAL_PHASE.weeks)}. Rapportene legges i dokumentbanken når de er levert.`}</p>
             </div>
           </Reveal>
         </div>

@@ -1,7 +1,7 @@
 # Knotten — the digital platform (site)
 
 Next.js 16 · React 19 · three.js / react-three-fiber · Tailwind 4 · TypeScript.
-Implements `../specs/` Release 1 in full, with the portal surfaces of Releases 2–3 as working demos on model data.
+Implements `../specs/` for the public site, with the portal surfaces as working demos on model data.
 
 ## Run
 
@@ -44,13 +44,13 @@ Sigve liked both designs, so the site carries both and the visitor chooses with 
 - One render loop (`StateRenderer`) sets visibility per state (`today · cleared · built · lived`) and draws the frame twice with a scissor split when the wipe is active. Shadows update once per frame.
 - The sun is the real sun (`src/lib/solar.ts`, the NOAA routine the pipeline used) for the date dial's month/hour; default 21 December 12:00.
 - Stand-on-plot puts the camera on the terrace of `plot-NN` at eye height and draws the sea-view corridor arc from `plots.json`.
-- The living field lights roofs (PV), windows (load), flows (sharing) and the hub (SOC) from `src/lib/energy.ts` — a transparent model that Release 3 swaps for live frames of the same shape.
+- The living field lights roofs (PV), windows (load), flows (sharing) and the hub (SOC) from `src/lib/energy.ts` — a transparent model that live meter frames of the same shape can replace later.
 - If the GPU drops the WebGL context, the stage offers *lite mode* (fewer trees, no shadows).
 
 ## Data and assumptions
 
 - `public/data/plots.json`, `trees.json`, `road.json`, `clearing.json` come from `../data` (pipeline outputs). Re-copy after re-running the pipeline.
-- `src/lib/assumptions.ts` holds every figure shown on the site with source, date and `provisional` flag. Nothing is hard-coded in components. Production: the `assumption` table (specs/04).
+- `src/lib/facts/` is the single source of the project's facts, shared by both designs and the portal: `sources.ts` (the quotes behind every "Kilde" chip), `figures.ts` (the key numbers in `FACT`, the assumptions with source, date and `provisional` flag, and the Klassisk figures table), `energy.ts` (energy budget, EED borehole field, the measures with their verdicts, and the owner's direction), `project.ts` (contact details, the internship, the work plan and the document register) and `core.ts` (number formatting). Pages keep their own markup and wording but take every shared number, date and contact detail from `@/lib/facts`, so one change there reaches both designs. Facts were checked against `knotten-source-informations` on 27 September 2026. Production: the `assumption` table (specs/04).
 - `data/leads.json` (git-ignored) receives registrations in dev. Production: Supabase `lead` table.
 
 ## Images Sigve gave us

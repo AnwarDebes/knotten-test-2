@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PageHead from "@/components/klassisk/PageHead";
 import Reveal from "@/components/klassisk/Reveal";
 import { Src } from "@/components/klassisk/Source";
+import { FACT } from "@/lib/facts";
 
 export const metadata: Metadata = { title: "Eksisterende bygg" };
 
@@ -26,7 +27,7 @@ export default function Bygg() {
       <section className="sec">
         <div className="wrap">
           <Reveal className="blist" stagger>
-            <article><span className="st">I drift</span><h3>Kontorbygget</h3><p>19 kontorer er ferdig i dag. Bygget utvides til 28 kontorer. Faktisk strømforbruk for dagens bygg hentes inn, regnes om per kontor og skaleres til 28, med felleslaster som oppvarming og ventilasjon holdt for seg. <Src id="kontor" /></p></article>
+            <article><span className="st">I drift</span><h3>Kontorbygget</h3><p>{`${FACT.offices_now} kontorer er ferdig i dag. Bygget utvides til ${FACT.offices_after} kontorer. Faktisk strømforbruk for dagens bygg hentes inn, regnes om per kontor og skaleres til ${FACT.offices_after}, med felleslaster som oppvarming og ventilasjon holdt for seg.`} <Src id="kontor" /></p></article>
             <article><span className="st">I drift</span><h3>Bolighuset</h3><p>Ligger nederst i feltet og tas inn i det samlede energibildet for området som en energibruker og mulig energiflate.</p></article>
             <article><span className="st">Planlagt</span><h3>Lager og verksted</h3><p>Bygges rett bak bolighuset. Til målte tall finnes, dimensjoneres bygget som én bolig. Det er en tydelig merket antakelse som byttes ut med målerdata. <Src id="lager" /></p></article>
           </Reveal>

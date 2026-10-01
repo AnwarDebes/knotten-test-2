@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PageHead from "@/components/klassisk/PageHead";
 import Reveal from "@/components/klassisk/Reveal";
 import { Src } from "@/components/klassisk/Source";
-import { FIGURES } from "@/lib/klassisk/sources";
+import { FIGURES } from "@/lib/facts";
 
 export const metadata: Metadata = { title: "Kilder og forutsetninger" };
 
@@ -12,7 +12,7 @@ export default function Kilder() {
   return (
     <>
       <PageHead title="Kilder og forutsetninger" crumb="Kilder og forutsetninger">
-        <p>Én rad per tall som brukes på nettsiden: hva det er, verdien, hvor den kommer fra, hvem som eier den og hvor sikker den er. Et tall som ikke står her, står ikke på siden.</p>
+        <p>Én rad per tall som brukes på nettsiden: hva det er, verdien, hvor den kommer fra, hvem som eier den og hvor sikker den er.</p>
       </PageHead>
       <section className="sec" style={{ paddingTop: 32 }}>
         <div className="wrap">

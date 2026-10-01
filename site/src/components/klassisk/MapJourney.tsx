@@ -5,8 +5,8 @@ import Link from "next/link";
 import { MAPS } from "@/lib/klassisk/maps";
 import { Src } from "./Source";
 
-const STEPS: { key: keyof typeof MAPS; src?: "audna" | "areal" | "bygg" | "vei" | "profil" | "foto" | "posisjon" }[] = [
-  { key: "siktlinje", src: "audna" },
+const STEPS: { key: keyof typeof MAPS; src?: "sikt" | "areal" | "bygg" | "vei" | "profil" | "foto" | "posisjon" }[] = [
+  { key: "siktlinje", src: "sikt" },
   { key: "terreng", src: "posisjon" },
   { key: "eiendom", src: "areal" },
   { key: "omrade", src: "areal" },

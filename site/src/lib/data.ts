@@ -29,7 +29,7 @@ export async function loadCommercial(): Promise<Record<string, PlotCommercial>> 
   const out: Record<string, PlotCommercial> = {};
   for (const p of plots) {
     const s = store.plots[p.id];
-    out[p.id] = { id: p.id, status: s?.status ?? "unreleased", price_nok: s?.price_nok, note: s?.note, house_type: p.zone === "flat" ? "Enebolig 1 etasje, flaten" : (p.house.storeys ?? 1) > 1 ? "Enebolig 1,5 etasje" : "Enebolig 1 etasje" };
+    out[p.id] = { id: p.id, status: s?.status ?? "unreleased", price_nok: s?.price_nok, note: s?.note, house_type: p.zone === "flat" ? "Modell: 1 etasje, flaten" : (p.house.storeys ?? 1) > 1 ? "Modell: 1,5 etasje" : "Modell: 1 etasje" };
   }
   return out;
 }

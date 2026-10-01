@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Plot } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
-import { sunLabel } from "@/lib/format";
+import { plotName, rowLabel, sunLabel } from "@/lib/format";
 
 function SunRow({ label, day, small = false }: { label: string; day: Plot["sun"]["dec21"]; small?: boolean }) {
   const pct = Math.max(0, Math.min(1, day.possible_hours ? day.hours / day.possible_hours : 0));
@@ -29,8 +29,8 @@ export default function Passport({ plot, locale, compact = false }: { plot: Plot
     <div className={compact ? "paper p-3.5 text-[13px]" : "paper p-5 md:p-6"}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className={`display leading-none ${compact ? "text-[20px]" : "text-[30px]"}`}>{plot.id.replace("plot-", no ? "Tomt " : "Plot ")}</div>
-          <div className="provenance mt-1.5">{plot.zone === "flat" ? P.flat : `${P.row} ${plot.row}`}, {plot.local.z_ground.toFixed(0)} moh.</div>
+          <div className={`display leading-none ${compact ? "text-[20px]" : "text-[30px]"}`}>{plotName(plot.id, no)}</div>
+          <div className="provenance mt-1.5">{plot.zone === "flat" ? P.flat : `${P.row} ${rowLabel(plot)}`}, {plot.local.z_ground.toFixed(0)} moh.</div>
         </div>
         <div className="text-right">
           <div className={`num leading-none ${compact ? "text-[20px]" : "text-[30px]"}`}>{plot.view.water_visible_deg}°</div>
@@ -52,8 +52,8 @@ export default function Passport({ plot, locale, compact = false }: { plot: Plot
 
       <div className={compact ? "hidden" : "provenance mt-4"}>
         {no
-          ? "Kartverket DTM 1 m og NOAA solposisjon. Terrengskygge med feltet ryddet. Beregnet 2026-09-14 for foreløpig utlegg v5 (terrasser), med nabohusene stående."
-          : "Kartverket DTM 1 m and NOAA solar position. Terrain shading with the field cleared. Computed 2026-09-14 for provisional layout v5 (terraces), with the neighbouring houses standing."}
+          ? "Kartverket DTM 1 m og NOAA solposisjon. Terrengskygge med feltet ryddet. Beregnet 2026-09-30 for foreløpig utlegg v6 (rekke A til D), med nabohusene stående."
+          : "Kartverket DTM 1 m and NOAA solar position. Terrain shading with the field cleared. Computed 2026-09-30 for provisional layout v6 (rows A to D), with the neighbouring houses standing."}
       </div>
       {!compact && (
         <div className="mt-5 flex flex-wrap gap-2.5">

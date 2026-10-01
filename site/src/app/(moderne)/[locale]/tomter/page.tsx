@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import { loadPlots, loadCommercial } from "@/lib/data";
-import { sunLabel } from "@/lib/format";
+import { plotName, rowLabel, sunLabel } from "@/lib/format";
+import { FACT, word } from "@/lib/facts";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import Stage from "@/components/Stage";
@@ -27,8 +28,8 @@ export default async function Plots({ params, searchParams }: { params: Promise<
       <PageHead
         title={d.nav.plots}
         lede={no
-          ? `${plots.length} tomter innenfor eiendomsgrensen, i terrasser over sørhellingen, en rekke på hvert nivå rett under den over, slik prosjekteier vil forme terrenget, alle med målt sjøutsikt. Utlegget er foreløpig og byttes ut med den regulerte planen, men tallene per tomt er allerede regnet fra terrenget.`
-          : `${plots.length} plots inside the parcel boundary, in terraces across the south face, a row on every level right under the one above, as the project owner intends to shape the ground, all with a measured sea view. The layout is provisional and will be replaced by the regulated plan, but the numbers per plot are already computed from the terrain.`}
+          ? `I modellen ligger ${plots.length} tomter innenfor eiendomsgrensen, i ${word(FACT.rows)} rekker som i prosjekteiers plan: A, B og C over hverandre i sørhellingen og D på knausen Knotten. Ønsket er sjøutsikt fra alle tomtene, men det er ikke sikkert at det går fra alle; i modellens forslag ser alle vann. Utlegget er foreløpig og byttes ut med den regulerte planen, men tallene per tomt er allerede regnet fra terrenget.`
+          : `In the model, ${plots.length} plots sit inside the parcel boundary, in ${word(FACT.rows, "en")} rows as in the project owner's plan: A, B and C one above the other on the south face and D on the Knotten knoll. The aim is a sea view from every plot, but it is not certain every plot will get one; in the model's proposal all see water. The layout is provisional and will be replaced by the regulated plan, but the numbers per plot are already computed from the terrain.`}
         action={<Link className="btn btn-amber" href={`/${locale}/interesse`}>{d.cta.register}</Link>}
       />
       <Stage plots={plots} locale={locale} initialMode="plot" initialPlot={sorted[0].id} compact />
@@ -59,11 +60,11 @@ export default async function Plots({ params, searchParams }: { params: Promise<
             <tbody>
               {sorted.map((p) => (
                 <tr key={p.id}>
-                  <td><Link href={`/${locale}/tomter/${p.id}`} className="font-medium">{p.id.replace("plot-", no ? "Tomt " : "Plot ")}</Link></td>
-                  <td>{p.zone === "flat" ? (no ? "flaten" : "flat") : p.row}</td>
+                  <td><Link href={`/${locale}/tomter/${p.id}`} className="font-medium">{plotName(p.id, no)}</Link></td>
+                  <td>{p.zone === "flat" ? (no ? "flaten" : "flat") : rowLabel(p)}</td>
                   <td className="n">{p.local.z_ground.toFixed(0)} m</td>
                   <td className="n">{p.sun.dec21.hours.toFixed(1)} h</td>
-                  <td>{sunLabel(p.sun.dec21.first_sun_cet)} til {sunLabel(p.sun.dec21.last_sun_cet)}</td>
+                  <td>{sunLabel(p.sun.dec21.first_sun_cet)} {no ? "til" : "to"} {sunLabel(p.sun.dec21.last_sun_cet)}</td>
                   <td className="n">{p.sun.jun21.hours.toFixed(1)} h</td>
                   <td className="n">{p.view.water_visible_deg}°</td>
                   <td>{p.view.open_sea_visible ? (no ? "ja" : "yes") : (no ? "nei" : "no")}</td>
@@ -77,8 +78,8 @@ export default async function Plots({ params, searchParams }: { params: Promise<
         </div>
         <p className="provenance mt-5 max-w-[80ch]">
           {no
-            ? "Sol: terrengskygge med feltet ryddet, ingen skygge mellom hus. Sjø: siktlinje til celler på havnivå; åpent hav er vann lenger unna enn 7 km. Kartverket DTM 1 m med 30 km horisont, beregnet 2026-09-08."
-            : "Sun: terrain shading with the field cleared, no shading between houses. Water: line of sight to sea-level cells; open sea is water beyond 7 km. Kartverket DTM 1 m with a 30 km horizon, computed 2026-09-08."}
+            ? "Sol: terrengskygge med feltet ryddet, ingen skygge mellom hus. Sjø: siktlinje til celler på havnivå; åpent hav er vann lenger unna enn 7 km. Kartverket DTM 1 m med 30 km horisont, beregnet 2026-09-30 for det foreløpige utlegget v6."
+            : "Sun: terrain shading with the field cleared, no shading between houses. Water: line of sight to sea-level cells; open sea is water beyond 7 km. Kartverket DTM 1 m with a 30 km horizon, computed 2026-09-30 for the provisional layout v6."}
         </p>
       </section>
     </>

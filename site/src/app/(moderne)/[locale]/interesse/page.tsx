@@ -16,8 +16,8 @@ export default async function Interest({ params, searchParams }: { params: Promi
       <PageHead
         title={no ? "Meld interesse" : "Register interest"}
         lede={no
-          ? "Tomtene er ikke sluppet ennå. Registrer deg, så får du beskjed først. Du velger selv hva vi får bruke kontakten til."
-          : "The plots are not released yet. Register and you hear first. You choose what we may use your contact for."}
+          ? "Tomtene er ikke sluppet ennå. Registrer deg, så får du beskjed når det skjer noe med tomtene. Du velger selv hva vi får bruke kontakten til."
+          : "The plots are not released yet. Register and you hear when something happens with the plots. You choose what we may use your contact for."}
       />
       <section className="wrap pb-24">
         <div className="panel p-6 md:p-8 max-w-[680px]">

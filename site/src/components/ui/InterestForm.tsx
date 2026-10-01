@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Locale } from "@/lib/i18n";
+import { plotNo } from "@/lib/format";
 
 export default function InterestForm({ locale, plots, preselect }: { locale: Locale; plots: string[]; preselect?: string }) {
   const no = locale === "no";
@@ -25,7 +26,7 @@ export default function InterestForm({ locale, plots, preselect }: { locale: Loc
     return (
       <div className="bg-bone border line rounded-[2px] p-6 max-w-[60ch]">
         <div className="display text-[30px]">{no ? "Registrert." : "Registered."}</div>
-        <p className="mt-2">{no ? "Du får en e-post for å bekrefte adressen. Deretter hører du fra oss når det skjer noe med tomtene." : "You will get an email to confirm the address. After that you hear from us when something happens with the plots."}</p>
+        <p className="mt-2">{no ? "Interessen din er lagret. Du hører fra oss når det skjer noe med tomtene." : "Your interest is saved. You will hear from us when something happens with the plots."}</p>
       </div>
     );
   }
@@ -44,7 +45,7 @@ export default function InterestForm({ locale, plots, preselect }: { locale: Loc
         <legend className="mb-1">{no ? "Tomter jeg vil høre om" : "Plots I want to hear about"}</legend>
         <div className="flex flex-wrap gap-1">
           {plots.map((p) => (
-            <label key={p} className="chip cursor-pointer"><input type="checkbox" name="plots" value={p} defaultChecked={p === preselect} className="mr-1" />{p.replace("plot-", "")}</label>
+            <label key={p} className="chip cursor-pointer"><input type="checkbox" name="plots" value={p} defaultChecked={p === preselect} className="mr-1" />{plotNo(p)}</label>
           ))}
         </div>
       </fieldset>
@@ -56,7 +57,7 @@ export default function InterestForm({ locale, plots, preselect }: { locale: Loc
       </fieldset>
       <button className="btn btn-amber justify-self-start" disabled={state === "sending"}>{state === "sending" ? "…" : no ? "Meld interesse" : "Register interest"}</button>
       {state === "error" && <div className="text-[14px] text-amber-deep">{err === "consent_required" ? (no ? "Kryss av for oppdateringer for å sende." : "Tick updates consent to send.") : (no ? "Sjekk e-postadressen." : "Check the email address.")}</div>}
-      <div className="provenance">{no ? "Lagres i EU. Du kan få eksportert eller slettet dine data når som helst." : "Stored in the EU. You can export or delete your data at any time."}</div>
+      <div className="provenance">{no ? "Du kan få eksportert eller slettet dine data når som helst." : "You can export or delete your data at any time."}</div>
     </form>
   );
 }

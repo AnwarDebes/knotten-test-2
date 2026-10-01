@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { SOURCES } from "@/lib/klassisk/sources";
+import { SOURCES, type SourceId } from "@/lib/facts";
 
 type Ctx = { open: (id: string, el: HTMLElement) => void; current: string | null };
 const SourceCtx = createContext<Ctx>({ open: () => {}, current: null });
@@ -34,7 +34,7 @@ export default function SourceProvider({ children }: { children: React.ReactNode
     };
   }, [current]);
 
-  const s = current ? SOURCES[current] : null;
+  const s = current ? SOURCES[current as SourceId] : null;
   return (
     <SourceCtx.Provider value={{ open, current }}>
       {children}
@@ -42,7 +42,7 @@ export default function SourceProvider({ children }: { children: React.ReactNode
         <div ref={popRef} className="pop" role="dialog" aria-live="polite" style={{ left: pos.left, top: pos.top }}>
           {s.quote}
           <small>
-            {s.doc}
+            {s.doc.no}
             {s.url && (
               <>
                 {" "}
@@ -57,7 +57,7 @@ export default function SourceProvider({ children }: { children: React.ReactNode
 }
 
 /** The chip. Put it right after the number it documents. */
-export function Src({ id, label = "Kilde" }: { id: keyof typeof SOURCES; label?: string }) {
+export function Src({ id, label = "Kilde" }: { id: SourceId; label?: string }) {
   const { open, current } = useContext(SourceCtx);
   return (
     <button type="button" className="src" aria-expanded={current === id} onClick={(e) => open(id, e.currentTarget)}>

@@ -87,7 +87,7 @@ Both states share terrain, sun and horizon, so a wipe lines up exactly.
 |---|---|---|
 | Site + context terrain | Kartverket NHM DTM (national LiDAR), hoydedata.no | 1 m (web mesh 2 m / 5 m) |
 | Existing roofs | Kartverket NHM DOM, profile swept per footprint | 1 m |
-| Trees: position, height | canopy height model DOM − DTM, treetop detection | 1 m, 32 312 trees |
+| Trees: position, height | canopy height model DOM − DTM, treetop detection | 1 m, 31 823 trees |
 | 8 km / 30 km horizon | AWS terrain tiles (terrarium) | 20 m / 80 m |
 | Ground colour | Esri World Imagery mosaic | 0.32 m/px |
 | Footprints, roads, power lines | OpenStreetMap | — |
@@ -100,20 +100,25 @@ For every plot: ground and floor level, slope/aspect, level-pad cut/fill, **sun 
 open sea beyond 7 km is visible), and a 360° terrain horizon profile — the input the energy group needs
 for PV irradiance with real ridge shading.
 
-Headline from the provisional layout: 27 plots, open sea visible from 16, fjord/river from 20;
-winter-solstice sun 3.3–4.0 h on the top row.
+Headline from the provisional layout (v6, 30 September 2026): 30 plots in rows A to D (9, 10, 7 and 4),
+all 30 with water and open sea in view with the neighbouring houses standing; winter-solstice sun 2.3–4.4 h.
 
 ## Assumptions (replace when the real inputs arrive)
 
-1. **House layout is provisional.** Rows on the 78/68/58/48 m contours of the south-facing slope, 22 m
-   spacing, 11 × 8.5 m 1.5-storey houses — the *structure* of Sigve's sketch, not its geometry.
-   Swap in the georeferenced plan and re-run `pipeline/plan_layout.py`; every number regenerates.
-2. **Ramps between rows are straight placeholders.** `road.json` states, per ramp, the climb and the
-   length a 6 % road needs; where a straight ramp can't meet it, the real plan needs a hairpin.
-3. **Clearing extent** = bounding box of the rows + 15 m.
+1. **House layout is provisional.** Layout v6 (`pipeline/plan_layout_v6.py`): the four rows of the plan,
+   A (plots 1–9), B (10–19), C (20–26) and D (27–30), numbered as in the Klassisk site plan and laid along
+   the measured terrain inside parcel 355/10: A along the rim under Løkkeheia, B across the slope and on
+   the east shoulder, C above the steep band, D on the south face of the Knotten knoll. 11 × 8.5 m
+   1.5-storey houses at least 14 m apart and 10.5 m inside the boundary. Replace with the regulation plan
+   when it exists and re-run; every number regenerates.
+2. **The road is drawn on today's ground.** One road from the yard by Rødbergsveien behind every row,
+   with hairpins at alternating ends as in the sketch. `road.json` states, per link, how far it goes up
+   and down and the length a 6 % road needs; the regulation plan sets the real loops and earthworks.
+3. **Clearing extent** = 14 m around each house, 6.5 m along the road, 2.5 m along the footpath, and the
+   trees standing in each living room's line of sight to the water it sees (84 trees in v6).
 4. **Sun hours** are terrain shading only — no shading between houses, no trees (field cleared).
 5. **Tree crowns are modelled** (cones); heights and positions are measured.
-6. **Site boundary** is not the legal parcel — needs gnr/bnr → Matrikkel.
+6. **Site boundary** is the legal parcel 355/10 (and the yard, 355/368) from the Matrikkel, `data/parcels.json`.
 7. **Imagery licence:** Esri World Imagery is fine for study; for the public website use Norge i bilder
    (needs a Geonorge login) or the project's own drone orthophoto, and rebuild `web/textures`.
 
@@ -126,3 +131,8 @@ AWS Terrain Tiles: public. Esri World Imagery: Esri terms of use — see assumpt
 `fetch_horizon.py` → `fetch_kartverket.py` → `prep_kartverket.py` → `plan_layout.py` → then in Blender
 `build_final.py` (which runs `build_gjedeland_kv.py`). Host scripts need Python 3 + Pillow; Blender 5.2 with a
 GPU for the renders.
+
+The current layout: `plan_layout_v6.py` (writes `data/plots.json`, `road.json`, `clearing.json`, `trees.json`
+and the copies in `site/public/data`) → `build_klassisk_plan.py` (the Klassisk site plan,
+`site/src/lib/klassisk/siteplan.ts`) → in Blender `relayout_v2.py` (stills and fly-in frames) →
+`optimise_images.py` → ffmpeg for `site/public/renders/knotten_flyin_720p.mp4`.

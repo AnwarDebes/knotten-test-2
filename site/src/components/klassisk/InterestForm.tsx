@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { CONTACT } from "@/lib/facts";
 
 /** Each "interessert som" choice and the purpose the project's lead records use for it. */
 const ROLES: [string, "buy" | "invest" | "partner" | "curious"][] = [
@@ -62,10 +63,10 @@ export default function InterestForm({ plot }: { plot?: string }) {
       </label>
       <div className="full cta-row" style={{ marginTop: 4 }}>
         <button className="btn" type="submit" disabled={state === "sending" || state === "sent"}>{state === "sending" ? "Sender" : "Send interessemelding"}</button>
-        {state === "sent" && <span className="small" style={{ alignSelf: "center" }}>Sendt. Du får en bekreftelse på e-post innen to virkedager.</span>}
+        {state === "sent" && <span className="small" style={{ alignSelf: "center" }}>Sendt. Takk, interessen din er registrert.</span>}
         {state === "error" && (
           <span className="small no" style={{ alignSelf: "center" }}>
-            {err === "invalid_email" ? "Sjekk e-postadressen." : err === "consent_required" ? "Kryss av for samtykket for å sende." : "Det gikk ikke å sende. Prøv igjen, eller skriv til sigve.simonsen@hotmail.com."}
+            {err === "invalid_email" ? "Sjekk e-postadressen." : err === "consent_required" ? "Kryss av for samtykket for å sende." : `Det gikk ikke å sende. Prøv igjen, eller skriv til ${CONTACT.email}.`}
           </span>
         )}
       </div>

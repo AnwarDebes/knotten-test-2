@@ -13,14 +13,14 @@ export default async function Research({ params }: { params: Promise<{ locale: s
     ["trees.json", no ? "31 823 trær: posisjon, høyde, krone, art, ryddet" : "31,823 trees: position, height, crown, species, cleared", "CC BY 4.0", "/data/trees.json"],
     ["road.json", no ? "Vei: rekker, ramper, stigning per segment" : "Road: rows, ramps, grade per segment", "CC BY 4.0", "/data/road.json"],
     ["clearing.json", no ? "Ryddeområde (foreløpig)" : "Clearing extent (provisional)", "CC BY 4.0", "/data/clearing.json"],
-    ["energy_contract.schema.json", no ? "Datakontrakt for energigruppen" : "Data contract for the energy group", "MIT", "/data/schemas/energy_contract.schema.json"],
-    [no ? "Målerserier" : "Meter series", no ? "Fra utgivelse 2, anonymisert per samtykke" : "From release 2, anonymised per consent", "DSA", ""],
+    ["energy_contract.schema.json", no ? "Datakontrakt for energisporet" : "Data contract for the energy track", "MIT", "/data/schemas/energy_contract.schema.json"],
+    [no ? "Målerserier" : "Meter series", no ? "Senere, anonymisert per samtykke" : "Later, anonymised per consent", "DSA", ""],
   ];
   return (
     <div className="grid gap-10">
       <div>
         <h1 className="display text-[clamp(36px,5vw,60px)]">{no ? "Forskningsrom · UiA" : "Research space · UiA"}</h1>
-        <p className="measure mt-3">{no ? "Datasett med skjema, lisens og versjon. Siteringstekst: «Knotten digital tvilling, Sigve Simonsen AS / UiA, 2026». API-nøkler kommer i utgivelse 2." : "Datasets with schema, licence and version. Citation: “Knotten digital twin, Sigve Simonsen AS / UiA, 2026”. API keys arrive in release 2."}</p>
+        <p className="measure mt-3">{no ? "Datasett med skjema, lisens og versjon. Siteringstekst: «Knotten digital tvilling, Sigve Simonsen AS / UiA, 2026». API-nøkler kommer senere." : "Datasets with schema, licence and version. Citation: “Knotten digital twin, Sigve Simonsen AS / UiA, 2026”. API keys come later."}</p>
       </div>
       <table className="table max-w-[100ch]">
         <thead><tr><th>{no ? "Datasett" : "Dataset"}</th><th>{no ? "Innhold" : "Contents"}</th><th>{no ? "Lisens" : "Licence"}</th><th></th></tr></thead>

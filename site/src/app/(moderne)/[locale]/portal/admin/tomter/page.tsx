@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import { readStore, PLOT_STATUSES } from "@/lib/store";
 import { loadPlots } from "@/lib/data";
+import { plotName, rowLabel } from "@/lib/format";
 import { savePlot, setAllPlots } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +41,7 @@ export default async function AdminPlots({ params }: { params: Promise<{ locale:
               const s = store.plots[p.id];
               return (
                 <tr key={p.id}>
-                  <td><Link href={`/${locale}/tomter/${p.id}`} className="font-medium whitespace-nowrap">{p.id.replace("plot-", no ? "Tomt " : "Plot ")}</Link><div className="text-[12px] text-muted">{p.zone === "flat" ? (no ? "flaten" : "flat") : `${no ? "rekke" : "row"} ${p.row}`}, {p.local.z_ground.toFixed(0)} m</div></td>
+                  <td><Link href={`/${locale}/tomter/${p.id}`} className="font-medium whitespace-nowrap">{plotName(p.id, no)}</Link><div className="text-[12px] text-muted">{p.zone === "flat" ? (no ? "flaten" : "flat") : `${no ? "rekke" : "row"} ${rowLabel(p)}`}, {p.local.z_ground.toFixed(0)} m</div></td>
                   <td className="n">{p.sun.dec21.hours.toFixed(1)} h</td>
                   <td className="n">{p.view.water_visible_deg}°{p.view.open_sea_visible ? "" : ""}</td>
                   <td className="n">{wanted[p.id] ?? 0}</td>

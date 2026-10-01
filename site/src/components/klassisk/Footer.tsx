@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import OwnerLogo from "./OwnerLogo";
+import { CONTACT } from "@/lib/facts";
 
 export default function Footer() {
   return (
@@ -34,14 +35,14 @@ export default function Footer() {
         </div>
         <div>
           <h4>Kontakt</h4>
-          <span style={{ display: "block", padding: "4px 0 8px", fontSize: ".95rem" }}>Prosjekteier: Sigve Simonsen AS</span>
-          <a href="mailto:sigve.simonsen@hotmail.com">sigve.simonsen@hotmail.com</a>
-          <a href="tel:+4795495152">954 95 152</a>
-          <span style={{ display: "block", padding: "4px 0", fontSize: ".95rem" }}>Rødbergsveien 121, 4520 Lindesnes</span>
+          <span style={{ display: "block", padding: "4px 0 8px", fontSize: ".95rem" }}>{`Prosjekteier: ${CONTACT.company}`}</span>
+          <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+          <a href={`tel:${CONTACT.tel}`}>{CONTACT.phone}</a>
+          <span style={{ display: "block", padding: "4px 0", fontSize: ".95rem" }}>{CONTACT.place}</span>
         </div>
         <div className="bottom">
           <OwnerLogo light />
-          <span>Kartgrunnlag: Kartverket og Norkart. Områdebilder: Wikimedia Commons, CC BY-SA 3.0 og 4.0</span>
+          <span>Kartgrunnlag: Kartverket, Norkart og OpenStreetMap-bidragsytere (ODbL). Områdebilder: Wikimedia Commons, CC BY-SA 3.0 og 4.0</span>
           <Link href="/personvern">Personvern</Link>
         </div>
       </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PHOTOS } from "@/lib/klassisk/photos";
 import { Src } from "./Source";
 import CountUp from "./CountUp";
+import { FACT } from "@/lib/facts";
 
 /**
  * Hero: text left, the real view photo right at its native resolution (never upscaled),
@@ -17,9 +18,9 @@ export default function Hero() {
       <div className="wrap hero2-grid">
         <div className="hero2-text">
           <div className="kicker rise">Rødberg i Lindesnes, ved Audna elvas utløp</div>
-          <h1 className="rise d1">Et boligfelt som ser havet, og som klarer seg selv.</h1>
+          <h1 className="rise d1">Et boligfelt som ser havet, og som skal klare seg mest mulig selv.</h1>
           <p className="lede rise d2">
-            Rundt 30 tomter på Knotten, i rekker oppover en skogkledd knaus over Sniksfjorden. Alle tomtene planlegges med sjøutsikt. Feltet planlegges fra første dag med lavt energibehov, egen energiproduksjon, lagring og drift ved strømbrudd. Alle tall vi viser kan spores til sin kilde.
+            {`Rundt ${FACT.plots} tomter på Knotten, i rekker oppover en skogkledd knaus over Sniksfjorden.`} Ønsket er sjøutsikt fra alle tomtene, men det er ikke sikkert at det går fra alle. Feltet planlegges fra første dag med lavt energibehov, egen energiproduksjon, lagring og robusthet ved strømbrudd. Alle tall vi viser kan spores til sin kilde.
           </p>
           <div className="cta-row rise d3">
             <Link className="btn" href="/tomtene">Se tomtene</Link>
@@ -39,10 +40,10 @@ export default function Hero() {
       </div>
       <div className="wrap">
         <div className="facts">
-          <div className="fact"><CountUp value={30} prefix="Rundt " /><span>tomter, alle planlagt med sjøutsikt <Src id="sigve30" /></span></div>
-          <div className="fact"><CountUp value={40181} suffix=" m²" /><span>samlet tomteareal, gnr 355 bnr 10 og 368 <Src id="areal" /></span></div>
-          <div className="fact"><CountUp value={6} prefix="Maks " suffix=" %" /><span>stigning på veiene i feltet <Src id="vei" /></span></div>
-          <div className="fact"><b>Regulering</b><span>pågår. Prosjektet starter før reguleringsplan <Src id="regulering" /></span></div>
+          <div className="fact"><CountUp value={FACT.plots} prefix="Rundt " /><span>tomter, ønsket er sjøutsikt fra alle <Src id="sigve30" /></span></div>
+          <div className="fact"><CountUp value={FACT.parcel_m2} suffix=" m²" /><span>{`samlet for eiendommene gnr ${FACT.gnr} bnr ${FACT.bnr} og ${FACT.bnr_extra}`} <Src id="areal" /></span></div>
+          <div className="fact"><CountUp value={FACT.road_grade_pct} prefix="Maks " suffix=" %" /><span>stigning på veiene i feltet <Src id="vei" /></span></div>
+          <div className="fact"><b>Regulering</b><span>ikke vedtatt ennå. Prosjektet starter før reguleringsplan <Src id="regulering" /></span></div>
         </div>
       </div>
     </section>

@@ -90,11 +90,11 @@ export default function PlotStage() {
             <button type="button" className="back" onClick={() => setSel(null)}>‹ Alle tomter</button>
             <div className="eyebrow" style={{ margin: "6px 0 2px" }}>Valgt tomt</div>
             <h3>Tomt {p.n}, rekke {p.row}</h3>
-            <p className="small" style={{ marginTop: 8 }}>Planlagt med sjøutsikt mot sør, ut Sniksfjorden. Størrelse, pris og byggegrense oppgis når reguleringen er vedtatt.</p>
+            <p className="small" style={{ marginTop: 8 }}>Ønsket er sjøutsikt mot sør, ut Sniksfjorden, men det er ikke sikkert for alle tomtene. Størrelse, pris og byggegrense oppgis når reguleringen er vedtatt.</p>
             <dl className="kv">
-              <div><dt>Sjøutsikt</dt><dd>Planlagt</dd></div>
+              <div><dt>Sjøutsikt</dt><dd>Ønsket</dd></div>
               <div><dt>Terreng</dt><dd>{p.terrain}</dd></div>
-              <div><dt>Tak</dt><dd>Sørvendt, forberedt for solceller</dd></div>
+              <div><dt>Tak</dt><dd>Sørvendt, så enkelt som mulig for solceller</dd></div>
               <div><dt>Status</dt><dd>Ikke lagt ut for salg</dd></div>
             </dl>
             <div className="cta-row" style={{ marginTop: 14 }}>
@@ -108,7 +108,7 @@ export default function PlotStage() {
               <span className="ico"><i /></span>
               <b>Tomt {q.n}</b>
               <span className="m">Rekke {q.row}</span>
-              <span className="m"><span className="dot g" />Sjøutsikt planlagt</span>
+              <span className="m"><span className="dot g" />Sjøutsikt ønsket</span>
             </button>
           ))}
         </div>

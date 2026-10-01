@@ -40,7 +40,7 @@ export default async function Resident({ params }: { params: Promise<{ locale: s
           <h2 className="display text-[28px]">{no ? "Samtykker" : "Consents"}</h2>
           <div className="grid gap-2 mt-3 text-[15px] max-w-[60ch]">
             {(no ? ["Dele mine målinger med feltet (aggregert)", "Dele anonymiserte data med UiA", "La optimalisering styre varmepumpe og lading (med overstyring)"] : ["Share my readings with the field (aggregated)", "Share anonymised data with UiA", "Let optimisation control heat pump and charging (with override)"]).map((c) => (
-              <label key={c} className="flex items-center gap-2"><input type="checkbox" defaultChecked /> {c}</label>
+              <label key={c} className="flex items-center gap-2"><input type="checkbox" /> {c}</label>
             ))}
           </div>
         </div>

@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import { useSession } from "@/lib/session-client";
 import { ROLE_LABEL } from "@/lib/auth-shared";
 import Logo from "./Logo";
+import { CONTACT, FACT } from "@/lib/facts";
 
 /**
  * The header: the logo, one sentence about the place, and two pills. It floats over the page and
@@ -35,7 +36,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
   }, [open]);
 
   const links: [string, string, string][] = [
-    [p("/tomter"), d.nav.plots, no ? "30 tomter, solpass for hver" : "30 plots, a sun passport for each"],
+    [p("/tomter"), d.nav.plots, no ? `Rundt ${FACT.plots} tomter, solpass for hver` : `About ${FACT.plots} plots, a sun passport for each`],
     [p("/utsikt"), d.nav.view, no ? "Fjorden og åpent hav" : "The fjord and open sea"],
     [p("/energi"), d.nav.energy, no ? "Konseptet og tallene" : "The concept and the numbers"],
     [p("/energi/eksisterende"), no ? "Eksisterende bygg" : "Existing buildings", no ? "Kontoret, boligen og det som planlegges" : "The office, the house and what is planned"],
@@ -43,7 +44,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
     [p("/prosjektet"), d.nav.project, no ? "Fra målt grunnlag til salg" : "From measured basis to sale"],
     [p("/investor"), d.nav.investor, no ? "Det investorer spør om" : "What investors ask"],
     [p("/dokumenter"), no ? "Dokumenter" : "Documents", no ? "Rapporter, kart og notater" : "Reports, maps and notes"],
-    [p("/kontakt"), d.nav.contact, "Sigve Simonsen AS"],
+    [p("/kontakt"), d.nav.contact, CONTACT.company],
   ];
 
   return (
@@ -55,7 +56,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
         </Link>
 
         <p className={`hidden lg:block justify-self-center max-w-[44ch] text-[15px] leading-snug text-center transition-opacity ${scrolled ? "opacity-0" : "opacity-80"}`}>
-          {no ? "Norges mest energivennlige boligfelt. Rundt 30 boliger med sjøutsikt på Knotten i Lindesnes." : "Norway's most energy-friendly housing field. About 30 homes with a sea view on Knotten in Lindesnes."}
+          {no ? `Norges mest energivennlige boligfelt. Rundt ${FACT.plots} boliger på Knotten i Lindesnes, over Sniksfjorden.` : `Norway's most energy-friendly housing field. About ${FACT.plots} homes on Knotten in Lindesnes, above Sniksfjorden.`}
         </p>
 
         <div className="justify-self-end flex items-center gap-2">
@@ -95,7 +96,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
                 <Link className="btn no-underline" href={p("/interesse")} onClick={() => setOpen(false)}>{d.nav.interest}</Link>
               </div>
               <Link href={`/${other}`} className="no-underline text-granite hover:text-bone">{other === "en" ? "Read this in English" : "Les dette på norsk"}</Link>
-              <p className="text-granite max-w-[36ch] mt-6">Knotten, Rødberg, 4520 Lindesnes. Sigve Simonsen AS.</p>
+              <p className="text-granite max-w-[36ch] mt-6">{`${CONTACT.place}. ${CONTACT.company}.`}</p>
             </div>
           </nav>
         </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import { readStore, LEAD_STATUSES } from "@/lib/store";
+import { plotNo } from "@/lib/format";
 import { addLead, addLeadNote, deleteLead, setLeadStatus } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ export default async function Leads({ params, searchParams }: { params: Promise<
               </div>
               <div className="text-[14px]">
                 <div>{no ? "Vil " : "Wants to "}{PURPOSE[x.purpose][locale]}</div>
-                <div className="text-[13px] text-muted">{x.plots.length ? (no ? "Tomt " : "Plot ") + x.plots.map((p) => p.replace("plot-", "")).join(", ") : (no ? "Ingen tomt valgt" : "No plot chosen")}</div>
+                <div className="text-[13px] text-muted">{x.plots.length ? (no ? "Tomt " : "Plot ") + x.plots.map(plotNo).join(", ") : (no ? "Ingen tomt valgt" : "No plot chosen")}</div>
               </div>
               <div className="text-[13px] text-muted">
                 <div>{x.created.slice(0, 16).replace("T", " ")}</div>

@@ -12,7 +12,7 @@ export default function Kart() {
   return (
     <>
       <PageHead title="Kart og terreng" crumb="Kart og terreng">
-        <p>Kartene prosjekteier har lagt til grunn, i full størrelse. Eiendomsgrenser, høydekurver, siktlinjen til havet, terrengprofilen og den første skissen til situasjonsplan.</p>
+        <p>Kartene prosjekteier har lagt til grunn, og et terrengkart laget for nettsiden, i full størrelse. Eiendomsgrenser, høydekurver, siktlinjen til havet, terrengprofilen og den første skissen til situasjonsplan.</p>
       </PageHead>
       <section className="sec" style={{ paddingTop: 32 }}>
         <div className="wrap mapgrid">

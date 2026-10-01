@@ -1,21 +1,22 @@
 "use client";
 import { useMemo, useState } from "react";
 import type { Locale } from "@/lib/i18n";
+import { BUDGET, PV_KWP_PER_HOME, fmt } from "@/lib/facts";
 
 /**
- * Scenario explorer: the response curves are stand-ins with the shape the energy group will
- * replace (a small table, not a black box). Every output states its assumptions version.
+ * Scenario explorer: the response curves are stand-ins with the shape the energy track will
+ * replace (a small table, not a black box). The starting values are the energy budget's.
  */
 export default function Scenario({ locale, homes }: { locale: Locale; homes: number }) {
   const no = locale === "no";
-  const [price, setPrice] = useState(1.1);      // NOK/kWh incl. grid
-  const [pv, setPv] = useState(8);              // kWp per home
-  const [battery, setBattery] = useState(10);   // kWh per home
-  const [v2h, setV2h] = useState(30);           // % of homes
+  const [price, setPrice] = useState(BUDGET.prices.buy_nok);      // NOK/kWh incl. grid
+  const [pv, setPv] = useState(PV_KWP_PER_HOME);              // kWp per home
+  const [battery, setBattery] = useState(BUDGET.battery.per_home_kwh);   // kWh per home
+  const [v2h, setV2h] = useState(0);           // % of homes
   const [subsidy, setSubsidy] = useState(35);   // % of premium (Enova-like)
   const r = useMemo(() => {
-    const demand = 9500;                                         // kWh/yr per home, low-energy
-    const yieldPer = 820;                                        // kWh/kWp/yr at this latitude with ridge shading
+    const demand = 9500;                                         // kWh/yr per home, a placeholder (not from the budget)
+    const yieldPer = BUDGET.pv.yield_kwh_per_kwp;                // kWh/kWp/yr, the energy budget's production factor
     const production = pv * yieldPer;
     const selfUse = Math.min(demand, production * (0.42 + 0.03 * battery + 0.002 * v2h));
     const importKwh = Math.max(0, demand - selfUse);
@@ -26,7 +27,7 @@ export default function Scenario({ locale, homes }: { locale: Locale; homes: num
     const premium = pv * 12000 + battery * 6500 + (v2h / 100) * 15000;
     const netPremium = premium * (1 - subsidy / 100);
     const payback = saving > 0 ? netPremium / saving : Infinity;
-    const co2 = ((selfUse + exportKwh) * 0.13) / 1000;            // t/yr with a Nordic marginal factor
+    const co2 = ((selfUse + exportKwh) * BUDGET.prices.co2_kg_per_kwh) / 1000;            // t/yr with the energy budget's emission factor
     return { production, selfUse, importKwh, exportKwh, saving, netPremium, payback, co2, selfSufficiency: selfUse / demand };
   }, [price, pv, battery, v2h]);
   const nok = (v: number) => Math.round(v).toLocaleString(no ? "nb-NO" : "en-GB");
@@ -61,8 +62,8 @@ export default function Scenario({ locale, homes }: { locale: Locale; homes: num
         ))}
         <div className="provenance sm:col-span-2 lg:col-span-3">
           {no
-            ? "Responskurver er plassholdere (forutsetninger 2026-09-A): 9 500 kWh/bolig/år, 820 kWh/kWp/år med åsskygge, 0,13 kg CO₂/kWh. Energigruppen leverer de endelige kurvene i kontraktsformatet."
-            : "Response curves are placeholders (assumptions 2026-09-A): 9,500 kWh/home/yr, 820 kWh/kWp/yr with ridge shading, 0.13 kg CO₂/kWh. The energy group delivers the final curves in the contract format."}
+            ? `Responskurver er plassholdere. Forbruket på 9 500 kWh per bolig og år er en plassholder; ${BUDGET.pv.yield_kwh_per_kwp} kWh/kWp/år og ${fmt(BUDGET.prices.co2_kg_per_kwh)} kg CO₂/kWh er som i energiregnskapet. Energisporet leverer de endelige tallene.`
+            : `Response curves are placeholders. The consumption of 9,500 kWh per home a year is a placeholder; ${BUDGET.pv.yield_kwh_per_kwp} kWh/kWp/yr and ${fmt(BUDGET.prices.co2_kg_per_kwh, "en")} kg CO₂/kWh are as in the energy budget. The energy track delivers the final figures.`}
         </div>
       </div>
     </div>

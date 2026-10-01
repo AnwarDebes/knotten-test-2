@@ -19,11 +19,11 @@ export default function PlanPreview() {
       </div>
       <SitePlan mode={mode} revealOnView />
       <div className="legend">
-        <span><i style={{ background: "var(--pine)" }} />Tomt, planlagt med sjøutsikt</span>
+        <span><i style={{ background: "var(--pine)" }} />Tomt, sjøutsikt ønsket</span>
         <span><i style={{ background: "#7C8A9B" }} />Eksisterende bygg</span>
         <span><i style={{ border: "1.5px dashed var(--pine)", background: "transparent" }} />Planlagt næringsbygg</span>
       </div>
-      <figcaption><span>Skisse fra prosjekteier, tegnet om. Reguleringsplan er ikke vedtatt, avvik vil forekomme. Hold over en tomt for å se siktretningen.</span></figcaption>
+      <figcaption><span>Prosjekteiers rekker, lagt inn i det målte terrenget innenfor eiendomsgrensen. Foreløpig utlegg; reguleringsplan er ikke vedtatt, avvik vil forekomme. Hold over en tomt for å se siktretningen.</span></figcaption>
     </figure>
   );
 }

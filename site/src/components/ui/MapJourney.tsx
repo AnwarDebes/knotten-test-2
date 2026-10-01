@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/i18n";
 import Src from "./Source";
-import type { SourceId } from "@/lib/sources";
+import { FACT, cap, fmt, word, type SourceId } from "@/lib/facts";
 
 type Step = { file: string; title: { no: string; en: string }; text: { no: string; en: string }; credit: string; src?: SourceId };
 
@@ -13,22 +13,22 @@ const STEPS: Step[] = [
     text: { no: "Fra Raudberg ved Vigeland går den stiplede linjen sørover forbi Snig og ut på åpent hav. Det er den retningen feltet ser.", en: "From Raudberg by Vigeland the dashed line runs south past Snig and out to open sea. That is the direction the field faces." } },
   { file: "terrain_profile.webp", credit: "Norgeskart, prosjekteier", src: "profil",
     title: { no: "Fra vannet og opp", en: "From the water and up" },
-    text: { no: "Terrengprofilen er tegnet fra Spangereidveien nede ved vannet til Knotten. 409,5 meter, flatt først, så bratt opp knausen.", en: "The terrain profile is drawn from Spangereidveien down by the water to Knotten. 409.5 metres, flat at first, then steeply up the knoll." } },
+    text: { no: `Terrengprofilen er tegnet fra Spangereidveien nede ved vannet til Knotten. ${fmt(FACT.profile_m)} meter, flatt først, så bratt opp knausen.`, en: `The terrain profile is drawn from Spangereidveien down by the water to Knotten. ${fmt(FACT.profile_m, "en")} metres, flat at first, then steeply up the knoll.` } },
   { file: "norgeskart_property.webp", credit: "Kartverket, Norgeskart", src: "areal",
     title: { no: "Eiendommen", en: "The parcel" },
-    text: { no: "Rødbergsveien 121, gnr 355 bnr 10, 39 431 m². Sammen med bnr 368 er feltet 40 181 m².", en: "Rødbergsveien 121, cadastral 355/10, 39,431 m². With 355/368 the field is 40,181 m²." } },
+    text: { no: `${FACT.property_address}, gnr ${FACT.gnr} bnr ${FACT.bnr}, ${fmt(FACT.parcel_bnr10_m2)} m². Sammen med bnr ${FACT.bnr_extra} er eiendommene ${fmt(FACT.parcel_m2)} m² til sammen.`, en: `${FACT.property_address}, cadastral ${FACT.gnr}/${FACT.bnr}, ${fmt(FACT.parcel_bnr10_m2, "en")} m². With ${FACT.gnr}/${FACT.bnr_extra} the properties are ${fmt(FACT.parcel_m2, "en")} m² in all.` } },
   { file: "cadastral_map.webp", credit: "Norkart, prosjekteier", src: "flat",
     title: { no: "Området som inngår", en: "The area that goes in" },
-    text: { no: "Prosjekteier har merket området i blått langs den røde grensen: hele knausen, og tungen ned til Rødbergsveien der kontoret og boligen står. Flaten ved veien får ikke sjøutsikt, derfor ligger alle tomtene i hellingen.", en: "The project owner marked the area in blue along the red boundary: the whole knoll, and the tongue down to Rødbergsveien where the office and the house stand. The flat by the road has no sea view, so every plot sits on the slope." } },
+    text: { no: "Prosjekteier har merket området i blått langs den røde grensen: hele knausen, og tungen ned til Rødbergsveien der kontoret og boligen står. Prosjekteier sier at tomter nede på flaten ikke får sjøutsikt.", en: "The project owner marked the area in blue along the red boundary: the whole knoll, and the tongue down to Rødbergsveien where the office and the house stand. The project owner says plots down on the flat will not have a sea view." } },
   { file: "knotten_map.webp", credit: "Norkart, prosjekteier", src: "bygg",
     title: { no: "Det som står der i dag", en: "What stands there today" },
-    text: { no: "Kontorbygget og boligen nederst finnes allerede. De to grønne byggene er planlagt: et tilbygg til kontoret og et lager- og verkstedbygg bak boligen.", en: "The office and the house at the bottom already exist. The two green buildings are planned: an extension to the office and a workshop behind the house." } },
+    text: { no: "Kontorbygget og boligen nederst finnes allerede. De to grønne byggene er planlagt: et tilbygg til kontoret og et lager- og verkstedbygg bak boligen.", en: "The office and the house at the bottom already exist. The two green buildings are planned: an extension to the office and a warehouse and workshop behind the house." } },
   { file: "grillbu_map.webp", credit: "Norkart, prosjekteier", src: "foto",
     title: { no: "Der utsiktsbildet er tatt", en: "Where the view photo was taken" },
-    text: { no: "Naboens grillbu ligger på skrenten øst for Knotten, litt lavere enn feltet. Fotografiene på denne siden er tatt derfra.", en: "The neighbour's grill hut sits on the ledge east of Knotten, a little lower than the field. The photographs on this page were taken from there." } },
+    text: { no: "Naboens grillbu ligger på skrenten øst for Knotten, litt lavere enn feltet. Utsiktsbildet er tatt derfra.", en: "The neighbour's grill hut sits on the ledge east of Knotten, a little lower than the field. The view photo was taken from there." } },
   { file: "site_plan_sketch.webp", credit: "Skisse: prosjekteier", src: "vei",
     title: { no: "Skissen", en: "The sketch" },
-    text: { no: "Rekker av hus langs én vei som svinger seg opp hellingen i hårnålssvinger, med maks 6 prosent stigning og gangstier mellom rekkene. Modellen på forsiden legger rekkene inn i det målte terrenget som terrasser, rekke under rekke, slik prosjekteier vil forme åsen.", en: "Rows of houses along one road that hairpins up the slope, at most 6 percent grade, with footpaths between the rows. The model on the front page puts the rows into the measured terrain as terraces, row under row, the way the project owner intends to shape the hill." } },
+    text: { no: `${cap(word(FACT.rows))} rekker av hus langs én vei som svinger seg opp hellingen i hårnålssvinger, med maks ${FACT.road_grade_pct} prosent stigning og gangstier mellom rekkene. Modellen på forsiden legger rekkene inn i det målte terrenget innenfor eiendomsgrensen: A, B og C over hverandre i sørhellingen og D på knausen Knotten.`, en: `${cap(word(FACT.rows, "en"))} rows of houses along one road that hairpins up the slope, at most ${FACT.road_grade_pct} percent grade, with footpaths between the rows. The model on the front page puts the rows into the measured terrain inside the parcel boundary: A, B and C one above the other on the south face and D on the Knotten knoll.` } },
 ];
 
 /**
