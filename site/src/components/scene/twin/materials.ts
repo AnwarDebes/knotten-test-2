@@ -19,6 +19,10 @@ export const twinUniforms = {
   uWind: { value: 3 },        // m/s at 10 m, from the weather when known
   uPixelAngle: { value: 0.0008 }, // radians per pixel, set from the camera each frame
   uNight: { value: 0 },       // 0 day .. 1 night: lit windows
+  uSunWorld: { value: new THREE.Vector3(0, 1, 0) },  // direction to the sun (scene axes), for the light through the windows
+  uClipHouse: { value: new THREE.Vector4(0, 0, 1, 0) },  // the visited house: x, z (scene), cos and sin of its facing
+  uClipOn: { value: 0 },      // 1 while a house is visited: no ground inside its walls (its own floors are there)
+  uExposureBoost: { value: 1 },  // the eye adapting indoors (the walk raises it inside a house)
   uClear: { value: new THREE.Vector4(0, 0, 0, 0) },  // x0, z0, x1, z1 (three.js axes): trees cleared for a scenario (the shared plant)
   uClearOn: { value: 0 },
 };
@@ -134,6 +138,8 @@ export function terrainMaterial(aerial: THREE.Texture, mask: THREE.Texture, buil
     shader.fragmentShader = shader.fragmentShader
       .replace("#include <common>", `#include <common>
 uniform sampler2D uMask;   // R water, G forest, B broadleaf share of the trees
+uniform vec4 uClipHouse;
+uniform float uClipOn;
 ${built ? "uniform sampler2D uBuilt;" : ""}
 varying vec3 vTwinWorld;
 ${WAVES_GLSL}
@@ -146,6 +152,12 @@ float twinVNoise(vec2 p) {
   return mix(mix(twinNoise(i), twinNoise(i + vec2(1.0, 0.0)), u.x), mix(twinNoise(i + vec2(0.0, 1.0)), twinNoise(i + vec2(1.0, 1.0)), u.x), u.y);
 }`)
       .replace("#include <map_fragment>", `#include <map_fragment>
+// inside the visited house's walls the house's own floors stand in for the ground
+if (uClipOn > 0.5) {
+  vec2 cd = vec2(vTwinWorld.x - uClipHouse.x, -(vTwinWorld.z - uClipHouse.y));
+  float cu = cd.x * uClipHouse.z - cd.y * uClipHouse.w, cv = cd.x * uClipHouse.w + cd.y * uClipHouse.z;
+  if (abs(cu) < 5.48 && abs(cv) < 4.23) discard;
+}
 vec3 twinMask = texture2D(uMask, vMapUv).rgb;
 twinWater = smoothstep(0.35, 0.65, twinMask.r);
 diffuseColor.rgb = twinSeason(diffuseColor.rgb, twinMask.g, twinMask.b);

@@ -153,8 +153,12 @@ and Pillow; downloads are cached in `source/twin/`, which git ignores):
 4. `twin_trees.py`: the trees (`trees.bin`, `trees.json`): treetops in the laser data, species from SR16, AR5
    and the aerial photo (a crown that is dark in the summer photo is a conifer).
 5. `twin_broadleaf.py`: the broadleaf share of the trees into the masks' blue channel (the winter look of the woods).
-6. `twin_grading.py`: the plan's pads, roads and gardens graded into the inner ring (`ring_r0b_*`).
-7. `twin_energy.py` and `twin_names.py`: the energy simulation's inputs (`energy.json`) and the place names.
+6. `twin_houses.py`: the model's example house fitted to each plot (`houses.json`): a lower floor under the view
+   side where the ground in front lies low enough (18 of the 30 plots), one floor elsewhere; every other house mirrored.
+7. `twin_grading.py`: the plan's pads, roads and gardens graded into the inner ring (`ring_r0b_*`), with a patio
+   dug to the lower floor's level in front of the houses that have one, and every footprint kept clear of its
+   neighbours' slopes.
+8. `twin_energy.py` and `twin_names.py`: the energy simulation's inputs (`energy.json`) and the place names.
 
 The stills in `renders/` that come from the live model, and the fly-in, are made in the browser with
 `?twindebug` (see `site/README.md` and `pipeline/twin_flyin.js`).

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
@@ -15,6 +15,10 @@ import { plotNo } from "@/lib/format";
 import Dial, { type DialValue } from "./ui/Dial";
 import Passport from "./ui/Passport";
 import type { CameraPreset } from "./scene/KnottenScene";
+import WalkHud from "./walk/WalkHud";
+import { fitFor, loadHouses } from "./scene/house/frame";
+import { addLook, requestClick, setLive, subscribeWalk, walkState, walkVersion, type LiveFigures, type WalkStart } from "./scene/house/walkState";
+import type { HouseFit } from "@/lib/house/plan";
 
 const KnottenScene = dynamic(() => import("./scene/KnottenScene"), { ssr: false });
 
@@ -54,6 +58,15 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
   const [lost, setLost] = useState(false);
   const [quality, setQuality] = useState<"full" | "lite">("full");
   const [sceneKey, setSceneKey] = useState(0);
+  // on foot through a house (null: the camera views of the stage)
+  const [walk, setWalk] = useState<{ plot: string; start: WalkStart } | null>(null);
+  const [fits, setFits] = useState<HouseFit[] | null>(null);
+  useEffect(() => {
+    if (!armed) return;
+    let alive = true;
+    loadHouses().then((f) => { if (alive) setFits(plots.map((p) => fitFor(f, p))); });
+    return () => { alive = false; };
+  }, [armed, plots]);
   const box = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
 
@@ -95,10 +108,12 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
     setStep(s);
     setInside(false);
     setState("built");
+    // the journey ends inside a house: the camera flies in and stands in the living room
+    setWalk(s === "inside" && showcase ? { plot: showcase, start: "living" } : null);
     if (s === "fjord") { setMode("wipe"); setSelected(null); setPreset("fjord"); }
     if (s === "field") { setMode("wipe"); setSelected(null); setPreset("site"); }
     if (s === "plot") { setMode("plot"); setSelected(showcase); }
-    if (s === "inside") { setMode("plot"); setSelected(showcase); setInside(true); }
+    if (s === "inside") { setMode("plot"); setSelected(showcase); }
   }, [showcase]);
   // auto-advance while playing
   useEffect(() => {
@@ -116,14 +131,18 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
   // as the hero, the journey begins on its own once the model is in (capable desktops only; others get the poster and a button)
   // eslint-disable-next-line react-hooks/set-state-in-effect -- starts when two outside events have both happened: the stage came into view and the model finished loading
   useEffect(() => { if (hero && journey && armed && ready && phase === "invite") start(); }, [hero, journey, armed, ready, phase, start]);
-  const explore = () => { setPhase("explore"); setInside(false); setMode("wipe"); setSelected(null); setPreset("site"); setState("built"); };
+  // exploring from inside the house (the journey's last stop) goes on on foot; from anywhere else, the open field
+  const explore = () => {
+    if (walk) { setPhase("explore"); setMode("plot"); return; }
+    setPhase("explore"); setInside(false); setMode("wipe"); setSelected(null); setPreset("site"); setState("built");
+  };
 
   const onContextLost = useCallback(() => { setLost(true); setReady(false); }, []);
   const retryLite = () => { setQuality("lite"); setLost(false); setSceneKey((k) => k + 1); };
   const plot = useMemo(() => plots.find((p) => p.id === selected) ?? null, [plots, selected]);
   // the living field: the energy simulation (the budget's scenario) at the dial's day and hour
   const homes = useMemo(() => homesOf(plots), [plots]);
-  const { out: simOut } = useSim(homes, BUDGET_SCENARIO, armed && mode === "field");
+  const { out: simOut } = useSim(homes, BUDGET_SCENARIO, armed && (mode === "field" || !!walk));
   const simHour = hourOf(2025, dial.month, 21, Math.floor(dial.hour));
   const sim = useMemo(() => {
     const r = simOut?.result;
@@ -136,13 +155,57 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
     use: simOut.result.field.homes[simHour] + simOut.result.field.heatPumps[simHour] + simOut.result.field.office[simHour],
     soc: simOut.result.field.soc[simHour],
   } : null;
+  // the visited house's own figures at the dial's hour, for its screens and the walk's panel
+  useSyncExternalStore(subscribeWalk, walkVersion, walkVersion);
+  const visit = walk ? walkState.visit : -1;
+  const live = useMemo<LiveFigures | null>(() => {
+    const r = simOut?.result;
+    if (!r || visit < 0 || visit >= r.homes) return null;
+    const h = simHour, k = visit;
+    let yearPv = 0, yearUse = 0;
+    for (let i = 0; i < r.pv[k].length; i++) { yearPv += r.pv[k][i]; yearUse += r.load[k][i]; }
+    const local = { month: dial.month, day: 21, hour: Math.floor(dial.hour) };
+    return {
+      pv: r.pv[k][h], use: r.load[k][h], hp: Math.max(0, r.load[k][h] - r.appliance[k][h]), soc: r.soc[k][h], share: r.share[k][h],
+      grid: r.field.imp[h] - r.field.exp[h], temp: r.field.temp[h], price: r.field.buy[h], cop: r.field.cop[h] || 3.6,
+      hour: local.hour, day: local.day, month: local.month, yearPv, yearUse, selfUse: 0,
+      batteryKwh: r.scenario.batteryKwh, kwp: r.scenario.pvPerHomeKwp, offline: false,
+    };
+  }, [simOut, simHour, visit, dial]);
+  useEffect(() => { setLive(live); }, [live]);
   const onReady = useCallback(() => setReady(true), []);
-  const onPick = useCallback((id: string) => { setSelected(id); setMode("plot"); setState("built"); setInside(false); setPhase("explore"); }, []);
+  const onPick = useCallback((id: string) => { if (walkState.visit >= 0 && walk) return; setSelected(id); setMode("plot"); setState("built"); setInside(false); setPhase("explore"); }, [walk]);
 
   const wipeActive = phase === "explore" && mode === "wipe" && !plot;
   const effectiveState: SceneState = mode === "field" ? "lived" : state;
 
+  // on foot: drag to look, a short click or tap to walk there
+  const drag = useRef<{ x: number; y: number; t: number; moved: number; id: number } | null>(null);
+  const onWalkPointer = (e: React.PointerEvent) => {
+    if (!box.current) return;
+    if (e.type === "pointerdown") {
+      setFocus(true);
+      drag.current = { x: e.clientX, y: e.clientY, t: performance.now(), moved: 0, id: e.pointerId };
+      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      return;
+    }
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    if (e.type === "pointermove") {
+      const dx = e.clientX - d.x, dy = e.clientY - d.y;
+      d.moved += Math.hypot(dx, dy);
+      addLook(dx, dy);
+      d.x = e.clientX; d.y = e.clientY;
+      return;
+    }
+    if (e.type === "pointerup" && d.moved < 8 && performance.now() - d.t < 450) {
+      const r = box.current.getBoundingClientRect();
+      requestClick(e.clientX - r.left, e.clientY - r.top);
+    }
+    drag.current = null;
+  };
   const onPointer = (e: React.PointerEvent) => {
+    if (walk) { onWalkPointer(e); return; }
     if (e.type === "pointerdown") setFocus(true);
     if (!wipeActive || !box.current) return;
     if (e.type === "pointerdown") setDragging(true);
@@ -171,7 +234,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
   return (
     <div ref={root} className={`frame dark relative w-full transition-shadow duration-300 ${focus ? "ring-2 ring-amber" : ""}`} style={{ height: compact ? "min(70vh, 680px)" : hero ? "min(78vh, 820px)" : "min(84vh, 860px)" }}>
 
-      <div ref={box} className={`absolute inset-0 ${ready && !focus ? "cursor-pointer" : ""}`} onPointerDown={onPointer} onPointerMove={onPointer} onPointerUp={onPointer} onPointerLeave={onPointer}>
+      <div ref={box} className={`absolute inset-0 ${walk ? "cursor-grab touch-none" : ready && !focus ? "cursor-pointer" : ""}`} onPointerDown={onPointer} onPointerMove={onPointer} onPointerUp={onPointer} onPointerLeave={onPointer} onPointerCancel={onPointer}>
         {armed && !lost && (
           <KnottenScene
             key={sceneKey}
@@ -188,6 +251,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
             inside={inside}
             preset={preset}
             labels={preset === "fjord" ? "wide" : "near"}
+            walk={walk}
             locale={locale}
             sim={mode === "field" ? sim : undefined}
             showWind={mode === "field"}
@@ -198,6 +262,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
           />
         )}
         {ready && wipeActive && <div className="wipe-handle" style={{ left: `${wipe * 100}%` }} aria-hidden />}
+        {ready && walk && phase === "explore" && <WalkHud locale={locale} plots={plots} fits={fits} live={live} onExit={() => { setWalk(null); setMode("plot"); setPhase("explore"); }} />}
         {ready && wipeActive && (
           <>
             <div className="absolute left-4 top-4 md:left-5 md:top-5 chip">{d.states.today}</div>
@@ -271,7 +336,15 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
       )}
 
       {/* exploring: modes, states, plots, cameras, sun */}
-      {ready && phase === "explore" && (
+      {ready && walk && phase === "explore" && (
+        <div className="absolute right-3 top-14 md:top-auto md:right-5 md:bottom-5 pointer-events-auto flex flex-col items-end" onPointerDown={(e) => e.stopPropagation()}>
+          <button className="md:hidden chip !bg-night/70 mb-2" onClick={() => setShowDial((s) => !s)}>{S.sunHint}</button>
+          <div className={`${showDial ? "block" : "hidden"} md:block`}>
+            <Dial value={dial} onChange={setDial} locale={locale} horizon={plots.find((p) => p.id === (walkState.visit >= 0 ? plots[walkState.visit]?.id : walk.plot))?.horizon_deg_by_bearing} />
+          </div>
+        </div>
+      )}
+      {ready && phase === "explore" && !walk && (
         <>
           {!focus && <div className="absolute left-1/2 -translate-x-1/2 top-4 md:top-5 chip !bg-night/60 !text-white pointer-events-none">{no ? "Klikk i modellen for å styre den" : "Click the model to take control"}</div>}
           <div className="absolute left-0 right-0 bottom-0 p-3 md:p-5 pointer-events-none">
@@ -303,7 +376,8 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       <button onClick={() => setInside(false)} className={`chip transition-colors ${!inside ? "!bg-white !text-ink" : "hover:!bg-white/20"}`}>{no ? "På terrassen" : "On the terrace"}</button>
-                      <button onClick={() => setInside(true)} className={`chip transition-colors ${inside ? "!bg-white !text-ink" : "hover:!bg-white/20"}`}>{no ? "Inne i stua" : "In the living room"}</button>
+                      {selected && <button onClick={() => { setInside(false); setFocus(true); setWalk({ plot: selected, start: "living" }); }} className="chip transition-colors hover:!bg-white/20">{no ? "Inne i stua" : "In the living room"}</button>}
+                      {selected && <button onClick={() => { setInside(false); setFocus(true); setWalk({ plot: selected, start: "door" }); }} className="chip !bg-amber !text-ink hover:!bg-amber-deep">{no ? "Gå inn i huset" : "Walk into the house"}</button>}
                     </div>
                   </>
                 )}

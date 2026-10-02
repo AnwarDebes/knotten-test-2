@@ -1,0 +1,397 @@
+{
+ "version": 1,
+ "built": "2026-10-02",
+ "note": "The model's example house on each plot: whether it has a lower floor under its view side (pipeline/twin_houses.py, rule in src/lib/house/houseType.json). An illustration of how one house type adapts to the ground, not a design.",
+ "houses": [
+  {
+   "id": "plot-01",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 78.1,
+   "lower_z": 75.35,
+   "patio_z": 75.3,
+   "front_ground_rel_lower": [
+    -1.06,
+    -0.09,
+    0.57
+   ]
+  },
+  {
+   "id": "plot-02",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 78.1,
+   "lower_z": 75.35,
+   "patio_z": 75.3,
+   "front_ground_rel_lower": [
+    0.27,
+    0.7,
+    1.01
+   ]
+  },
+  {
+   "id": "plot-03",
+   "mirror": false,
+   "lower": false,
+   "floor_z": 74.1,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    -0.0,
+    2.0,
+    3.31
+   ]
+  },
+  {
+   "id": "plot-04",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 73.6,
+   "lower_z": 70.85,
+   "patio_z": 70.8,
+   "front_ground_rel_lower": [
+    -0.41,
+    0.47,
+    1.46
+   ]
+  },
+  {
+   "id": "plot-05",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 74.1,
+   "lower_z": 71.35,
+   "patio_z": 71.3,
+   "front_ground_rel_lower": [
+    0.05,
+    0.85,
+    2.23
+   ]
+  },
+  {
+   "id": "plot-06",
+   "mirror": true,
+   "lower": false,
+   "floor_z": 76.6,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    0.03,
+    1.49,
+    1.86
+   ]
+  },
+  {
+   "id": "plot-07",
+   "mirror": false,
+   "lower": false,
+   "floor_z": 75.6,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    1.41,
+    1.61,
+    1.83
+   ]
+  },
+  {
+   "id": "plot-08",
+   "mirror": true,
+   "lower": false,
+   "floor_z": 73.1,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    2.15,
+    2.58,
+    2.86
+   ]
+  },
+  {
+   "id": "plot-09",
+   "mirror": false,
+   "lower": false,
+   "floor_z": 69.6,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    2.72,
+    3.23,
+    3.86
+   ]
+  },
+  {
+   "id": "plot-10",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 64.6,
+   "lower_z": 61.85,
+   "patio_z": 61.8,
+   "front_ground_rel_lower": [
+    -1.05,
+    -0.19,
+    0.38
+   ]
+  },
+  {
+   "id": "plot-11",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 65.1,
+   "lower_z": 62.35,
+   "patio_z": 62.3,
+   "front_ground_rel_lower": [
+    -1.91,
+    -0.94,
+    -0.33
+   ]
+  },
+  {
+   "id": "plot-12",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 67.1,
+   "lower_z": 64.35,
+   "patio_z": 64.3,
+   "front_ground_rel_lower": [
+    -2.89,
+    -0.47,
+    1.31
+   ]
+  },
+  {
+   "id": "plot-13",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 67.1,
+   "lower_z": 64.35,
+   "patio_z": 64.3,
+   "front_ground_rel_lower": [
+    0.23,
+    0.37,
+    0.51
+   ]
+  },
+  {
+   "id": "plot-14",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 67.1,
+   "lower_z": 64.35,
+   "patio_z": 64.3,
+   "front_ground_rel_lower": [
+    -0.09,
+    0.54,
+    0.97
+   ]
+  },
+  {
+   "id": "plot-15",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 67.6,
+   "lower_z": 64.85,
+   "patio_z": 64.8,
+   "front_ground_rel_lower": [
+    -0.22,
+    0.78,
+    2.12
+   ]
+  },
+  {
+   "id": "plot-16",
+   "mirror": true,
+   "lower": false,
+   "floor_z": 67.6,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    0.33,
+    1.23,
+    1.99
+   ]
+  },
+  {
+   "id": "plot-17",
+   "mirror": false,
+   "lower": false,
+   "floor_z": 64.1,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    1.43,
+    2.44,
+    3.51
+   ]
+  },
+  {
+   "id": "plot-18",
+   "mirror": true,
+   "lower": false,
+   "floor_z": 60.1,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    -1.0,
+    1.68,
+    4.31
+   ]
+  },
+  {
+   "id": "plot-19",
+   "mirror": false,
+   "lower": false,
+   "floor_z": 54.6,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    -0.33,
+    2.34,
+    3.69
+   ]
+  },
+  {
+   "id": "plot-20",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 54.6,
+   "lower_z": 51.85,
+   "patio_z": 51.8,
+   "front_ground_rel_lower": [
+    -0.26,
+    0.9,
+    2.14
+   ]
+  },
+  {
+   "id": "plot-21",
+   "mirror": false,
+   "lower": false,
+   "floor_z": 55.6,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    1.25,
+    1.42,
+    1.7
+   ]
+  },
+  {
+   "id": "plot-22",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 57.6,
+   "lower_z": 54.85,
+   "patio_z": 54.8,
+   "front_ground_rel_lower": [
+    -0.44,
+    0.93,
+    2.47
+   ]
+  },
+  {
+   "id": "plot-23",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 60.1,
+   "lower_z": 57.35,
+   "patio_z": 57.3,
+   "front_ground_rel_lower": [
+    0.03,
+    1.06,
+    2.05
+   ]
+  },
+  {
+   "id": "plot-24",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 62.1,
+   "lower_z": 59.35,
+   "patio_z": 59.3,
+   "front_ground_rel_lower": [
+    0.24,
+    1.16,
+    1.78
+   ]
+  },
+  {
+   "id": "plot-25",
+   "mirror": false,
+   "lower": false,
+   "floor_z": 63.1,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    1.24,
+    1.38,
+    1.53
+   ]
+  },
+  {
+   "id": "plot-26",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 68.1,
+   "lower_z": 65.35,
+   "patio_z": 65.3,
+   "front_ground_rel_lower": [
+    -2.09,
+    0.13,
+    1.17
+   ]
+  },
+  {
+   "id": "plot-27",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 52.1,
+   "lower_z": 49.35,
+   "patio_z": 49.3,
+   "front_ground_rel_lower": [
+    -0.58,
+    0.21,
+    1.35
+   ]
+  },
+  {
+   "id": "plot-28",
+   "mirror": true,
+   "lower": false,
+   "floor_z": 53.6,
+   "lower_z": null,
+   "patio_z": null,
+   "front_ground_rel_lower": [
+    -0.64,
+    0.71,
+    3.2
+   ]
+  },
+  {
+   "id": "plot-29",
+   "mirror": false,
+   "lower": true,
+   "floor_z": 59.1,
+   "lower_z": 56.35,
+   "patio_z": 56.3,
+   "front_ground_rel_lower": [
+    -0.29,
+    1.05,
+    1.8
+   ]
+  },
+  {
+   "id": "plot-30",
+   "mirror": true,
+   "lower": true,
+   "floor_z": 60.1,
+   "lower_z": 57.35,
+   "patio_z": 57.3,
+   "front_ground_rel_lower": [
+    -0.98,
+    0.9,
+    1.81
+   ]
+  }
+ ]
+}

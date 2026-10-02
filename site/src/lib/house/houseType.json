@@ -1,0 +1,13 @@
+{
+  "note": "The example house of the model, shared by the browser (src/lib/house) and the pipeline (pipeline/twin_houses.py, pipeline/twin_grading.py). Metres. The outer box is the one in data/plots.json (11 x 8.5 m, eaves 3.2 m and ridge 5.6 m above the main floor); everything inside it is an illustration, not a design.",
+  "wall": 0.35,
+  "partition": 0.1,
+  "wet_wall": 0.12,
+  "lower_depth": 2.75,
+  "lower_slab": 0.3,
+  "lower_back_v": -0.85,
+  "pad_drop": 0.6,
+  "patio": { "depth": 4.5, "side": 0.6, "below_floor": 0.05, "grade_margin": 1.6 },
+  "terrace": { "depth": 3.0, "inset": 0.4 },
+  "lower_rule": { "front_mean_max": 1.2, "front_max_max": 2.6 }
+}

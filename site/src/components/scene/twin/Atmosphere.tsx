@@ -8,6 +8,7 @@ import { solarPosition } from "@/lib/solar";
 import { markShadowsDirty } from "./shadowState";
 import { twinUniforms } from "./materials";
 import { cloudDome, cloudUniforms } from "./clouds";
+import { houseUniforms } from "../house/materials";
 
 export type Weather = { clouds: number; wind: number };
 
@@ -74,7 +75,12 @@ export function Atmosphere({ date, weather, shadows, quality = "full" }: { date:
 
   const sky = useMemo(() => makeSky(450000), []);
   const dome = useMemo(() => cloudDome(), []);
-  useFrame(() => { dome.position.copy(camera.position); });
+  // the camera's exposure: the sky's own (set below with the sun) times the eye's adaptation indoors
+  const baseExposure = useRef(0.92);
+  useFrame(() => {
+    dome.position.copy(camera.position);
+    gl.toneMappingExposure = baseExposure.current * twinUniforms.uExposureBoost.value;
+  });
   const env = useMemo(() => {
     const s = makeSky(1000);
     const sc = new THREE.Scene();
@@ -111,6 +117,9 @@ export function Atmosphere({ date, weather, shadows, quality = "full" }: { date:
     // after dusk the sky model goes black; the night sky is a deep blue glow instead (the clear colour)
     sky.visible = sun.elevation > -5;
     twinUniforms.uNight.value = 1 - smooth(-6, 3, sun.elevation);
+    twinUniforms.uSunWorld.value.copy(sun.dir).normalize();
+    // how bright a room behind a window looks from outside by day (the houses' glass)
+    houseUniforms.uDaylight.value = smooth(-4, 20, sun.elevation) * lerp(1, 0.55, clouds);
     // the clear-sky model is HDR and bright: as ambient light it is scaled down to sit beside the
     // sun. Under a closed deck the sky is the only light, and the drawn clouds are the light that
     // reaches the ground: the scene is lit by them as they are (the ground then comes out about a
@@ -124,7 +133,7 @@ export function Atmosphere({ date, weather, shadows, quality = "full" }: { date:
     const clearTwilight = smooth(-7, -1, sun.elevation) * (1 - smooth(3, 14, sun.elevation));
     const deckTwilight = smooth(-7, -1, sun.elevation) * (1 - smooth(-2, 6, sun.elevation));
     const twilight = lerp(clearTwilight, deckTwilight, deck);
-    gl.toneMappingExposure = 0.92 * lerp(1, lerp(1, 1.45, deck), daylight) * (1 + 1.6 * twilight);
+    baseExposure.current = 0.92 * lerp(1, lerp(1, 1.45, deck), daylight) * (1 + 1.6 * twilight);
     const haze = hazeColour(sun.elevation, clouds);
     cloudUniforms.uHaze.value.copy(haze);
     if (scene.fog instanceof THREE.FogExp2) { scene.fog.color.copy(haze); scene.fog.density = lerp(2.4e-5, 6.5e-5, clouds); }

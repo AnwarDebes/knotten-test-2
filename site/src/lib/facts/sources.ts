@@ -164,6 +164,13 @@ const ALL = {
     doc: { no: "Grunnvarmeanalyse i Earth Energy Designer, energisporet, september 2026", en: "Ground source heat analysis in Earth Energy Designer, energy track, September 2026" },
   },
 
+  // the building code every new house at Knotten has to meet, whichever standard the project chooses
+  tek17: {
+    quote: "Byggteknisk forskrift (TEK17) § 14-2, tiltaksmetoden for småhus: U-verdi yttervegg høyst 0,18, tak høyst 0,13, gulv høyst 0,10, vinduer og dører høyst 0,80 W/(m²K); lekkasjetall høyst 0,6 luftvekslinger i timen ved 50 Pa; årsgjennomsnittlig temperaturvirkningsgrad for varmegjenvinning i ventilasjonsanlegg minst 80 %. Ellers gjelder energirammen: 100 + 1600/m² oppvarmet BRA kWh per m² i året.",
+    doc: { no: "Direktoratet for byggkvalitet, TEK17 § 14-2, lest 2. oktober 2026", en: "Norwegian Building Authority (DiBK), TEK17 section 14-2, read 2 October 2026" },
+    url: "https://www.dibk.no/regelverk/byggteknisk-forskrift-tek17/14/14-2",
+  },
+
   // the website's own computations (not a source of facts, only the record of how a number was computed)
   modell: {
     quote: "Terreng: Kartverket NHM DTM 1 m (hoydedata.no). Trær: DOM minus DTM, tretoppdeteksjon. Horisont: AWS Terrain Tiles. Sol: NOAA solposisjon. Sikt: linje for linje over terrenget. Utlegget er et foreløpig forslag, ikke prosjekteiers plan.",

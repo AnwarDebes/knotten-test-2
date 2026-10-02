@@ -6,6 +6,9 @@ numbers (data/plots.json pad heights, data/road.json road and path lines) with t
 earthworks a contractor would make, so the houses and roads sit on the ground instead of floating:
 
   pad      footprint + 2.5 m round the house (+ 4 m on the view side for the terrace) at floor - 0.6 m
+  patio    for the houses with a lower floor (houses.json, from twin_houses.py): no pad in front of the
+           house; instead a patio 4.5 m deep at the lower floor's level, dug where the ground is higher
+           (the house model draws the paving, and a wall where the ground falls away below it)
   road     5 m wide with 0.75 m shoulders, flat across, at the road line's height along it
   path     1.5 m footpath with steps, following the path line
   slopes   fill at 1:1.5, cut at 1:0.7 (the ground here is shallow soil on rock), back to the terrain
@@ -67,6 +70,19 @@ def apply_feature(h, inside, design, base, reach=24.0, fill_in=1.0, fill_out=2.5
     return np.where(near, graded, h)
 
 
+def cut_to(h, inside, z, reach=24.0):
+    """Dig down to height z inside the footprint, with rock cuts at 1:0.7 back up to the ground.
+
+    A pure cut (it never raises the ground), so it can run after everything else and nothing graded
+    later can fill it in again.
+    """
+    if not inside.any():
+        return h
+    dist = ndi.distance_transform_edt(~inside) * POST
+    cap = z + CUT * dist
+    return np.where(dist <= reach, np.minimum(h, cap), h)
+
+
 def main():
     h0 = decode()
     s = np.linspace(-HALF, HALF, N)
@@ -75,6 +91,8 @@ def main():
 
     plots = json.load(open(tc.DATA / "plots.json", encoding="utf-8"))["plots"]
     road = json.load(open(tc.DATA / "road.json", encoding="utf-8"))
+    houses = {x["id"]: x for x in json.loads((tc.OUT / "houses.json").read_text(encoding="utf-8"))["houses"]}
+    htype = json.loads((tc.KN / "site" / "src" / "lib" / "house" / "houseType.json").read_text(encoding="utf-8"))
 
     # mask canvases in post coordinates (heights) and texture coordinates (look)
     def post_xy(x, y):
@@ -121,25 +139,58 @@ def main():
         draw["garden"].line([tex_xy(*p) for p in pts], fill=200, width=int(round(7.0 / (2 * TEX_HALF) * MPX)), joint="curve")
 
     # ---------------- house pads at floor - 0.6 m, with the terrace and garden on the view side
+    # (a house with a lower floor has its patio there instead, graded below)
+    def polygon_mask(corners):
+        m = Image.new("L", (N, N), 0)
+        ImageDraw.Draw(m).polygon([post_xy(*c) for c in corners], fill=255)
+        return np.asarray(m) > 0
+
+    patios = []
     for p in plots:
         x, y = p["local"]["x"], p["local"]["y"]
         hs = p["house"]
-        pad = p["local"]["z_floor"] - 0.6
+        pad = p["local"]["z_floor"] - htype["pad_drop"]
         f = math.radians(hs["facing_deg"])
         ca, sa = math.cos(f), math.sin(f)
         hw, hd = hs["width_m"] / 2 + 2.5, hs["depth_m"] / 2
-        corners_uv = [(-hw, -hd - 2.5), (hw, -hd - 2.5), (hw, hd + 6.5), (-hw, hd + 6.5)]
-        corners = [(x + u * ca + v * sa, y - u * sa + v * ca) for u, v in corners_uv]
-        m = Image.new("L", (N, N), 0)
-        ImageDraw.Draw(m).polygon([post_xy(*c) for c in corners], fill=255)
-        inside = np.asarray(m) > 0
-        h = apply_feature(h, inside, np.full((N, N), pad), h0, fill_in=1.0, fill_out=1.0)
+        to_xy = lambda u, v: (x + u * ca + v * sa, y - u * sa + v * ca)
+        lower = houses[p["id"]]["lower"]
+        front = hd if lower else hd + 6.5
+        corners = [to_xy(u, v) for u, v in [(-hw, -hd - 2.5), (hw, -hd - 2.5), (hw, front), (-hw, front)]]
+        h = apply_feature(h, polygon_mask(corners), np.full((N, N), pad), h0, fill_in=1.0, fill_out=1.0)
         draw["garden"].polygon([tex_xy(*c) for c in corners], fill=255)
+        if lower:
+            # graded a post wider and deeper than the paving, so the 1.25 m posts never lift its edges, and
+            # back under the lower floor (its dig, hidden inside the house)
+            margin = htype["patio"]["grade_margin"]
+            pw = hs["width_m"] / 2 + htype["patio"]["side"] + margin
+            pd = hd + htype["patio"]["depth"] + margin
+            back = htype["lower_back_v"] + htype["wall"]
+            pc = [to_xy(u, v) for u, v in [(-pw, back), (pw, back), (pw, pd), (-pw, pd)]]
+            patios.append((pc, houses[p["id"]]["patio_z"]))
 
     # ---------------- the footpath (no earthworks to speak of: steps follow the ground)
     for path in road["paths"]:
         draw["garden"].line([tex_xy(*q) for q in path["pts"]], fill=255, width=int(round(1.6 / (2 * TEX_HALF) * MPX)), joint="curve")
         draw["slope"].line([tex_xy(*q) for q in path["pts"]], fill=140, width=int(round(1.5 / (2 * TEX_HALF) * MPX)), joint="curve")
+
+    # ---------------- patios in front of the lower floors, last: dug down to the floor where the ground is
+    # higher, never filled (where the ground falls away, the house model stands the paving on a wall)
+    for pc, z in patios:
+        h = cut_to(h, polygon_mask(pc), z)
+
+    # ---------------- and every house clear of its neighbours' slopes: a house graded later can lift the
+    # ground back up at the edge of one graded earlier, into its walls; this keeps the footprint and the
+    # 2.5 m strip round it (and the terrace strip of a house on one floor) at or below its pad
+    for p in plots:
+        x, y = p["local"]["x"], p["local"]["y"]
+        hs = p["house"]
+        f = math.radians(hs["facing_deg"])
+        ca, sa = math.cos(f), math.sin(f)
+        hw, hd = hs["width_m"] / 2 + 2.5, hs["depth_m"] / 2
+        front = hd if houses[p["id"]]["lower"] else hd + htype["terrace"]["depth"] + 0.5
+        corners = [(x + u * ca + v * sa, y - u * sa + v * ca) for u, v in [(-hw, -hd - 2.5), (hw, -hd - 2.5), (hw, front), (-hw, front)]]
+        h = cut_to(h, polygon_mask(corners), p["local"]["z_floor"] - htype["pad_drop"])
 
     # ---------------- fresh slopes: where the ground moved by more than 0.3 m outside pads and roads
     moved = np.abs(h - h0) > 0.3

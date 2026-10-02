@@ -40,6 +40,15 @@ export function groundHeight(x: number, y: number) {
   return loaded ? loaded.heightAt(x, y) : 0;
 }
 
+/** Ground height once the field is built: the plan's pads, patios, roads and path graded in (r0b), the terrain beyond. */
+export function builtGroundHeight(x: number, y: number) {
+  if (!loaded) return 0;
+  const g = loaded.graded;
+  const r0 = loaded.rings[0];
+  if (g && Math.abs(x) < r0.desc.half && Math.abs(y) < r0.desc.half) return bilinear(g.heights, r0.desc, x, y);
+  return loaded.heightAt(x, y);
+}
+
 /** The twin, loading it the first time. Use with React's use() inside the scene's Suspense. */
 export function loadTwin(): Promise<Twin> {
   if (!cached) cached = load().catch((e) => { cached = null; throw e; });
@@ -122,15 +131,19 @@ async function load(): Promise<Twin> {
 /** Ground height (m above sea level) at scene coordinates, from the finest ring that covers the point. */
 function heightAt(rings: TwinRing[], x: number, y: number): number {
   for (const r of rings) {
-    const { half, n, post_m: p } = r.desc;
+    const { half } = r.desc;
     if (Math.abs(x) > half || Math.abs(y) > half) continue;
-    const fx = (x + half) / p, fy = (half - y) / p;
-    const i = Math.min(n - 2, Math.max(0, Math.floor(fx))), j = Math.min(n - 2, Math.max(0, Math.floor(fy)));
-    const tx = fx - i, ty = fy - j;
-    const h = r.heights;
-    const a = h[j * n + i] * (1 - tx) + h[j * n + i + 1] * tx;
-    const b = h[(j + 1) * n + i] * (1 - tx) + h[(j + 1) * n + i + 1] * tx;
-    return a * (1 - ty) + b * ty;
+    return bilinear(r.heights, r.desc, x, y);
   }
   return 0;
+}
+
+function bilinear(h: Float32Array, desc: RingDesc, x: number, y: number) {
+  const { half, n, post_m: p } = desc;
+  const fx = (x + half) / p, fy = (half - y) / p;
+  const i = Math.min(n - 2, Math.max(0, Math.floor(fx))), j = Math.min(n - 2, Math.max(0, Math.floor(fy)));
+  const tx = fx - i, ty = fy - j;
+  const a = h[j * n + i] * (1 - tx) + h[j * n + i + 1] * tx;
+  const b = h[(j + 1) * n + i] * (1 - tx) + h[(j + 1) * n + i + 1] * tx;
+  return a * (1 - ty) + b * ty;
 }
