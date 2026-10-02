@@ -5,7 +5,11 @@ import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import type { Plot, SceneState } from "@/lib/types";
-import { frameFor } from "@/lib/energy";
+import { useSim } from "@/lib/sim/useSim";
+import { BUDGET_SCENARIO, homesOf } from "@/lib/sim/scenario";
+import { frameAt } from "@/lib/sim/frame";
+import { hourOf } from "@/lib/sim/inputs";
+import { outage as runOutage } from "@/lib/sim/run";
 import { DEFAULT_DATE } from "@/lib/solar";
 import { plotNo } from "@/lib/format";
 import Dial, { type DialValue } from "./ui/Dial";
@@ -117,7 +121,21 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
   const onContextLost = useCallback(() => { setLost(true); setReady(false); }, []);
   const retryLite = () => { setQuality("lite"); setLost(false); setSceneKey((k) => k + 1); };
   const plot = useMemo(() => plots.find((p) => p.id === selected) ?? null, [plots, selected]);
-  const frame = useMemo(() => frameFor(plots, dial.month, 21, dial.hour, { outage }), [plots, dial, outage]);
+  // the living field: the energy simulation (the budget's scenario) at the dial's day and hour
+  const homes = useMemo(() => homesOf(plots), [plots]);
+  const { out: simOut } = useSim(homes, BUDGET_SCENARIO, armed && mode === "field");
+  const simHour = hourOf(2025, dial.month, 21, Math.floor(dial.hour));
+  const sim = useMemo(() => {
+    const r = simOut?.result;
+    if (!r) return undefined;
+    const cut = outage ? runOutage(r, simHour, 1, true) : null;
+    return frameAt(r, simHour, cut, cut ? 0 : -1);
+  }, [simOut, simHour, outage]);
+  const simField = simOut?.result ? {
+    pv: simOut.result.field.pvRoofs[simHour] + simOut.result.field.pvOffice[simHour] + simOut.result.field.wind[simHour],
+    use: simOut.result.field.homes[simHour] + simOut.result.field.heatPumps[simHour] + simOut.result.field.office[simHour],
+    soc: simOut.result.field.soc[simHour],
+  } : null;
   const onReady = useCallback(() => setReady(true), []);
   const onPick = useCallback((id: string) => { setSelected(id); setMode("plot"); setState("built"); setInside(false); setPhase("explore"); }, []);
 
@@ -152,7 +170,6 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
 
   return (
     <div ref={root} className={`frame dark relative w-full transition-shadow duration-300 ${focus ? "ring-2 ring-amber" : ""}`} style={{ height: compact ? "min(70vh, 680px)" : hero ? "min(78vh, 820px)" : "min(84vh, 860px)" }}>
-      <img src="/renders/web/site_after.webp" srcSet="/renders/web/site_after_960.webp 960w, /renders/web/site_after.webp 1920w" sizes="100vw" alt="" className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${ready ? "opacity-0" : "opacity-100"}`} />
 
       <div ref={box} className={`absolute inset-0 ${ready && !focus ? "cursor-pointer" : ""}`} onPointerDown={onPointer} onPointerMove={onPointer} onPointerUp={onPointer} onPointerLeave={onPointer}>
         {armed && !lost && (
@@ -170,7 +187,11 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
             selectedPlot={mode === "plot" ? selected : null}
             inside={inside}
             preset={preset}
-            frame={frame}
+            labels={preset === "fjord" ? "wide" : "near"}
+            locale={locale}
+            sim={mode === "field" ? sim : undefined}
+            showWind={mode === "field"}
+            simPark={simOut?.info.park ?? null}
             outage={outage}
             onPick={onPick}
             onReady={onReady}
@@ -184,6 +205,9 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
           </>
         )}
       </div>
+      {/* the still sits over the (opaque) canvas until the model has drawn, then fades away */}
+      {/* eslint-disable-next-line @next/next/no-img-element -- a plain still that fades out over the canvas; next/image adds nothing here */}
+      <img src="/renders/web/site_after.webp" srcSet="/renders/web/site_after_960.webp 960w, /renders/web/site_after.webp 1920w" sizes="100vw" alt="" className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-opacity duration-700 ${ready ? "opacity-0" : "opacity-100"}`} />
 
       {/* invitation: the journey, or plain opening */}
       {(!armed || (phase === "invite" && ready && !hero)) && !lost && (
@@ -286,7 +310,7 @@ export default function Stage({ plots, locale, initialPlot = null, initialMode =
                 {mode === "field" && (
                   <div className="flex flex-wrap items-center gap-3">
                     <button onClick={() => setOutage((o) => !o)} className={`chip transition-colors ${outage ? "!bg-amber !text-ink" : "hover:!bg-white/20"}`}>{outage ? S.gridOff : S.grid}</button>
-                    <span className="text-[13px] opacity-80">PV {frame.field.pv_kw} kW, {no ? "last" : "load"} {frame.field.load_kw} kW, SOC {(frame.field.soc * 100).toFixed(0)} %</span>
+                    {simField && <span className="text-[13px] opacity-80">{no ? "Produksjon" : "Production"} {simField.pv.toFixed(0)} kW, {no ? "forbruk" : "use"} {simField.use.toFixed(0)} kW, {no ? "batteri" : "battery"} {(simField.soc * 100).toFixed(0)} %</span>}
                   </div>
                 )}
                 {!plot && (

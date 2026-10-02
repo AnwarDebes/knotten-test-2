@@ -6,6 +6,8 @@ import { Src } from "@/components/klassisk/Source";
 import Image from "next/image";
 import { EED } from "@/lib/klassisk/maps";
 import { BUDGET, EED as SIM, STATUS_SOLAR, fmt, fmtRound, measure } from "@/lib/facts";
+import EnergySimulator from "@/components/energy/EnergySimulator";
+import { loadPlots } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Energi og teknologi" };
 
@@ -26,7 +28,8 @@ const MEASURES: [string, string][] = [
   ["Ett stort felles litiumbatteri", "large_battery"],
 ];
 
-export default function Energi() {
+export default async function Energi() {
+  const { plots } = await loadPlots();
   return (
     <>
       <PageHead title="Energi og teknologi" crumb="Energi og teknologi">
@@ -81,6 +84,18 @@ export default function Energi() {
             <div><span className="tag">Foreløpig</span><b>{`ca. ${fmtRound(BUDGET.results.saving_per_home_nok, 1000)} kr`}</b><span>anslått årlig besparelse per bolig mot direkte elektrisk oppvarming uten sol og batteri, forenklet fordeling. <Src id="besparelse" /></span></div>
             <div><span className="tag">Foreløpig</span><b>{`ca. ${fmtRound(BUDGET.results.co2_saved_kg, 1000)} kg`}</b><span>{`CO₂ spart per år mot referansen, med ${fmt(BUDGET.prices.co2_kg_per_kwh)} kg per kWh nettstrøm som metodevalg.`} <Src id="co2" /></span></div>
           </Reveal>
+        </div>
+      </section>
+      <section className="sec">
+        <div className="wrap">
+          <Reveal className="stack">
+            <div className="eyebrow">Simulert time for time</div>
+            <h2>Feltet gjennom et helt år</h2>
+            <p className="measure">Energiregnskapet regner måned for måned. Her regnes hele feltet time for time gjennom et typisk år for Knotten, med vær fra EUs PVGIS, panelene på hvert hus sitt eget tak og forbruk etter regnskapet. Velg tiltak og se hva de betyr, og prøv et strømbrudd.</p>
+          </Reveal>
+          <div style={{ marginTop: 32 }}>
+            <EnergySimulator plots={plots} locale="no" variant="klassisk" />
+          </div>
         </div>
       </section>
     </>

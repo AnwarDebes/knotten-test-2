@@ -14,8 +14,9 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   poweredByHeader: false,
   turbopack: { root: __dirname },
-  // the Klassisk design serves its photos and maps through next/image
-  images: { formats: ["image/avif", "image/webp"] },
+  // the Klassisk design serves its photos and maps through next/image, at the qualities its pages ask
+  // for (Next 16 allows only 75 unless they are listed, and quietly lowers the rest)
+  images: { formats: ["image/avif", "image/webp"], qualities: [75, 80, 85, 88, 90, 92] },
   experimental: {
     // two root layouts (one per design) need a 404 of their own: src/app/global-not-found.tsx
     globalNotFound: true,

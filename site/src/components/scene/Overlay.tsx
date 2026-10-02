@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import type { EnergyFrame, Plot } from "@/lib/types";
-import type { PlotRegistry } from "./Proposal";
+import type { PlotRegistry } from "./twin/TwinHouses";
 
 /** The living field: production on roofs, load in windows, sharing as flow, storage as a pulse. */
 export function EnergyOverlay({ frame, plots, outage, registry }: { frame: EnergyFrame; plots: Plot[]; outage: boolean; registry: React.RefObject<PlotRegistry> }) {

@@ -1,4 +1,4 @@
-import Stage from "@/components/Stage";
+import EnergySimulator from "@/components/energy/EnergySimulator";
 import { loadPlots } from "@/lib/data";
 import { pageTitle, portalPage } from "@/lib/server/portal";
 import { current, symbolText, weather } from "@/lib/server/live";
@@ -23,12 +23,10 @@ export default async function Twin({ params }: { params: Promise<{ locale: strin
       <PageHead
         eyebrow={no ? "Energi" : "Energy"}
         title={no ? "Digital tvilling" : "Digital twin"}
-        lede={no ? "Terrenget, trærne og de 30 boligene fra Kartverkets laserdata, med sol og energi time for time. Dra i solen, velg dag og se energien flyte mellom husene." : "The terrain, the trees and the 30 homes from Kartverket's laser data, with sun and energy hour by hour. Drag the sun, pick a day and watch the energy flow between the houses."}
+        lede={no ? "Terrenget, skogen og byggene fra Kartverkets laserdata, de 30 boligene fra planen, og energien time for time gjennom et typisk år: vær fra EUs PVGIS, forbruk etter energiregnskapet og ekte timepriser." : "The terrain, the forest and the buildings from Kartverket's laser data, the 30 homes from the plan, and the energy hour by hour through a typical year: weather from the EU's PVGIS, use from the energy budget and real hourly prices."}
         actions={wx ? <span className="chip">{no ? "Nå på Knotten" : "Now at Knotten"}: {wx.temp.toFixed(1).replace(".", no ? "," : ".")} °C, {symbolText(wx.symbol, no)}</span> : undefined}
       />
-      <div className="rounded-[var(--radius-lg)] overflow-hidden border line">
-        <Stage plots={plots} locale={locale} initialMode="field" />
-      </div>
+      <EnergySimulator plots={plots} locale={locale} />
       <div className="grid gap-5 lg:grid-cols-2">
         <Section title={no ? "Rammekontrakten" : "The frame contract"} sub={no ? "Tvillingen leser én ramme per tidspunkt. I dag kommer rammene fra modellen; målerne skal levere det samme formatet." : "The twin reads one frame per moment. Today the frames come from the model; the meters are to deliver the same format."}>
           <pre className="panel p-4 text-[12.5px] leading-relaxed overflow-x-auto font-mono">{`GET /api/energy/frame?ts=2026-12-21T12:00

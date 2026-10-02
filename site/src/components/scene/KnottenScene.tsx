@@ -1,17 +1,26 @@
 "use client";
 /* eslint-disable react-hooks/immutability -- react-three-fiber's own pattern: the camera, the controls and the renderer are three.js objects, changed in useFrame outside React's render */
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { EnergyFrame, Plot, SceneState } from "@/lib/types";
-import { Terrain, Water, Existing } from "./layers";
-import { Proposal, type PlotRegistry } from "./Proposal";
+import { Powerlines } from "./layers";
+import { TwinBuildings } from "./twin/TwinBuildings";
+import { TwinTerrain } from "./twin/TwinTerrain";
+import { Atmosphere, type Weather } from "./twin/Atmosphere";
+import { SimLayer, type SimFrame } from "./twin/SimLayer";
+import { twinUniforms } from "./twin/materials";
+import { TwinLabels } from "./twin/TwinLabels";
+import { takeShadowsDirty } from "./twin/shadowState";
+import { groundHeight } from "./twin/twinData";
+import { knottenTime } from "@/lib/solar";
+import { TwinHouses, modulesFor, type PlotRegistry } from "./twin/TwinHouses";
+import { PV_KWP_PER_HOME } from "@/lib/facts";
 import { Planned } from "./Planned";
 import { Interior } from "./Interior";
-import { Forest } from "./Forest";
-import { Sun } from "./Sun";
+import { TwinForest } from "./twin/TwinForest";
 import { EnergyOverlay } from "./Overlay";
 import { ViewCorridor } from "./ViewCorridor";
 
@@ -34,6 +43,16 @@ export type SceneProps = {
   onPick?: (id: string) => void;
   onReady?: () => void;
   onContextLost?: () => void;
+  /** The energy simulation drives the scene: its moment (sun), its weather (clouds, wind) and its flows. */
+  simDate?: Date;
+  weather?: Weather;
+  sim?: SimFrame;
+  simPark?: { x: number; y: number } | null;
+  showPark?: boolean;
+  showWind?: boolean;
+  /** Official place names over the model: off, the near ones, or also the far ones. */
+  labels?: "off" | "near" | "wide";
+  locale?: "no" | "en";
 };
 
 type Goal = { pos: THREE.Vector3; target: THREE.Vector3; fov: number; min: number; max: number; polarMin: number; polarMax: number };
@@ -56,7 +75,7 @@ export function framePresets(plots: Plot[]): Record<CameraPreset, { pos: [number
     fjord: { pos: [c.x + 260, 150, c.z + 1500], target: [c.x, c.y + 10, c.z] },   // from over Snigsfjorden, looking in
     site: { pos: at([0.3, 0.38, 1], 0.95), target },                                // from the fjord side, low
     drone: { pos: at([-1, 0.55, 0.5], 1.15), target },                              // from the western ridge
-    knoll: { pos: [10, 92, -80], target: [40, 20, 400] },
+    knoll: { pos: [10, 128, -84], target: [40, 25, 380] },        // over the treetops on Lokkeheia, looking out over the field to the sea
     plan: { pos: at([0, 1, 0.001], 0.85), target },
   };
 }
@@ -124,7 +143,8 @@ function CameraRig({ preset, plot, inside, controls, presets, idle }: { preset: 
       return;
     }
     if (c) {
-      c.autoRotate = idle && !plot;
+      // (a debug view placed from the console holds still: no idle rotation)
+      c.autoRotate = idle && !plot && !(window as unknown as { __twinHold?: boolean }).__twinHold;
       c.autoRotateSpeed = 0.16;
       if (c.autoRotate) c.update();
     }
@@ -133,18 +153,29 @@ function CameraRig({ preset, plot, inside, controls, presets, idle }: { preset: 
 }
 
 /** Owns the render loop: per-state visibility, one shadow update per frame, scissor split for the wipe. */
-function StateRenderer({ state, wipe, cleared, proposal }: { state: SceneState; wipe: number | null; cleared: React.RefObject<THREE.Group | null>; proposal: React.RefObject<THREE.Group | null> }) {
+function StateRenderer({ state, wipe, cleared, proposal, ground }: { state: SceneState; wipe: number | null; cleared: React.RefObject<THREE.Group | null>; proposal: React.RefObject<THREE.Group | null>; ground: { today: React.RefObject<THREE.Group | null>; graded: React.RefObject<THREE.Group | null> } }) {
   const { gl, scene, camera, size } = useThree();
   useEffect(() => { gl.shadowMap.autoUpdate = false; }, [gl]);
+  const last = useRef<string>("");
   useFrame(() => {
     const c = cleared.current;
     const p = proposal.current;
     const showCleared = state === "today";
     const showProposal = state === "built" || state === "lived";
-    gl.shadowMap.needsUpdate = true;
+    const key = `${state}|${wipe === null}`;
+    const changed = key !== last.current;
+    last.current = key;
+    gl.shadowMap.needsUpdate = takeShadowsDirty() || changed || wipe !== null;
+    // today's ground or the graded ground of the plan (pads, roads), whichever this pass shows
+    const groundFor = (today: boolean) => {
+      const t = ground.today.current, g = ground.graded.current;
+      if (t) t.visible = today || !g;
+      if (g) g.visible = !today;
+    };
     if (wipe === null) {
       if (c) c.visible = showCleared;
       if (p) p.visible = showProposal;
+      groundFor(state === "today");
       gl.setScissorTest(false);
       gl.render(scene, camera);
       return;
@@ -155,12 +186,15 @@ function StateRenderer({ state, wipe, cleared, proposal }: { state: SceneState; 
     gl.setScissorTest(true);
     if (c) c.visible = true;
     if (p) p.visible = false;
+    groundFor(true);
     gl.setScissor(0, 0, split, h);
     gl.render(scene, camera);
     gl.shadowMap.needsUpdate = false;
     if (c) c.visible = false;
     if (p) p.visible = true;
+    groundFor(false);
     gl.setScissor(split, 0, w - split, h);
+    gl.shadowMap.needsUpdate = true;
     gl.render(scene, camera);
     gl.setScissorTest(false);
   }, 1);
@@ -173,51 +207,128 @@ function Ready({ onReady }: { onReady?: () => void }) {
 }
 
 export default function KnottenScene(props: SceneProps) {
-  const { state, wipe, month, hour, plots, selectedPlot, inside = false, preset, frame, outage, quality = "full", paused = false, interactive = true, onPick, onReady, onContextLost } = props;
+  // ?twindebug can override the date from the console (for checking seasons and light)
+  const [dateOverride, setDateOverride] = useState<{ month: number; hour: number; clouds?: number } | null>(null);
+  const month = dateOverride?.month ?? props.month;
+  const hour = dateOverride?.hour ?? props.hour;
+  const weather = dateOverride?.clouds !== undefined ? { clouds: dateOverride.clouds, wind: 2 } : props.weather;
+  const { state, wipe, plots, selectedPlot, inside = false, preset, frame, outage, quality = "full", paused = false, interactive = true, onPick, onReady, onContextLost } = props;
   const controls = useRef<OrbitControlsImpl | null>(null);
   const clearedGroup = useRef<THREE.Group>(null);
   const proposalGroup = useRef<THREE.Group>(null);
+  const todayGround = useRef<THREE.Group>(null);
+  const gradedGround = useRef<THREE.Group>(null);
   const registry = useRef<PlotRegistry>(new Map());
   // the scene only renders in the browser (Stage loads it with ssr: false), so the screen can be read directly
   const shadows = useMemo(() => quality === "full" && !(window.innerWidth < 900 || navigator.maxTouchPoints > 1), [quality]);
   const plot = useMemo(() => plots.find((p) => p.id === selectedPlot) ?? null, [plots, selectedPlot]);
   const presets = useMemo(() => framePresets(plots), [plots]);
   const showOverlay = state === "lived" && !!frame;
-  const treeRadius = quality === "lite" ? 360 : 520;
+  const date = useMemo(() => props.simDate ?? knottenTime(2026, month, 21, hour), [props.simDate, month, hour]);
+  useEffect(() => { twinUniforms.uWind.value = weather?.wind ?? 3; }, [weather?.wind]);
 
   return (
     <Canvas
       shadows={shadows}
       dpr={[1, quality === "lite" ? 1 : 1.5]}
       frameloop={paused ? "never" : "always"}
-      gl={{ antialias: quality !== "lite", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05, powerPreference: "high-performance", logarithmicDepthBuffer: true }}
-      camera={{ fov: 48, near: 1, far: 40000, position: presets.site.pos }}
-      onCreated={({ gl, scene }) => {
-        gl.setClearColor("#b7c6ce");
-        scene.fog = new THREE.Fog("#c5d3da", 900, 9000);
-      }}
+      gl={{ alpha: false, antialias: quality !== "lite", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.92, powerPreference: "high-performance", logarithmicDepthBuffer: false }}
+      camera={{ fov: 48, near: 1, far: 200000, position: presets.site.pos }}
+      onCreated={({ gl }) => { gl.setClearColor("#c3cfd8"); }}
     >
-      <Sun month={month} hour={hour} shadows={shadows} />
+      <Atmosphere date={date} weather={weather} shadows={shadows} quality={quality} />
       <Suspense fallback={null}>
-        <Terrain shadows={shadows} />
-        <Water />
-        <Existing shadows={shadows} />
-        <Forest ref={clearedGroup} maxRadius={treeRadius} />
+        <TwinTerrain shadows={shadows} todayRef={todayGround} gradedRef={gradedGround} />
+        <TwinBuildings shadows={shadows} />
+        <Powerlines />
+        <TwinForest ref={clearedGroup} month={month} quality={quality} shadows={shadows} />
         <group ref={proposalGroup}>
-          <Proposal plots={plots} shadows={shadows} registry={registry} onPick={onPick} hideGlassFor={inside && plot ? plot.id : null} />
+          <group onClick={(e) => { const a = (e.object as THREE.Mesh).geometry?.getAttribute("aHouse"); const idx = a && e.face ? Math.round(a.getX(e.face.a)) : -1; if (idx >= 0 && plots[idx]) { e.stopPropagation(); onPick?.(plots[idx].id); } }}>
+            <TwinHouses plots={plots} shadows={shadows} modules={modulesFor(PV_KWP_PER_HOME)} registry={registry} hideGlassFor={inside && plot ? plot.id : null} />
+          </group>
           <Planned />
           {inside && plot && <Interior plot={plot} />}
-          {showOverlay && frame && <EnergyOverlay frame={frame} plots={plots} outage={!!outage} registry={registry} />}
+          {props.sim ? (
+            <SimLayer plots={plots} frame={props.sim} park={props.simPark ?? null} showPark={!!props.showPark} showWind={!!props.showWind} />
+          ) : showOverlay && frame && <EnergyOverlay frame={frame} plots={plots} outage={!!outage} registry={registry} />}
         </group>
         {plot && !inside && <ViewCorridor plot={plot} />}
+        {props.labels && props.labels !== "off" && !plot && <TwinLabels locale={props.locale ?? "no"} wide={props.labels === "wide"} />}
         <Ready onReady={onReady} />
       </Suspense>
       <ContextGuard onLost={onContextLost} />
+      <DepthRange />
+      <DebugHook controls={controls} setDate={setDateOverride} groups={{ cleared: clearedGroup, proposal: proposalGroup, today: todayGround, graded: gradedGround }} />
       <OrbitControls ref={controls} makeDefault enableDamping dampingFactor={0.08} enablePan={!plot && interactive} enableZoom={interactive && !inside} enableRotate={interactive} />
       <CameraRig preset={preset} plot={plot} inside={inside} controls={controls} presets={presets} idle={!interactive} />
-      <StateRenderer state={state} wipe={wipe} cleared={clearedGroup} proposal={proposalGroup} />
+      <StateRenderer state={state} wipe={wipe} cleared={clearedGroup} proposal={proposalGroup} ground={{ today: todayGround, graded: gradedGround }} />
     </Canvas>
   );
+}
+
+/**
+ * The near plane follows the camera's height above the ground: close to the ground it is under a
+ * metre, from the air it is several metres. The depth buffer then stays precise from the living
+ * room to the horizon without a logarithmic depth buffer, which would stop the GPU from skipping
+ * hidden forest (the most expensive part of the picture).
+ */
+function DepthRange() {
+  const { camera } = useThree();
+  useFrame(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    const ground = groundHeight(cam.position.x, -cam.position.z);
+    const h = Math.max(0, cam.position.y - Math.max(0, ground));
+    const near = Math.min(30, Math.max(0.8, h * 0.03));
+    if (Math.abs(near - cam.near) / cam.near > 0.05) { cam.near = near; cam.updateProjectionMatrix(); }
+  });
+  return null;
+}
+
+/** With ?twindebug in the address, the camera and controls are reachable from the console (for checks against photos). */
+type Groups = { cleared: React.RefObject<THREE.Group | null>; proposal: React.RefObject<THREE.Group | null>; today: React.RefObject<THREE.Group | null>; graded: React.RefObject<THREE.Group | null> };
+function DebugHook({ controls, setDate, groups }: { controls: React.RefObject<OrbitControlsImpl | null>; setDate: (d: { month: number; hour: number; clouds?: number } | null) => void; groups: Groups }) {
+  const { camera, gl, scene } = useThree();
+  useEffect(() => {
+    if (!window.location.search.includes("twindebug")) return;
+    const w = window as unknown as { __twin?: unknown };
+    w.__twin = {
+      camera, gl, scene, controls: controls.current,
+      date(month: number, hour: number, clouds?: number) { setDate({ month, hour, clouds }); },
+      /** A still at any size, for one state of the field, read straight back as a PNG data URL. */
+      still(o: { w: number; h: number; state: "today" | "cleared" | "built" }) {
+        const cam = camera as THREE.PerspectiveCamera;
+        const size = gl.getSize(new THREE.Vector2()), ratio = gl.getPixelRatio(), aspect = cam.aspect;
+        const c = groups.cleared.current, p = groups.proposal.current, t = groups.today.current, g = groups.graded.current;
+        if (c) c.visible = o.state === "today";
+        if (p) p.visible = o.state === "built";
+        if (t) t.visible = o.state === "today" || !g;
+        if (g) g.visible = o.state !== "today";
+        gl.setPixelRatio(1);
+        gl.setSize(o.w, o.h, false);
+        cam.aspect = o.w / o.h;
+        cam.updateProjectionMatrix();
+        gl.setScissorTest(false);
+        gl.shadowMap.needsUpdate = true;
+        gl.render(scene, cam);
+        const url = gl.domElement.toDataURL("image/png");
+        gl.setPixelRatio(ratio);
+        gl.setSize(size.x, size.y, false);
+        cam.aspect = aspect;
+        cam.updateProjectionMatrix();
+        return url;
+      },
+      view(pos: [number, number, number], target: [number, number, number], fov?: number) {
+        const c = controls.current;
+        (window as unknown as { __twinHold?: boolean }).__twinHold = true;
+        camera.position.set(...pos);
+        if (fov) { (camera as THREE.PerspectiveCamera).fov = fov; (camera as THREE.PerspectiveCamera).updateProjectionMatrix(); }
+        if (c) { c.minDistance = 0.1; c.maxDistance = 1e6; c.minPolarAngle = 0; c.maxPolarAngle = Math.PI; c.target.set(...target); c.update(); }
+        else camera.lookAt(...target);
+      },
+    };
+    return () => { delete w.__twin; };
+  }, [camera, gl, scene, controls, setDate, groups]);
+  return null;
 }
 
 function ContextGuard({ onLost }: { onLost?: () => void }) {

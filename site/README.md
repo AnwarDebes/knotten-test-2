@@ -106,14 +106,23 @@ How it is built:
 
 On a normal server: `npm run build && npm run start`, set the same variables except KV and Blob, and keep `data/` on persistent disk with a backup.
 
-## The 3D stage (`src/components/Stage.tsx`, `src/components/scene/*`)
+## The 3D model (`src/components/Stage.tsx`, `src/components/scene/*`, data in `public/twin`)
 
-- Loads the GLBs from `public/models` (Draco) and `public/data/trees.json` (31 823 measured trees, instanced per species; trees beyond 520 m of the site are dropped on the web tier).
-- One render loop (`StateRenderer`) sets visibility per state (`today · cleared · built · lived`) and draws the frame twice with a scissor split when the wipe is active. Shadows update once per frame.
-- The sun is the real sun (`src/lib/solar.ts`, the NOAA routine the pipeline used) for the date dial's month/hour; default 21 December 12:00.
-- Stand-on-plot puts the camera on the terrace of `plot-NN` at eye height and draws the sea-view corridor arc from `plots.json`.
-- The living field lights roofs (PV), windows (load), flows (sharing) and the hub (SOC) from `src/lib/energy.ts` — a transparent model that live meter frames of the same shape can replace later.
-- If the GPU drops the WebGL context, the stage offers *lite mode* (fewer trees, no shadows).
+A digital twin of Knotten and its surroundings, built from measured data (`../pipeline/twin_*.py`, see the README one level up):
+
+- **Terrain:** Kartverket's terrain model (NHM, 1 m near the field) in four nested rings out to 20 km (`ring_r0..r3`: heights in PNG, the aerial photo in WebP, masks), meshed in a Web Worker without seams. Water is drawn by the terrain shader where the mask says water, so there is no second surface to flicker against (the old blinking sea). For the built states the plan's pads, roads and gardens are graded into the inner ring (`ring_r0b_*`).
+- **Buildings:** every existing building, its roof shape and height fitted to the laser data (`buildings.glb`); the 30 homes from `plots.json` (`twin/TwinHouses.tsx`).
+- **Trees:** 102 046 treetops measured in the laser data within 1.28 km (`trees.bin`), species from NIBIO SR16 and AR5 and the aerial photo, leaf colour from the aerial photo at each tree. Detailed models within 70 m of the camera, simpler ones to 260 m, painted cards beyond. The seasons follow the coast of Agder: leaf out in May, autumn colour, bare birch and oak in winter (oaks keep a few dry leaves), and the summer photo's fields and broadleaf woods turned to winter straw and bare twigs (the masks' blue channel holds the broadleaf share of the trees).
+- **Sky and light:** the real sun (NOAA, `src/lib/solar.ts`), a clear-sky model, a cloud deck that follows the weather (it closes into grey stratus on an overcast day and then lights the scene), haze, and a camera's longer exposure on a grey day and around sunset.
+- **Names and lines:** place names from Kartverket's register, power lines from OpenStreetMap.
+- **Energy:** the living field and the energy simulator show each hour of the simulation in `src/lib/sim` (below): panels lit by their own production, the hub, the sharing and the batteries.
+- **Checked against a photograph:** the landing page's photo slider puts Sigve's winter photo beside the model seen from the same spot. The spot was found by fitting the photo's skyline and the five Raudberg buildings in it to the terrain model (camera 1.9 m above the ground at local (52.6, -67.3), towards 176 degrees, field of view 59.4 degrees; buildings within about 11 px of 1440, skyline within about 3 px of 360).
+- **Debug:** `?twindebug` in the address exposes `window.__twin` (`date(month, hour, clouds)`, `view(pos, target, fov)`, `still({ w, h, state })`), used for the stills, the photo match and the fly-in (`../pipeline/twin_flyin.js`).
+- If the GPU drops the WebGL context, the stage offers lite mode (fewer trees, no shadows).
+
+## The energy simulation (`src/lib/sim`)
+
+Hour by hour through a typical year at Knotten (EU PVGIS, sun from satellite, temperature and wind from ERA5): each home's panels on its real roof pitch and direction with its terrain horizon (Perez sky, Martin and Ruiz reflection, Faiman module temperature, the Huld model PVGIS uses, 14 % losses, calibrated to PVGIS's own yield for the spot), household use in the rhythm of real NO2 homes (Elhub 2025), heat pumps on the borehole field (SCOP 3.6), batteries that keep 30 % for outages, sharing in the field, the budget's prices or NO2 spot prices for 2025, and an outage drill. It runs in a Web Worker on the page (`useSim.ts`) and on the server for the portal's figures and `/api/energy/frame` (`src/lib/energy.ts`). With the energy budget's own assumptions it lands close to the budget (self-sufficiency 51.4 % against 52.5 %).
 
 ## Data and assumptions
 
@@ -127,7 +136,7 @@ Put the originals in `public/assets/incoming/` with the names in `README.txt` th
 
 ## Before launch
 
-1. Replace Esri imagery textures in the GLBs with Norge i bilder or a drone orthophoto (licence) — re-run `../pipeline/build_final.py`.
+1. Replace the Esri imagery in `public/twin` (each terrain ring's aerial photo, which also gives the trees their colour) with Norge i bilder or a drone orthophoto (licence): `../pipeline/twin_fetch.py`, then `twin_terrain.py` and the steps after it.
 2. Georeferenced site plan → `../pipeline/plan_layout.py` → copy `../data/*.json` here.
 3. Storage, email and the environment variables above; first-time setup; invite the project group.
 4. Read the privacy statement (`/personvern`, `/no/personvern`) with the project owner; it is marked as a draft.

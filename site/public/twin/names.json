@@ -1,0 +1,135 @@
+{
+ "source": "Kartverket, Sentralt stedsnavnregister (SSR); the project's buildings from the laser data",
+ "names": [
+  {
+   "name": "Knotten",
+   "kind": "hill",
+   "tier": 1,
+   "x": 32.3,
+   "y": -59.4,
+   "z": 57.8
+  },
+  {
+   "name": "Løkkeheia",
+   "kind": "hill",
+   "tier": 1,
+   "x": 13.0,
+   "y": 97.7,
+   "z": 86.6
+  },
+  {
+   "name": "Storhaugen",
+   "kind": "hill",
+   "tier": 1,
+   "x": 35.8,
+   "y": -218.7,
+   "z": 12.8
+  },
+  {
+   "name": "Raudberg",
+   "kind": "place",
+   "tier": 1,
+   "x": 361.9,
+   "y": 155.7,
+   "z": 3.1
+  },
+  {
+   "name": "Gjedeland",
+   "kind": "place",
+   "tier": 1,
+   "x": -129.8,
+   "y": 489.4,
+   "z": 80.5
+  },
+  {
+   "name": "Rødbergsveien",
+   "kind": "road",
+   "tier": 1,
+   "x": 155.9,
+   "y": -376.9,
+   "z": 3.4
+  },
+  {
+   "name": "Gjedelandsveien",
+   "kind": "road",
+   "tier": 1,
+   "x": 250.8,
+   "y": 94.4,
+   "z": 3.8
+  },
+  {
+   "name": "Snigsfjorden",
+   "kind": "water",
+   "tier": 2,
+   "x": -327.5,
+   "y": -2329.0,
+   "z": 0.0
+  },
+  {
+   "name": "Snig",
+   "kind": "place",
+   "tier": 2,
+   "x": -453.1,
+   "y": -1620.2,
+   "z": 0.9
+  },
+  {
+   "name": "Vigeland",
+   "kind": "place",
+   "tier": 2,
+   "x": 1571.2,
+   "y": 1803.6,
+   "z": 4.0
+  },
+  {
+   "name": "Mjåvann",
+   "kind": "water",
+   "tier": 1,
+   "x": 560.9,
+   "y": -334.5,
+   "z": 1.6
+  },
+  {
+   "name": "Nodøy",
+   "kind": "place",
+   "tier": 2,
+   "x": -61.9,
+   "y": -1465.6,
+   "z": 1.1
+  },
+  {
+   "name": "Valle kirke",
+   "kind": "place",
+   "tier": 2,
+   "x": 1717.9,
+   "y": 1518.8,
+   "z": 2.7
+  },
+  {
+   "name": "Audna",
+   "kind": "water",
+   "tier": 1,
+   "x": 1115.0,
+   "y": 710.0,
+   "z": 0.0
+  },
+  {
+   "name": "Kontorbygget",
+   "kind": "project",
+   "tier": 1,
+   "x": 175.74,
+   "y": -108.29,
+   "z": 12.1,
+   "project": "bld-office"
+  },
+  {
+   "name": "Boligen",
+   "kind": "project",
+   "tier": 1,
+   "x": 166.95,
+   "y": -139.28,
+   "z": 11.1,
+   "project": "bld-house"
+  }
+ ]
+}

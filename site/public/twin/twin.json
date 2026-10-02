@@ -1,0 +1,79 @@
+{
+ "version": 2,
+ "built": "2026-10-01",
+ "height": {
+  "offset": 20.0,
+  "note": "h = (R*256 + G) * ring.step - offset, metres above NN2000"
+ },
+ "sea_level": 0.0,
+ "rings": [
+  {
+   "name": "r0",
+   "half": 320.0,
+   "n": 513,
+   "step": 0.02,
+   "post_m": 1.25,
+   "tex_half": 330.0,
+   "hole": 0,
+   "files": {
+    "height": "ring_r0_h.png",
+    "aerial": "ring_r0.webp",
+    "mask": "ring_r0_m.png"
+   }
+  },
+  {
+   "name": "r1",
+   "half": 1280.0,
+   "n": 1025,
+   "step": 0.05,
+   "post_m": 2.5,
+   "tex_half": 1290.0,
+   "hole": 320.0,
+   "files": {
+    "height": "ring_r1_h.png",
+    "aerial": "ring_r1.webp",
+    "mask": "ring_r1_m.png"
+   }
+  },
+  {
+   "name": "r2",
+   "half": 5120.0,
+   "n": 513,
+   "step": 0.1,
+   "post_m": 20.0,
+   "tex_half": 5150.0,
+   "hole": 1280.0,
+   "files": {
+    "height": "ring_r2_h.png",
+    "aerial": "ring_r2.webp",
+    "mask": "ring_r2_m.png"
+   }
+  },
+  {
+   "name": "r3",
+   "half": 20480.0,
+   "n": 513,
+   "step": 0.25,
+   "post_m": 80.0,
+   "tex_half": 20500.0,
+   "hole": 5120.0,
+   "files": {
+    "height": "ring_r3_h.png",
+    "aerial": "ring_r3.webp",
+    "mask": "ring_r3_m.png"
+   }
+  }
+ ],
+ "sources": {
+  "terrain": "Kartverket, Nasjonal detaljert hoydemodell (NHM), DTM 1 m, 5 m and 20 m via hoydedata.no",
+  "aerial": "Esri World Imagery (Maxar, Earthstar Geographics and contributors)",
+  "land_cover": "NIBIO, AR5 arealtype",
+  "broadleaf": "share of broadleaf trees in trees.bin (NIBIO SR16, AR5), mask channel B"
+ },
+ "graded": {
+  "ring": "r0",
+  "height": "ring_r0b_h.png",
+  "mask": "ring_r0b_m.png",
+  "note": "the plan's pads, roads and footpath graded with fill 1:1.5 and cut 1:0.7 (pipeline/twin_grading.py); illustrative earthworks, not a design"
+ }
+}

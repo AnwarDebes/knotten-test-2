@@ -23,13 +23,15 @@ knotten/
 
 | File | Camera | State |
 |---|---|---|
-| `site_before.png` / `site_after.png` | oblique over the field from the south | today / built |
+| `site_before.png` / `site_after.png` | oblique over the field from the south (`site_after.png` is now the live 3D model's first frame, the stage's poster) | today / built |
 | `drone_before.png` / `drone_after.png` | high from the west ridge | today / built |
 | `knoll_view_after.png` | knoll top, first-floor height, down the sea corridor | built |
-| `grillbu_photo_match.png` | neighbour's grillbu, bearing 150° | today (compare with Sigve's photo) |
+| `grillbu_photo_match.png` | where Sigve's winter photo was taken (fitted: local (52.6, -67.3), 1.9 m up, bearing 176°, field of view 59.4°), from the live 3D model | today, December, overcast |
+| `knotten_view_model.jpg` | highest point of the property, 5 m up, bearing 174°, from the live 3D model | field cleared |
 | `farms_after.png` | low over Raudberg | built |
 | `plan_topdown_before.png` / `plan_topdown_after.png` | orthographic, 520 m square | for the plot map |
-| `anim/fly_0001..0072.png` + `knotten_flyin_720p.mp4` | fly-in over the fjord to the field | built |
+| `anim/fly_0001..0072.png` | the first fly-in, from Blender | built |
+| `site/public/renders/knotten_flyin_720p.mp4` | fly-in over the Audna to the field and round to the sea, recorded from the live 3D model (`pipeline/twin_flyin.js`) | built, 21 June 15:00 |
 
 Known cosmetic issue: row roads follow the raw 1 m contour, so their edges are jagged; smooth the
 polylines (or use the real plan) before final renders. Trees are cones; heights/positions are measured.
@@ -136,3 +138,23 @@ The current layout: `plan_layout_v6.py` (writes `data/plots.json`, `road.json`, 
 and the copies in `site/public/data`) → `build_klassisk_plan.py` (the Klassisk site plan,
 `site/src/lib/klassisk/siteplan.ts`) → in Blender `relayout_v2.py` (stills and fly-in frames) →
 `optimise_images.py` → ffmpeg for `site/public/renders/knotten_flyin_720p.mp4`.
+
+## The website's digital twin (`site/public/twin`)
+
+The website's 3D model is built by the `pipeline/twin_*.py` steps, in this order (Python 3 with numpy, scipy
+and Pillow; downloads are cached in `source/twin/`, which git ignores):
+
+1. `twin_fetch.py`: Kartverket NHM terrain and surface models (1 m, 5 m, 20 m), aerial imagery, NIBIO SR16 tree
+   species and AR5 land cover, Kartverket place names, EU PVGIS weather and yields, NO2 prices, Elhub load profiles.
+   OpenStreetMap is fetched only with `--osm` (the Overpass server's certificate had expired on 1 October 2026,
+   so the buildings and power lines still come from the earlier `source/osm_raw.json`).
+2. `twin_terrain.py`: the four terrain rings (heights, aerial photos, masks: water, forest) and `twin.json`.
+3. `twin_buildings.py`: every existing building with its roof fitted to the laser data (`buildings.glb`).
+4. `twin_trees.py`: the trees (`trees.bin`, `trees.json`): treetops in the laser data, species from SR16, AR5
+   and the aerial photo (a crown that is dark in the summer photo is a conifer).
+5. `twin_broadleaf.py`: the broadleaf share of the trees into the masks' blue channel (the winter look of the woods).
+6. `twin_grading.py`: the plan's pads, roads and gardens graded into the inner ring (`ring_r0b_*`).
+7. `twin_energy.py` and `twin_names.py`: the energy simulation's inputs (`energy.json`) and the place names.
+
+The stills in `renders/` that come from the live model, and the fly-in, are made in the browser with
+`?twindebug` (see `site/README.md` and `pipeline/twin_flyin.js`).

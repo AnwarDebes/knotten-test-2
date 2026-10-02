@@ -1,1 +1,0 @@
-{"count": 31823, "floats_per_tree": 8, "layout": "x y z h crown rot tint code; code = species(0 spruce,1 pine,2 birch) + 10 if cleared", "order": "kept trees first sorted by distance from origin, then cleared trees", "kept_count": 30795}

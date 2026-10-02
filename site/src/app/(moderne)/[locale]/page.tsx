@@ -172,8 +172,8 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
             <ProofSlider photo="/assets/incoming/web/view_from_grillbu.webp" model="/renders/web/grillbu_photo_match.webp" labels={[no ? "Fotografi" : "Photograph", no ? "Modell" : "Model"]} />
             <p className="provenance max-w-[60ch]">
               {no
-                ? "Fotografiet er tatt fra naboens grillbu, litt lavere enn feltet. Modellkameraet står på samme punkt, 1,7 meter over bakken, mot 150 grader. Dra i skillet."
-                : "The photograph was taken from the neighbour's grill hut, a little lower than the field. The model camera stands on the same point, 1.7 metres above the ground, towards 150 degrees. Drag the divider."}
+                ? "Fotografiet er tatt fra naboens grillbu, litt lavere enn feltet. Modellkameraet står der bildet er tatt, funnet ved å passe horisonten og gårdene i bildet mot Kartverkets terrengmodell: 1,9 meter over bakken, mot 176 grader. Dra i skillet."
+                : "The photograph was taken from the neighbour's grill hut, a little lower than the field. The model camera stands where the photo was taken, found by fitting the photo's skyline and farm buildings to Kartverket's terrain model: 1.9 metres above the ground, towards 176 degrees. Drag the divider."}
             </p>
           </div>
         </div>

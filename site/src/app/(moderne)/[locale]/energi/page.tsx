@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Locale } from "@/lib/i18n";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
-import Stage from "@/components/Stage";
+import EnergySimulator from "@/components/energy/EnergySimulator";
 import { loadPlots } from "@/lib/data";
 import { BUDGET, DOCS, EED, MEASURES, DIRECTION, STATUS_SOLAR, dateLong, fmt } from "@/lib/facts";
 import { pageMeta } from "@/lib/meta";
@@ -47,10 +47,9 @@ export default async function Energy({ params }: { params: Promise<{ locale: str
           : "The goal is Norway's most energy-efficient, robust and attractive housing field. Below is the concept as it stands: the direction from the project owner, the energy budget for the whole field, the simulated borehole field, and the assessment of every measure. All of it is a working basis with source and date, not promises."}
       />
 
-      {/* the living field */}
+      {/* the energy simulator: the field hour by hour through a typical year, on the 3D model */}
       <section className="wrap pb-6">
-        <Stage plots={plots} locale={locale} initialMode="field" compact journey={false} />
-        <div className="marks"><span /><span /><em className="not-italic">{no ? "Feltet som lever, som illustrasjon: produksjon på takene, forbruk i vinduene, mulig deling langs veien." : "The living field, as an illustration: production on the roofs, consumption in the windows, possible sharing along the road."}</em><span /><span /></div>
+        <EnergySimulator plots={plots} locale={locale} />
       </section>
 
       {/* the budget */}
