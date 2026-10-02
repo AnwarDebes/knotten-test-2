@@ -102,9 +102,14 @@ async function firstRun(): Promise<Store> {
   return store;
 }
 
+/** Pages built side by side can all find the store missing at once; they share one first run. */
+let firstRunning: Promise<Store> | null = null;
+
 export async function readStore(): Promise<Store> {
   const s = await readJSON<Partial<Store>>("crm");
-  return s ? complete(s) : firstRun();
+  if (s) return complete(s);
+  firstRunning ??= firstRun().finally(() => { firstRunning = null; });
+  return complete(await firstRunning);
 }
 
 /** Read, change, write, one at a time. Returns what the mutator returns. */

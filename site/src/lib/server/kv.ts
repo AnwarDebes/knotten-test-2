@@ -49,17 +49,28 @@ export async function readJSON<T>(key: string): Promise<T | null> {
   }
 }
 
+const writing = new Map<string, Promise<void>>();
+let tmpSeq = 0;
+
 export async function writeJSON(key: string, value: unknown) {
   if (STORAGE === "kv") {
     await redis(["SET", `knotten:${key}`, JSON.stringify(value)]);
     return;
   }
   const file = fileFor(key);
-  await fs.mkdir(path.dirname(file), { recursive: true });
-  // write to a side file and rename, so a crash never leaves half a file behind
-  const tmp = `${file}.${process.pid}.tmp`;
-  await fs.writeFile(tmp, key === "crm" ? JSON.stringify(value, null, 1) : JSON.stringify(value), "utf-8");
-  await fs.rename(tmp, file);
+  const text = key === "crm" ? JSON.stringify(value, null, 1) : JSON.stringify(value);
+  // one write at a time per file: writes that overlap (pages built side by side) queue up instead of
+  // renaming each other's side files away
+  const write = async () => {
+    await fs.mkdir(path.dirname(file), { recursive: true });
+    // write to a side file and rename, so a crash never leaves half a file behind
+    const tmp = `${file}.${process.pid}.${++tmpSeq}.tmp`;
+    await fs.writeFile(tmp, text, "utf-8");
+    await fs.rename(tmp, file);
+  };
+  const next = (writing.get(file) ?? Promise.resolve()).then(write, write);
+  writing.set(file, next.catch(() => undefined));
+  return next;
 }
 
 const locks = new Map<string, Promise<unknown>>();
