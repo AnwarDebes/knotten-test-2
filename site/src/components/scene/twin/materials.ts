@@ -122,15 +122,58 @@ vec3 twinSeason(vec3 c, float forest, float broad) {
 `;
 
 /**
+ * The roads from Statens vegvesen's road database, painted into the ground (pipeline/twin_roads.py):
+ * per texel the signed distance to the nearest centreline and that road's half width, so the edges
+ * are sharp at any distance however coarse the texel; the surface (asphalt, gravel, paving), the
+ * markings NVDB records, pedestrian crossings, and the bridges (their decks are 3D, nothing is painted
+ * on the water under them). A private road without a recorded surface is left to the aerial photo.
+ */
+const ROADS_GLSL = /* glsl */ `
+{
+  vec4 rd = texture2D(uRoads, vMapUv);
+  ivec2 tsz = textureSize(uRoads, 0);
+  vec4 rn = texelFetch(uRoads, ivec2(clamp(vMapUv, 0.0, 0.99999) * vec2(tsz)), 0);
+  int fl = int(rn.b * 255.0 + 0.5);
+  int surf = fl & 3;
+  if (surf > 0 && rn.g > 0.0 && (fl & 32) == 0) {
+    float sd = (rd.r * 255.0 - 128.0) / 8.0;
+    float hw = rn.g * 255.0 / 16.0;
+    float aa = max(fwidth(sd), 0.015);
+    float on = (1.0 - smoothstep(hw - aa, hw + aa, abs(sd))) * (1.0 - twinWater);
+    float n1 = twinVNoise(vTwinWorld.xz * 1.9), n2 = twinVNoise(vTwinWorld.xz * 0.23 + 7.0);
+    // colours as the aerial photo has them along the roads NVDB records the surface of (median, linear):
+    // sunlit asphalt is light grey from the air, gravel darker and greener (grass, shade)
+    vec3 asphalt = vec3(0.33, 0.345, 0.28) * (0.9 + 0.12 * n1 + 0.08 * n2);
+    vec3 gravel = vec3(0.17, 0.185, 0.13) * (0.85 + 0.2 * n1 + 0.1 * n2);
+    vec3 paving = vec3(0.3, 0.3, 0.28) * (0.92 + 0.12 * n1);
+    vec3 rc = surf == 1 ? asphalt : (surf == 2 ? gravel : paving);
+    // the photo's own wear and shade still show through; the edges of a gravel road blend into the verge
+    on *= surf == 2 ? 0.6 * (1.0 - 0.5 * smoothstep(hw - 0.6, hw, abs(sd))) : 0.75;
+    if ((fl & 4) != 0) rc = mix(rc, vec3(0.62, 0.42, 0.03), 1.0 - smoothstep(0.06, 0.06 + aa, abs(sd)));
+    if ((fl & 8) != 0) rc = mix(rc, vec3(0.78, 0.78, 0.76), 1.0 - smoothstep(0.06, 0.06 + aa, abs(abs(sd) - (hw - 0.35))));
+    if ((fl & 16) != 0) rc = mix(rc, vec3(0.8, 0.8, 0.78), smoothstep(0.45, 0.55, rd.a) * step(abs(sd), hw - 0.1));
+    diffuseColor.rgb = mix(diffuseColor.rgb, rc, on);
+    twinAsphalt = max(twinAsphalt, on * (surf == 1 ? 1.0 : 0.6));
+  }
+}`;
+
+/**
  * The terrain material: aerial photo, winter grading, and water where the mask says so. With
  * `built` (the graded inner ring), the plan's roads, gardens and fresh slopes are painted over the
- * photo: R asphalt, G garden and verge, B newly graded slope.
+ * photo: R asphalt, G garden and verge, B newly graded slope. With `roads`, today's roads (NVDB).
+ * With `depth`, the sea's depth from the nautical chart (pipeline/twin_sjokart.py): over shallows the
+ * bottom shows through as the aerial photo has it, fading over the first few metres of water (light
+ * coming back from the bottom crosses the water twice), and deep water keeps the dark default that
+ * lakes and rivers have too. Where a river meets the sea, its brown water spread over the estuary
+ * takes the photo's colour as well.
  */
-export function terrainMaterial(aerial: THREE.Texture, mask: THREE.Texture, built?: THREE.Texture) {
+export function terrainMaterial(aerial: THREE.Texture, mask: THREE.Texture, built?: THREE.Texture, roads?: THREE.Texture, depth?: THREE.Texture) {
   const m = new THREE.MeshStandardMaterial({ map: aerial, roughness: 0.96, metalness: 0, envMapIntensity: 0.55 });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uMask = { value: mask };
     if (built) shader.uniforms.uBuilt = { value: built };
+    if (roads) shader.uniforms.uRoads = { value: roads };
+    if (depth) shader.uniforms.uDepth = { value: depth };
     Object.assign(shader.uniforms, twinUniforms);
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vTwinWorld;")
@@ -141,6 +184,8 @@ uniform sampler2D uMask;   // R water, G forest, B broadleaf share of the trees
 uniform vec4 uClipHouse;
 uniform float uClipOn;
 ${built ? "uniform sampler2D uBuilt;" : ""}
+${roads ? "uniform sampler2D uRoads;" : ""}
+${depth ? "uniform sampler2D uDepth;   // R: 250 m * R^2 below the chart datum (1 where the chart has none); G: river water at the mouths" : ""}
 varying vec3 vTwinWorld;
 ${WAVES_GLSL}
 ${SEASON_GLSL}
@@ -160,6 +205,7 @@ if (uClipOn > 0.5) {
 }
 vec3 twinMask = texture2D(uMask, vMapUv).rgb;
 twinWater = smoothstep(0.35, 0.65, twinMask.r);
+vec3 twinPhoto = diffuseColor.rgb;   // the water's own colour in the photo: no winter for the sea bed
 diffuseColor.rgb = twinSeason(diffuseColor.rgb, twinMask.g, twinMask.b);
 // near the camera the aerial photo (30 cm a pixel) is soft: a little ground texture (tufts, stones,
 // litter) breaks it up; it fades out before it could be seen as a pattern
@@ -170,9 +216,17 @@ if (twinNear > 0.001) {
   diffuseColor.rgb *= mix(1.0, 0.74 + 0.52 * grain, twinNear * (1.0 - twinWater));
 }
 // humic river and fjord water: dark, with a little of the photo's own colour
-vec3 waterBase = mix(vec3(0.020, 0.045, 0.055), diffuseColor.rgb * 0.55, 0.22);
+vec3 waterBase = mix(vec3(0.020, 0.045, 0.055), twinPhoto * 0.55, 0.22);
+${depth ? `{
+  vec2 dp = texture2D(uDepth, vMapUv).rg;
+  float dm = 250.0 * dp.r * dp.r;
+  // the bottom through the water, as the photo shows it, gone by about 5 m; at a river mouth the
+  // river's brown water on the sea (dp.g)
+  waterBase = mix(waterBase, twinPhoto, 0.9 * max(exp(-dm / 1.8), dp.g));
+}` : ""}
 diffuseColor.rgb = mix(diffuseColor.rgb, waterBase, twinWater);
 twinAsphalt = 0.0;
+${roads ? ROADS_GLSL : ""}
 ${built ? `
 vec3 bm = texture2D(uBuilt, vMapUv).rgb;
 float grain = twinNoise(vTwinWorld.xz * 2.0) * 0.5 + twinNoise(vTwinWorld.xz * 0.5) * 0.5;
@@ -186,7 +240,7 @@ twinAsphalt = bm.r;` : ""}`)
       .replace("#include <roughnessmap_fragment>", `#include <roughnessmap_fragment>
 float twinDist = length(vTwinWorld - cameraPosition);
 roughnessFactor = mix(roughnessFactor, mix(0.035, 0.16, smoothstep(400.0, 6000.0, twinDist)), twinWater);
-roughnessFactor = mix(roughnessFactor, 0.72, twinAsphalt);`)
+roughnessFactor = mix(roughnessFactor, ${roads ? "0.9" : "0.72"}, twinAsphalt);`)
       .replace("#include <normal_fragment_maps>", `#include <normal_fragment_maps>
 if (twinWater > 0.01) {
   vec3 wn = twinWaveNormal(vTwinWorld.xz, twinDist);
@@ -194,7 +248,7 @@ if (twinWater > 0.01) {
   normal = normalize(mix(normal, wv, twinWater));
 }`);
   };
-  m.customProgramCacheKey = () => (built ? "twin-terrain-built-v1" : "twin-terrain-v1");
+  m.customProgramCacheKey = () => `twin-terrain-v2${built ? "-built" : ""}${roads ? "-roads" : ""}${depth ? "-depth" : ""}`;
   return m;
 }
 

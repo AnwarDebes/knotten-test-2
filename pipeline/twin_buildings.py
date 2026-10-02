@@ -1,11 +1,12 @@
-"""Every building within 1.3 km of the site, with its real roof, from Kartverket's laser data.
+"""The buildings with surveyed outlines round the site, with their real roofs, from Kartverket's laser data.
 
-Footprints: OpenStreetMap where it has them (the site tile, source/osm_raw.json), otherwise found in
-the laser data itself: surface 2 m or more above the ground, smooth like a roof, and not green in the
-aerial photo. Roofs: each footprint's 1 m surface model is fitted with flat, shed, gable (either way)
-and hipped roofs, and the best fit is kept, so ridge direction, pitch, eaves and ridge height are
-measured, not assumed. Roof colour is the median of the aerial photo on the roof. Wall colours are
-not in any data set; they follow the building type (barns red, houses mostly white), and say so.
+Footprints: the surveyed building outlines of the site tile (source/osm_raw.json: OpenStreetMap, whose
+Norwegian buildings come from Kartverket's building data). Every other building, out to 5 km, is a
+registered building found in the laser data by twin_world_buildings.py. Roofs: each footprint's 1 m
+surface model is fitted with flat, shed, gable (either way) and hipped roofs, and the best fit is kept,
+so ridge direction, pitch, eaves and ridge height are measured, not assumed. Roof colour is the median
+of the aerial photo on the roof. Wall colours are not in any data set; they follow the building type
+(barns red, houses mostly white), and say so.
 
 Outputs:
   site/public/twin/buildings.glb    one mesh: walls and roofs with colours and wall coordinates
@@ -192,13 +193,9 @@ def main():
     E = dtm.e_min + (cc + 0.5) * dtm.pix
     N = dtm.n_max - (rr + 0.5) * dtm.pix
     X, Y = tc.utm_to_local(E, N)
-    inside = (np.abs(X) < HALF) & (np.abs(Y) < HALF)
-    ndsm = dom.a - dtm.a
-    water = dtm.a <= 0.003
     rgb = aerial.sample(X, Y)
     green = rgb[..., 1] - 0.5 * (rgb[..., 0] + rgb[..., 2])
     rough = np.abs(dom.a - ndi.median_filter(dom.a, size=3))
-    lap = np.abs(ndi.laplace(ndi.gaussian_filter(dom.a, 0.6)))
 
     def to_px(xy):
         e, n = tc.local_to_utm(np.asarray(xy)[:, 0], np.asarray(xy)[:, 1])
@@ -221,46 +218,9 @@ def main():
             continue
         foot.append({"src": "osm", "id": f"osm-{el['id']}", "type": t.get("building"), "ring": ring})
 
-    osm_mask = Image.new("L", (Wd, H), 0)
-    dr = ImageDraw.Draw(osm_mask)
-    for f in foot:
-        dr.polygon([tuple(p) for p in to_px(f["ring"])], fill=255)
-    osm_mask = np.asarray(osm_mask) > 0
-
-    # ---------------- buildings found in the laser data
-    cand = inside & ~water & (ndsm > 2.2) & (rough < 0.3) & (lap < 0.6) & (green < 10)
-    cand = ndi.binary_opening(cand, iterations=1)
-    cand = ndi.binary_closing(cand, iterations=1)
-    lab, n = ndi.label(cand)
-    objs = ndi.find_objects(lab)
-    found = 0
-    for k, sl in enumerate(objs, start=1):
-        if sl is None:
-            continue
-        comp = lab[sl] == k
-        area = int(comp.sum())
-        if area < 14 or area > 6000:
-            continue
-        if (osm_mask[sl] & comp).sum() > 0.2 * area:
-            continue
-        ys, xs = np.nonzero(comp)
-        px = X[sl][ys, xs]
-        py = Y[sl][ys, xs]
-        ctr, L, W, a = obb(np.stack([px, py], 1))
-        if W < 2.6 or L < 3.5 or L / W > 8:
-            continue
-        rect = area / (L * W)
-        if rect < 0.6:
-            continue
-        # roofs are smooth; a tree crown that slipped through is rough across the whole patch
-        if float(np.median(rough[sl][comp])) > 0.12:
-            continue
-        c, s = math.cos(a), math.sin(a)
-        corners = np.array([[-L / 2, -W / 2], [L / 2, -W / 2], [L / 2, W / 2], [-L / 2, W / 2]])
-        ring = corners @ np.array([[c, s], [-s, c]]) + ctr
-        foot.append({"src": "lidar", "id": f"lid-{k}", "type": None, "ring": ring})
-        found += 1
-    print(f"footprints: {sum(f['src'] == 'osm' for f in foot)} from OpenStreetMap, {found} found in the laser data")
+    # every other building (registered in Matrikkelen, not in the surveyed outlines) is found in the laser
+    # data by twin_world_buildings.py, which calibrates its footprints on these outlines
+    print(f"footprints: {sum(f['src'] == 'osm' for f in foot)} surveyed outlines (OpenStreetMap, from Kartverket's building data)")
 
     # ---------------- fit roofs and build the mesh
     project = json.load(open(tc.DATA / "buildings.json", encoding="utf-8"))["buildings"]
@@ -320,7 +280,10 @@ def main():
             bx, by = bx[ok], by[ok]
         m = fit_roof(u, v, z, L, W)
         roof_px = aerial.sample(bx, by)
-        roof_rgb = np.median(roof_px, 0) / 255.0
+        # the sunlit half of the roof (twin_world_buildings.roof_colour): the shaded side turns red roofs mauve
+        lum = roof_px.mean(1)
+        lit = roof_px[lum >= np.median(lum)]
+        roof_rgb = (np.median(lit, 0) if len(lit) else np.median(roof_px, 0)) / 255.0
         h_ridge = float(np.max(roof_z(m, u, v, L, W)))
         height = max(2.4, float(np.percentile(z, 95)) - ground)
         typ = classify(f["type"], poly_area, L, W, height, roof_rgb)

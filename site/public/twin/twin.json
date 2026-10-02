@@ -1,24 +1,39 @@
 {
- "version": 2,
- "built": "2026-10-01",
+ "version": 3,
+ "built": "2026-10-02",
  "height": {
   "offset": 20.0,
-  "note": "h = (R*256 + G) * ring.step - offset, metres above NN2000"
+  "note": "h = (R*256 + G) * ring.step - ring.offset (or height.offset), metres; the true-frame rings are bent by the earth's curvature (earth.r_eff)"
  },
  "sea_level": 0.0,
+ "frames": {
+  "scene": "x east, y north in metres from 58.068057 N 7.278401 E, x = (lon - 7.278401) * 58878.4352, y = (lat - 58.068057) * 111132.0",
+  "true": "azimuthal equidistant from the same origin on GRS80 (Vincenty), x scaled by 0.997591 and y by 0.997784 so it meets the scene frame to first order; the scene is therefore about 0.23 % smaller than the ground everywhere"
+ },
+ "earth": {
+  "r_eff": 7342012.4,
+  "r": 6387550.8,
+  "k": 0.13,
+  "note": "drop = (x^2 + y^2) / (2 r_eff): the curvature less standard refraction"
+ },
  "rings": [
   {
    "name": "r0",
    "half": 320.0,
    "n": 513,
    "step": 0.02,
+   "offset": 20.0,
    "post_m": 1.25,
    "tex_half": 330.0,
+   "frame": "local",
+   "curved": false,
+   "shore_m": 0.0,
    "hole": 0,
    "files": {
     "height": "ring_r0_h.png",
     "aerial": "ring_r0.webp",
-    "mask": "ring_r0_m.png"
+    "mask": "ring_r0_m.webp",
+    "roads": "ring_r0_r.png"
    }
   },
   {
@@ -26,13 +41,18 @@
    "half": 1280.0,
    "n": 1025,
    "step": 0.05,
+   "offset": 20.0,
    "post_m": 2.5,
    "tex_half": 1290.0,
+   "frame": "local",
+   "curved": false,
+   "shore_m": 0.0,
    "hole": 320.0,
    "files": {
     "height": "ring_r1_h.png",
     "aerial": "ring_r1.webp",
-    "mask": "ring_r1_m.png"
+    "mask": "ring_r1_m.webp",
+    "roads": "ring_r1_r.png"
    }
   },
   {
@@ -40,13 +60,19 @@
    "half": 5120.0,
    "n": 513,
    "step": 0.1,
+   "offset": 20.0,
    "post_m": 20.0,
    "tex_half": 5150.0,
+   "frame": "true",
+   "curved": true,
+   "shore_m": 0.0,
    "hole": 1280.0,
    "files": {
     "height": "ring_r2_h.png",
     "aerial": "ring_r2.webp",
-    "mask": "ring_r2_m.png"
+    "mask": "ring_r2_m.webp",
+    "roads": "ring_r2_r.png",
+    "depth": "ring_r2_d.webp"
    }
   },
   {
@@ -54,26 +80,89 @@
    "half": 20480.0,
    "n": 513,
    "step": 0.25,
+   "offset": 100.0,
    "post_m": 80.0,
    "tex_half": 20500.0,
+   "frame": "true",
+   "curved": true,
+   "shore_m": 0.0,
    "hole": 5120.0,
    "files": {
     "height": "ring_r3_h.png",
     "aerial": "ring_r3.webp",
-    "mask": "ring_r3_m.png"
+    "mask": "ring_r3_m.webp",
+    "depth": "ring_r3_d.webp"
+   }
+  },
+  {
+   "name": "r4",
+   "half": 104857.6,
+   "n": 513,
+   "step": 0.1,
+   "offset": 2000.0,
+   "post_m": 409.6,
+   "tex_half": 105400.0,
+   "frame": "true",
+   "curved": true,
+   "shore_m": 4000.0,
+   "hole": 20480.0,
+   "files": {
+    "height": "ring_r4_h.png",
+    "aerial": "ring_r4.webp",
+    "mask": "ring_r4_m.webp"
    }
   }
  ],
  "sources": {
-  "terrain": "Kartverket, Nasjonal detaljert hoydemodell (NHM), DTM 1 m, 5 m and 20 m via hoydedata.no",
+  "terrain": "Kartverket, Nasjonal detaljert hoydemodell (NHM), DTM 1 m, 5 m, 20 m and 200 m via hoydedata.no",
+  "canopy": "Kartverket NHM DOM 5 m and 20 m minus DTM, where NIBIO AR5 has forest, bog or open ground",
   "aerial": "Esri World Imagery (Maxar, Earthstar Geographics and contributors)",
   "land_cover": "NIBIO, AR5 arealtype",
-  "broadleaf": "share of broadleaf trees in trees.bin (NIBIO SR16, AR5), mask channel B"
+  "broadleaf": "share of broadleaf trees in trees.bin (NIBIO SR16, AR5) and, out to 20 km, NIBIO SR16 dominant species; mask channel B",
+  "roads": "Statens vegvesen NVDB: road links, Vegbredde, Vegdekke, Vegoppmerking, Bru, Rekkverk, Belysningspunkt",
+  "depth": "Kartverket, Sjøkart - Dybdedata: depth areas, shoals and rocks (CC BY 4.0)"
  },
  "graded": {
   "ring": "r0",
   "height": "ring_r0b_h.png",
   "mask": "ring_r0b_m.png",
   "note": "the plan's pads, roads and footpath graded with fill 1:1.5 and cut 1:0.7 (pipeline/twin_grading.py); illustrative earthworks, not a design"
+ },
+ "roads": {
+  "encoding": "R 128 + 8 * signed distance to the centreline (m); G 16 * half width (m); B flags: bits 0-1 surface (1 asphalt, 2 gravel, 3 paving), 2 centre line, 3 edge lines, 4 crossing, 5 on a bridge; A 127.5 + 127.5 * sin(2 pi * metres along) for crossings",
+  "source": "Statens vegvesen, Nasjonal vegdatabank (NVDB), NLOD 2.0",
+  "model": "roads.glb"
+ },
+ "depth": {
+  "encoding": "R: depth = 250 * (R / 255)^2 m below the chart datum, 255 also where the chart has no depth (lakes, rivers); G: share of the photo's own colour near the river mouths (the river's brown water on the sea); B unused",
+  "source": "Kartverket, Sjøkart - Dybdedata (CC BY 4.0)",
+  "report": {
+   "r2": {
+    "texel_m": 10.06,
+    "water_charted_pct": 68.8,
+    "overlapping_texels": 5,
+    "under_2m_km2": 1.351,
+    "soundings": 591,
+    "sounding_error_median_m": 2.11,
+    "soundings_under_10m": 221,
+    "sounding_error_under_10m_median_m": 1.47,
+    "shoals_and_rocks": 561,
+    "deepest_m": 122.9,
+    "river_water_km2": 0.236
+   },
+   "r3": {
+    "texel_m": 40.04,
+    "water_charted_pct": 82.4,
+    "overlapping_texels": 356,
+    "under_2m_km2": 3.698,
+    "soundings": 21673,
+    "sounding_error_median_m": 4.91,
+    "soundings_under_10m": 5601,
+    "sounding_error_under_10m_median_m": 2.21,
+    "shoals_and_rocks": 7969,
+    "deepest_m": 473.3,
+    "river_water_km2": 0.407
+   }
+  }
  }
 }

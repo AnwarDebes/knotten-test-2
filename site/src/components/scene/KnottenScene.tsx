@@ -8,6 +8,7 @@ import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { EnergyFrame, Plot, SceneState } from "@/lib/types";
 import { Powerlines } from "./layers";
 import { TwinBuildings } from "./twin/TwinBuildings";
+import { TwinRoads } from "./twin/TwinRoads";
 import { TwinTerrain } from "./twin/TwinTerrain";
 import { Atmosphere, type Weather } from "./twin/Atmosphere";
 import { SimLayer, type SimFrame } from "./twin/SimLayer";
@@ -260,6 +261,7 @@ export default function KnottenScene(props: SceneProps) {
       <Suspense fallback={null}>
         <TwinTerrain shadows={shadows} todayRef={todayGround} gradedRef={gradedGround} />
         <TwinBuildings shadows={shadows} />
+        <TwinRoads shadows={shadows} quality={quality} />
         <Powerlines />
         <TwinForest ref={clearedGroup} month={month} quality={quality} shadows={shadows} />
         <group ref={proposalGroup}>

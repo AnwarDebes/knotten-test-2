@@ -61,25 +61,25 @@
    "name": "Snigsfjorden",
    "kind": "water",
    "tier": 2,
-   "x": -327.5,
+   "x": -327.7,
    "y": -2329.0,
-   "z": 0.0
+   "z": -0.4
   },
   {
    "name": "Snig",
    "kind": "place",
    "tier": 2,
-   "x": -453.1,
+   "x": -453.3,
    "y": -1620.2,
-   "z": 0.9
+   "z": 0.7
   },
   {
    "name": "Vigeland",
    "kind": "place",
    "tier": 2,
-   "x": 1571.2,
-   "y": 1803.6,
-   "z": 4.0
+   "x": 1570.5,
+   "y": 1803.9,
+   "z": 3.6
   },
   {
    "name": "Mjåvann",
@@ -95,15 +95,15 @@
    "tier": 2,
    "x": -61.9,
    "y": -1465.6,
-   "z": 1.1
+   "z": 0.9
   },
   {
    "name": "Valle kirke",
    "kind": "place",
    "tier": 2,
-   "x": 1717.9,
-   "y": 1518.8,
-   "z": 2.7
+   "x": 1717.3,
+   "y": 1519.1,
+   "z": 2.3
   },
   {
    "name": "Audna",
@@ -112,6 +112,230 @@
    "x": 1115.0,
    "y": 710.0,
    "z": 0.0
+  },
+  {
+   "name": "Egeland",
+   "kind": "place",
+   "tier": 2,
+   "x": 452.5,
+   "y": -2118.7,
+   "z": 27.5
+  },
+  {
+   "name": "Lonestrand",
+   "kind": "place",
+   "tier": 2,
+   "x": -1855.3,
+   "y": -1868.1,
+   "z": 5.3
+  },
+  {
+   "name": "Lian",
+   "kind": "place",
+   "tier": 2,
+   "x": 3085.6,
+   "y": 935.2,
+   "z": 29.2
+  },
+  {
+   "name": "Kvåfjord",
+   "kind": "place",
+   "tier": 2,
+   "x": 2188.2,
+   "y": -2872.7,
+   "z": 6.0
+  },
+  {
+   "name": "Austgården",
+   "kind": "place",
+   "tier": 2,
+   "x": 731.4,
+   "y": -3730.7,
+   "z": 2.1
+  },
+  {
+   "name": "Lundevik",
+   "kind": "place",
+   "tier": 2,
+   "x": 3395.6,
+   "y": -3219.4,
+   "z": 5.5
+  },
+  {
+   "name": "Lone",
+   "kind": "place",
+   "tier": 2,
+   "x": -2751.5,
+   "y": -778.4,
+   "z": 38.8
+  },
+  {
+   "name": "Lysestøl",
+   "kind": "place",
+   "tier": 2,
+   "x": -3389.2,
+   "y": -941.5,
+   "z": 64.5
+  },
+  {
+   "name": "Svennevik",
+   "kind": "place",
+   "tier": 2,
+   "x": -4572.0,
+   "y": -2158.7,
+   "z": 1.5
+  },
+  {
+   "name": "Tjømsfjorden",
+   "kind": "water",
+   "tier": 2,
+   "x": 1151.7,
+   "y": -3606.0,
+   "z": -1.0
+  },
+  {
+   "name": "Kvåfjorden",
+   "kind": "water",
+   "tier": 2,
+   "x": 2700.7,
+   "y": -3656.3,
+   "z": -1.4
+  },
+  {
+   "name": "Syrdalsfjorden",
+   "kind": "water",
+   "tier": 2,
+   "x": -2328.6,
+   "y": -3616.1,
+   "z": -1.3
+  },
+  {
+   "name": "Tarvatnet",
+   "kind": "water",
+   "tier": 2,
+   "x": -1523.9,
+   "y": 1051.1,
+   "z": 30.3
+  },
+  {
+   "name": "Haddelandsvannet",
+   "kind": "water",
+   "tier": 2,
+   "x": 3666.4,
+   "y": -1956.4,
+   "z": 79.5
+  },
+  {
+   "name": "Liansvannet",
+   "kind": "water",
+   "tier": 2,
+   "x": 2217.9,
+   "y": 266.6,
+   "z": 78.7
+  },
+  {
+   "name": "Lysevannet",
+   "kind": "water",
+   "tier": 2,
+   "x": -3666.4,
+   "y": -1202.0,
+   "z": 52.0
+  },
+  {
+   "name": "Sletheia",
+   "kind": "hill",
+   "tier": 2,
+   "x": -861.6,
+   "y": 4513.4,
+   "z": 268.4
+  },
+  {
+   "name": "Vardeheia",
+   "kind": "hill",
+   "tier": 2,
+   "x": -3297.1,
+   "y": 2988.8,
+   "z": 246.7
+  },
+  {
+   "name": "Fidjeheia",
+   "kind": "hill",
+   "tier": 2,
+   "x": -3021.3,
+   "y": 1468.2,
+   "z": 230.7
+  },
+  {
+   "name": "Solhellerheia",
+   "kind": "hill",
+   "tier": 2,
+   "x": 205.9,
+   "y": 3223.6,
+   "z": 227.0
+  },
+  {
+   "name": "Varåsen",
+   "kind": "hill",
+   "tier": 2,
+   "x": -1638.5,
+   "y": 2973.7,
+   "z": 220.1
+  },
+  {
+   "name": "Hoveheia",
+   "kind": "hill",
+   "tier": 2,
+   "x": 506.7,
+   "y": 1222.2,
+   "z": 214.3
+  },
+  {
+   "name": "Skiftingsheia",
+   "kind": "hill",
+   "tier": 2,
+   "x": 3659.4,
+   "y": 1897.1,
+   "z": 206.8
+  },
+  {
+   "name": "Vedeheia",
+   "kind": "hill",
+   "tier": 2,
+   "x": 1943.1,
+   "y": -1122.0,
+   "z": 207.1
+  },
+  {
+   "name": "Spangereid",
+   "kind": "place",
+   "tier": 2,
+   "x": -7914.1,
+   "y": -2506.3,
+   "z": -1.3
+  },
+  {
+   "name": "Lenefjorden",
+   "kind": "water",
+   "tier": 2,
+   "x": -6783.0,
+   "y": 2226.7,
+   "z": -3.5
+  },
+  {
+   "name": "Mandal",
+   "kind": "place",
+   "tier": 2,
+   "x": 10319.6,
+   "y": -4569.4,
+   "z": -7.7
+  },
+  {
+   "name": "Lindesnes fyr",
+   "kind": "place",
+   "tier": 2,
+   "x": -13676.3,
+   "y": -9485.2,
+   "z": 17.1
   },
   {
    "name": "Kontorbygget",

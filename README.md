@@ -126,7 +126,8 @@ all 30 with water and open sea in view with the neighbouring houses standing; wi
 
 ## Data licences
 Kartverket height data: CC BY 4.0 (© Kartverket). OpenStreetMap: ODbL (© OpenStreetMap contributors).
-AWS Terrain Tiles: public. Esri World Imagery: Esri terms of use — see assumption 7.
+AWS Terrain Tiles: public. Esri World Imagery: Esri terms of use — see assumption 7. The website's twin has its
+own table of sources and licences below.
 
 ## Re-running
 `pipeline/` in order: `fetch_area.py` → `prep_scene.py` → `prep_scatter.py` → `fetch_surround.py` →
@@ -144,21 +145,63 @@ and the copies in `site/public/data`) → `build_klassisk_plan.py` (the Klassisk
 The website's 3D model is built by the `pipeline/twin_*.py` steps, in this order (Python 3 with numpy, scipy
 and Pillow; downloads are cached in `source/twin/`, which git ignores):
 
-1. `twin_fetch.py`: Kartverket NHM terrain and surface models (1 m, 5 m, 20 m), aerial imagery, NIBIO SR16 tree
-   species and AR5 land cover, Kartverket place names, EU PVGIS weather and yields, NO2 prices, Elhub load profiles.
-   OpenStreetMap is fetched only with `--osm` (the Overpass server's certificate had expired on 1 October 2026,
-   so the buildings and power lines still come from the earlier `source/osm_raw.json`).
-2. `twin_terrain.py`: the four terrain rings (heights, aerial photos, masks: water, forest) and `twin.json`.
-3. `twin_buildings.py`: every existing building with its roof fitted to the laser data (`buildings.glb`).
-4. `twin_trees.py`: the trees (`trees.bin`, `trees.json`): treetops in the laser data, species from SR16, AR5
+1. `twin_fetch.py`: Kartverket NHM terrain and surface models (1 m and 5 m round the site, 20 m out to 20 km,
+   200 m out to 105 km), aerial imagery for every ring, NIBIO SR16 tree species and AR5 land cover, Kartverket
+   place names, EU PVGIS weather and yields, NO2 prices, Elhub load profiles. OpenStreetMap is fetched only
+   with `--osm` (the Overpass server's certificate had expired on 1 October 2026, so the outlines of the
+   buildings within 1.3 km still come from the earlier `source/osm_raw.json`).
+2. `twin_geonorge.py` and `twin_matrikkel.py`: from Geonorge's download API, Kartverket's building register
+   (Matrikkelen, Bygningspunkt: every registered building with its type and status) and the nautical chart's
+   depth data (Sjøkart, Dybdedata) for Lindesnes and Lyngdal.
+3. `twin_terrain.py`: the five terrain rings (`ring_r0` to `ring_r4`, out to 105 km: heights, aerial photos,
+   masks for water and forest) and `twin.json`. Beyond 1.3 km the rings are laid out in the true frame (exact
+   distance and direction from the site) and bend down with the earth's curvature less refraction; beyond the
+   3D trees the woods are the canopy of the surface model.
+4. `twin_buildings.py`: the buildings within 1.3 km that have a surveyed outline, each roof fitted to the laser
+   data (`buildings.glb`).
+5. `twin_world_buildings.py`: every other registered building out to 5.1 km that the laser data shows
+   (`buildings_far.glb`, 3 811 buildings: footprint, roof shape and height from the laser data, roof colour
+   from the photo, Valle kirke's cross plan and tower), and their footprints in the trees' building mask.
+6. `twin_trees.py`: the trees (`trees.bin`, `trees.json`): treetops in the laser data, species from SR16, AR5
    and the aerial photo (a crown that is dark in the summer photo is a conifer).
-5. `twin_broadleaf.py`: the broadleaf share of the trees into the masks' blue channel (the winter look of the woods).
-6. `twin_houses.py`: the model's example house fitted to each plot (`houses.json`): a lower floor under the view
-   side where the ground in front lies low enough (18 of the 30 plots), one floor elsewhere; every other house mirrored.
-7. `twin_grading.py`: the plan's pads, roads and gardens graded into the inner ring (`ring_r0b_*`), with a patio
-   dug to the lower floor's level in front of the houses that have one, and every footprint kept clear of its
-   neighbours' slopes.
-8. `twin_energy.py` and `twin_names.py`: the energy simulation's inputs (`energy.json`) and the place names.
+7. `twin_broadleaf.py`: the broadleaf share of the trees into the masks' blue channel (the winter look of the
+   woods; beyond the 3D trees, SR16's dominant species).
+8. `twin_nvdb.py` and `twin_roads.py`: the roads in Statens vegvesen's road database (NVDB) out to 5.3 km:
+   centrelines, widths, surfaces and markings painted into the ground (`ring_rN_r.png`), the bridges in 3D
+   (`roads.glb`), guardrails, guard stones and street lights (`road_objects.json`).
+9. `twin_nve.py` and `twin_power.py`: NVE's overhead lines (22 and 24 kV distribution, 110 kV regional) and
+   their masts out to 5.3 km (`power.json`).
+10. `twin_sjokart.py`: the sea's depth from the nautical chart (`ring_rN_d.webp`): the shader lets the bottom
+    show through shallow water, as the photo has it, and the Audna's brown water at its mouth.
+11. `twin_houses.py`: the model's example house fitted to each plot (`houses.json`): a lower floor under the view
+    side where the ground in front lies low enough (18 of the 30 plots), one floor elsewhere; every other house mirrored.
+12. `twin_grading.py`: the plan's pads, roads and gardens graded into the inner ring (`ring_r0b_*`), with a patio
+    dug to the lower floor's level in front of the houses that have one, and every footprint kept clear of its
+    neighbours' slopes.
+13. `twin_energy.py` and `twin_names.py`: the energy simulation's inputs (`energy.json`) and the place names
+    (`names.json`): the near names, and for the wide views the register's settlements, fjords, larger lakes and
+    highest hills within 5 km, Spangereid, Lenefjorden, Mandal and Lindesnes fyr.
+
+A step rewrites only its own files. `twin_terrain.py` keeps the other steps' entries in `twin.json`; after it,
+run `twin_broadleaf.py`, `twin_sjokart.py` and `twin_names.py` again (they read the masks).
+
+| Layer of the twin | Source | Licence |
+|---|---|---|
+| Terrain; canopy and roofs (surface model) | Kartverket, Nasjonal detaljert høydemodell (NHM), via hoydedata.no | CC BY 4.0 |
+| Registered buildings | Kartverket, Matrikkelen Bygningspunkt (Geonorge) | CC BY 4.0 |
+| Building outlines within 1.3 km | OpenStreetMap (`source/osm_raw.json`) | ODbL |
+| Place names | Kartverket, Sentralt stedsnavnregister | CC BY 4.0 |
+| Sea depth | Kartverket, Sjøkart Dybdedata (Geonorge) | CC BY 4.0 |
+| Roads, bridges, guardrails, street lights | Statens vegvesen, NVDB (API Les v4) | NLOD 2.0 |
+| Power lines and masts | NVE, Nettanlegg 4 | NLOD |
+| Tree species | NIBIO, SR16 WMS | NLOD |
+| Land cover: water, forest, fields | NIBIO, AR5 WMS | see below |
+| Aerial photo | Esri World Imagery | Esri terms (assumption 7) |
+
+NIBIO's AR5 map service answers without a login and its capabilities say "no conditions apply", but Geonorge's
+catalogue lists the same service (FKB-AR5 WMS) under the Norge digitalt licence with restricted access. Confirm
+the terms with NIBIO before launch, or move the masks to open data (AR50, NLOD). The site should also credit the
+sources above wherever it names the model's data.
 
 The stills in `renders/` that come from the live model, and the fly-in, are made in the browser with
 `?twindebug` (see `site/README.md` and `pipeline/twin_flyin.js`).

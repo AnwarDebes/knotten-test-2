@@ -9,10 +9,14 @@ export type RingDesc = {
   half: number;       // the ring covers [-half, half]^2 metres
   n: number;          // posts per side, 2^k + 1
   step: number;       // height code step, metres
+  offset?: number;    // height code offset, metres (the manifest's height.offset when absent)
   post_m: number;
   tex_half: number;   // the aerial photo covers [-tex_half, tex_half]^2
   hole: number;       // the next ring in covers [-hole, hole]^2 (0 for the innermost)
-  files: { height: string; aerial: string; mask: string };
+  frame?: "local" | "true";
+  curved?: boolean;   // the heights already bend down with the earth's curvature
+  shore_m?: number;   // the pipeline already ran the land down to the sea at the ring's edge
+  files: { height: string; aerial: string; mask: string; roads?: string; depth?: string };
 };
 
 export type RingMesh = {
@@ -25,8 +29,8 @@ export type RingMesh = {
 };
 
 /** Max mesh error per ring: a few centimetres at the site, metres at the horizon. */
-const MAX_ERROR: Record<string, number> = { r0: 0.15, r0b: 0.12, r1: 0.6, r2: 3, r3: 10 };
-const SKIRT: Record<string, number> = { r0: 2, r0b: 2, r1: 4, r2: 12, r3: 60 };
+const MAX_ERROR: Record<string, number> = { r0: 0.15, r0b: 0.12, r1: 0.6, r2: 2, r3: 8, r4: 30 };
+const SKIRT: Record<string, number> = { r0: 2, r0b: 2, r1: 4, r2: 12, r3: 60, r4: 400 };
 
 export function decodeHeights(rgba: Uint8ClampedArray, n: number, offset: number, step: number) {
   const h = new Float32Array(n * n);
@@ -38,7 +42,8 @@ export function buildRing(desc: RingDesc, heights: Float32Array, outermost: bool
   const { n, half, post_m: post, hole, tex_half: th } = desc;
   const h = heights;
   // the outermost ring slopes down to the sea over its last 40 posts, so its edge never shows as a cliff
-  if (outermost) {
+  // (unless the pipeline has already run its land down to the curved sea)
+  if (outermost && !desc.shore_m) {
     const ramp = 40;
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
       const d = Math.min(i, j, n - 1 - i, n - 1 - j);

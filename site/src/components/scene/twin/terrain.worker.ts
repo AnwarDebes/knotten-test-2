@@ -18,7 +18,7 @@ self.onmessage = async (e: MessageEvent<Job>) => {
       ctx.drawImage(bmp, 0, 0);
       const px = ctx.getImageData(0, 0, bmp.width, bmp.height).data;
       bmp.close();
-      const mesh = buildRing(r, decodeHeights(px, r.n, offset, r.step), r.name === outermost);
+      const mesh = buildRing(r, decodeHeights(px, r.n, r.offset ?? offset, r.step), r.name === outermost);
       (self as unknown as Worker).postMessage({ type: "ring", mesh }, [mesh.position.buffer, mesh.normal.buffer, mesh.uv.buffer, mesh.index.buffer, mesh.heights.buffer]);
     }));
     (self as unknown as Worker).postMessage({ type: "done" });

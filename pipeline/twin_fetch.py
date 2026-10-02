@@ -1,9 +1,11 @@
-"""Download everything the digital twin is built from, into source/twin (git-ignored).
+﻿"""Download everything the digital twin is built from, into source/twin (git-ignored).
 
-  Kartverket NHM (hoydedata.no)  DTM and DOM 1 m for +-1.3 km, DTM and DOM 5 m for +-5.2 km, DTM 20 m for +-21 km
-  Esri World Imagery             aerial tiles for four rings (0.3, 0.6, 2.5 and 10 m per pixel)
-  OpenStreetMap (Overpass)       buildings, roads, water, land use, power lines and place names, +-8 km
-  NIBIO                          AR5 land type and forest type, SR16 dominant tree species
+  Kartverket NHM (hoydedata.no)  DTM and DOM 1 m for +-1.3 km, DTM and DOM 5 m for +-5.2 km, DTM and DOM 20 m for
+                                 +-21 km, DTM and DOM 200 m for +-106 km (the outer three in the true frame)
+  Esri World Imagery             aerial tiles for the five rings (0.32, 1.26, 5, 20 and 103 m per pixel)
+  OpenStreetMap (Overpass)       only with --osm: buildings, roads, water, land use, power lines, +-8 km
+  NIBIO                          AR5 land type and forest type, SR16 dominant tree species (to 21 km)
+  Kartverket (SSR)               place names within 5 km
   EU JRC PVGIS 5.3               typical meteorological year (hourly) for Knotten, and the PV yield check
   hvakosterstrommen.no           hourly spot prices for NO2, 2025
   Elhub                          hourly consumption of all households in NO2, 2025
@@ -30,11 +32,20 @@ Image.MAX_IMAGE_PIXELS = None
 NHM = "https://hoydedata.no/arcgis/rest/services/{svc}/ImageServer/exportImage"
 
 
-def nhm(svc, stem, half, pix):
+def utm_bbox_of_true_square(half, pad=500.0):
+    """UTM bbox covering the true-frame square [-half, half]^2 plus a margin."""
+    s = np.linspace(-half - pad, half + pad, 41)
+    edge = np.concatenate([np.stack([s, np.full_like(s, -half - pad)], 1), np.stack([s, np.full_like(s, half + pad)], 1),
+                           np.stack([np.full_like(s, -half - pad), s], 1), np.stack([np.full_like(s, half + pad), s], 1)])
+    e, n = tc.true_to_utm(edge[:, 0], edge[:, 1])
+    return float(e.min()), float(n.min()), float(e.max()), float(n.max())
+
+
+def nhm(svc, stem, half, pix, frame="local", interpolation="RSP_BilinearInterpolation"):
     if (tc.CACHE / f"{stem}.npy").exists():
         print(f"  {stem}: cached")
         return
-    e0, n0, e1, n1 = tc.utm_bbox_of_local_square(half)
+    e0, n0, e1, n1 = tc.utm_bbox_of_local_square(half) if frame == "local" else utm_bbox_of_true_square(half)
     # snap to the pixel grid so neighbouring requests line up
     e0, n0 = math.floor(e0 / pix) * pix, math.floor(n0 / pix) * pix
     e1, n1 = math.ceil(e1 / pix) * pix, math.ceil(n1 / pix) * pix
@@ -44,7 +55,7 @@ def nhm(svc, stem, half, pix):
         "bbox": f"{e0},{n0},{e1},{n1}", "bboxSR": "25832", "imageSR": "25832",
         "size": f"{w},{h}", "format": "tiff", "pixelType": "F32",
         "noDataInterpretation": "esriNoDataMatchAny", "noData": "-9999",
-        "interpolation": "RSP_BilinearInterpolation", "f": "image",
+        "interpolation": interpolation, "f": "image",
     }
     url = NHM.format(svc=svc) + "?" + urllib.parse.urlencode(params)
     raw = tc.fetch(url, name=f"{stem}.tif", timeout=600)
@@ -54,7 +65,10 @@ def nhm(svc, stem, half, pix):
     arr = np.asarray(img, dtype=np.float32)
     if arr.shape != (h, w):
         raise RuntimeError(f"{stem}: got {arr.shape}, wanted {(h, w)}")
-    tc.save_raster(stem, arr, e0, n1, pix, {"source": f"Kartverket {svc} via hoydedata.no", "svc": svc})
+    # outside the national model (open sea far out, other countries) the service returns no-data,
+    # sometimes as huge numbers: mark it -9999 so the builders can treat it as sea
+    arr = np.where((arr < -1000) | (arr > 3000), -9999.0, arr).astype(np.float32)
+    tc.save_raster(stem, arr, e0, n1, pix, {"source": f"Kartverket {svc} via hoydedata.no", "svc": svc, "interpolation": interpolation})
     good = arr[arr > -1000]
     print(f"  {stem}: {w}x{h} at {pix} m, {good.min():.1f}..{good.max():.1f} m, nodata {np.mean(arr < -1000) * 100:.1f} %")
 
@@ -68,13 +82,18 @@ def tile(z, x, y):
     return Image.open(io.BytesIO(data)).convert("RGB")
 
 
-def imagery(stem, half, z, size):
-    """Esri tiles at zoom z, reprojected onto the north-up local square [-half, half]^2 at `size` px."""
+def imagery(stem, half, z, size, frame="local"):
+    """Esri tiles at zoom z, reprojected onto the north-up square [-half, half]^2 at `size` px, in the
+    scene frame (rings r0, r1) or the true frame (r2 and beyond)."""
     if (tc.CACHE / f"{stem}.png").exists():
         print(f"  {stem}: cached")
         return
-    lat0, lon0 = tc.local_to_latlon(-half - 50, -half - 50)
-    lat1, lon1 = tc.local_to_latlon(half + 50, half + 50)
+    to_geo = tc.local_to_latlon if frame == "local" else tc.true_to_geo
+    s = np.linspace(-half - 50, half + 50, 41)
+    bx, by = np.meshgrid(s, s)
+    blat, blon = to_geo(bx, by)
+    lat0, lon0 = float(np.min(blat)), float(np.min(blon))
+    lat1, lon1 = float(np.max(blat)), float(np.max(blon))
     px0, py1 = tc.merc_pixel(lat0, lon0, z)
     px1, py0 = tc.merc_pixel(lat1, lon1, z)
     tx0, tx1 = int(px0 // 256), int(px1 // 256)
@@ -89,7 +108,7 @@ def imagery(stem, half, z, size):
     # sample the mosaic at every output texel (texel centres; row 0 = north)
     s = (np.arange(size) + 0.5) / size * 2 * half - half
     gx, gy = np.meshgrid(s, -s)
-    lat, lon = tc.local_to_latlon(gx, gy)
+    lat, lon = to_geo(gx, gy)
     mx, my = tc.merc_pixel(lat, lon, z)
     fx, fy = mx - tx0 * 256 - 0.5, my - ty0 * 256 - 0.5
     # supersample when the output is coarser than the tiles (area average, no aliasing)
@@ -262,11 +281,17 @@ if __name__ == "__main__":
     nhm("NHM_DTM_25832", "dtm5", 5250, 5.0)
     nhm("NHM_DOM_25832", "dom5", 5250, 5.0)
     nhm("NHM_DTM_25832", "dtm20", 20600, 20.0)
+    # the outer rings in the true frame: the forest canopy (surface model) for r3, and r4 out to
+    # +-102 km (nearest-neighbour so no-data at sea never smears into the land)
+    nhm("NHM_DOM_25832", "dom20", 20600, 20.0, frame="true", interpolation="RSP_NearestNeighbor")
+    nhm("NHM_DTM_25832", "dtm200", 106000, 200.0, frame="true", interpolation="RSP_NearestNeighbor")
+    nhm("NHM_DOM_25832", "dom200", 106000, 200.0, frame="true", interpolation="RSP_NearestNeighbor")
     print("Esri World Imagery")
     imagery("img_r0", 330, 18, 2048)
     imagery("img_r1", 1290, 17, 2048)
-    imagery("img_r2", 5150, 15, 2048)
-    imagery("img_r3", 20500, 13, 2048)
+    imagery("img_r2t", 5150, 15, 2048, frame="true")
+    imagery("img_r3t", 20500, 13, 2048, frame="true")
+    imagery("img_r4", 105400, 10, 2048, frame="true")
     # OpenStreetMap: optional. The build uses source/osm_raw.json (the site tile, fetched 5 Sep 2026)
     # and finds buildings beyond it in the laser data; run with --osm to refresh a wider extract.
     if "--osm" in __import__("sys").argv:
@@ -277,6 +302,8 @@ if __name__ == "__main__":
         nibio(s)
     nibio("ar5_arealtype_5", 5250, 5.0, "ar5_arealtype")      # sea and fresh water for the outer rings
     nibio("ar5_arealtype_20", 20600, 12.0, "ar5_arealtype")   # the WMS draws nothing at 20 m/px
+    nibio("sr16_treslag_10", 5250, 10.0, "sr16_treslag")      # tree species of the woods beyond the 3D trees
+    nibio("sr16_treslag_40", 20600, 16.0, "sr16_treslag")
     print("Place names")
     place_names()
     print("PVGIS")

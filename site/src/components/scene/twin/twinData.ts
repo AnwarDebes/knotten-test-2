@@ -1,6 +1,7 @@
 /**
  * Loads the twin's terrain once per page: the ring layout, the meshes (built in a worker), the aerial
- * photos and the masks. The promise is cached, so remounting the scene does not fetch again.
+ * photos, the masks, and where there are any the roads and the sea's depth. The promise is cached, so
+ * remounting the scene does not fetch again.
  */
 import * as THREE from "three";
 import { buildRing, decodeHeights, type RingDesc, type RingMesh } from "./rings";
@@ -12,12 +13,14 @@ export type TwinManifest = {
   built: string;
   height: { offset: number };
   sea_level: number;
+  /** the earth's radius less refraction (the outer rings bend down by (x² + y²) / 2r) */
+  earth?: { r_eff: number; r: number; k: number };
   rings: RingDesc[];
   sources: Record<string, string>;
   graded?: { ring: string; height: string; mask: string; note: string };
 };
 
-export type TwinRing = { desc: RingDesc; geometry: THREE.BufferGeometry; aerial: THREE.Texture; mask: THREE.Texture; heights: Float32Array };
+export type TwinRing = { desc: RingDesc; geometry: THREE.BufferGeometry; aerial: THREE.Texture; mask: THREE.Texture; roads: THREE.Texture | null; depth: THREE.Texture | null; heights: Float32Array };
 /** The innermost ring as built: the plan's pads, roads and footpath graded in (twin_grading.py). */
 export type GradedRing = { geometry: THREE.BufferGeometry; built: THREE.Texture; heights: Float32Array };
 export type Twin = { manifest: TwinManifest; rings: TwinRing[]; graded: GradedRing | null; heightAt: (x: number, y: number) => number };
@@ -86,7 +89,7 @@ async function ringsOnPage(manifest: TwinManifest): Promise<RingMesh[]> {
     const ctx = cv.getContext("2d", { willReadFrequently: true })!;
     ctx.drawImage(img, 0, 0);
     const px = ctx.getImageData(0, 0, img.width, img.height).data;
-    out.push(buildRing(r, decodeHeights(px, r.n, manifest.height.offset, r.step), r.name === manifest.rings[manifest.rings.length - 1].name));
+    out.push(buildRing(r, decodeHeights(px, r.n, r.offset ?? manifest.height.offset, r.step), r.name === manifest.rings[manifest.rings.length - 1].name));
     await new Promise((res) => setTimeout(res, 0));
   }
   return out;
@@ -102,10 +105,13 @@ async function load(): Promise<Twin> {
     return t;
   });
   const meshesP = ringsInWorker(manifest).catch(() => ringsOnPage(manifest));
-  const [meshes, aerials, masks, builtMask] = await Promise.all([
+  const optional = (file?: string) => (file ? tex(file, false) : Promise.resolve(null));
+  const [meshes, aerials, masks, roads, depths, builtMask] = await Promise.all([
     meshesP,
     Promise.all(manifest.rings.map((r) => tex(r.files.aerial, true))),
     Promise.all(manifest.rings.map((r) => tex(r.files.mask, false))),
+    Promise.all(manifest.rings.map((r) => optional(r.files.roads))),
+    Promise.all(manifest.rings.map((r) => optional(r.files.depth))),
     manifest.graded ? tex(manifest.graded.mask, false) : Promise.resolve(null),
   ]);
   const geometryOf = (m: RingMesh) => {
@@ -120,7 +126,7 @@ async function load(): Promise<Twin> {
   };
   const rings: TwinRing[] = manifest.rings.map((desc, i) => {
     const m = meshes.find((x) => x.name === desc.name)!;
-    return { desc, geometry: geometryOf(m), aerial: aerials[i], mask: masks[i], heights: m.heights };
+    return { desc, geometry: geometryOf(m), aerial: aerials[i], mask: masks[i], roads: roads[i], depth: depths[i], heights: m.heights };
   });
   const gm = meshes.find((x) => x.name === "r0b");
   const graded: GradedRing | null = gm && builtMask ? { geometry: geometryOf(gm), built: builtMask, heights: gm.heights } : null;
