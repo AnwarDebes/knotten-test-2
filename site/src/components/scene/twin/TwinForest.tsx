@@ -81,7 +81,10 @@ export function foliageMaterial(map: THREE.Texture, key: string, species: number
   const m = new THREE.MeshStandardMaterial({ map, vertexColors: true, side: THREE.DoubleSide, alphaTest: 0.45, roughness: 1, envMapIntensity: 0.8 });
   const u = { uLeafColor: { value: new THREE.Color() }, uTwigColor: { value: new THREE.Color() }, uDensity: { value: 1 }, uSpecies: { value: species } };
   m.userData.foliage = u;
-  withWind(m, key);
+  // every leaf material compiles to the same program (species, colours and textures are uniforms): one key, one
+  // compile instead of eight; each material keeps its own uniforms (`key` stays for the callers' names)
+  void key;
+  withWind(m, "leaf");
   const wind = m.onBeforeCompile;
   m.onBeforeCompile = (shader, r) => {
     wind.call(m, shader, r);
@@ -147,6 +150,13 @@ const near0 = new THREE.Vector3(1e9, 1e9, 1e9);
  * only through the windows).
  */
 export const forestDetail = { scale: 1, near: 1 };
+
+/**
+ * The 3D trees drawn are the ones the camera can see (see TwinForest). A render with another camera or another
+ * shape of picture (the debug stills) asks for the trees of that view first with `run`, and for the live view's
+ * again afterwards with `dirty`.
+ */
+export const forestCull: { run: ((cam: THREE.Camera) => void) | null; dirty: () => void } = { run: null, dirty: () => {} };
 
 /**
  * The forest: 3D trees near the camera, painted cards further out, and the trees the plan clears
@@ -228,6 +238,46 @@ export const TwinForest = forwardRef<THREE.Group, { month: number; day?: number;
     return m;
   }), [detail, wood, closeLeaves, shadows]);
 
+  // The near and the close trees are refilled as the camera moves (every 12 m): those are the trees within reach,
+  // nearest first. Of those, only the trees the camera can see are drawn: a tree whose bounding sphere lies wholly
+  // outside the view would draw nothing anyway, but its thousands of vertices (wind, the photo's colour) were still
+  // worked out each frame, half or more of the forest's cost on the ground. The test is generous (a bigger sphere,
+  // room for the wind), and is made again whenever the camera has turned 2 degrees or moved a metre, so a tree at
+  // the edge of the picture is never left out. Trees cast no shadows here (the stand-ins below do), so nothing else
+  // depends on the trees that are not drawn.
+  const cand = useMemo(() => ({
+    near: near.map((m) => ({ idx: new Int32Array(m.instanceMatrix.count), n: 0 })),
+    close: close.map((m) => ({ idx: new Int32Array(m.instanceMatrix.count), n: 0 })),
+  }), [near, close]);
+  const bounds = useMemo(() => ({ near: geoms.map(boundsOf), close: detail.map(boundsOf) }), [geoms, detail]);
+  const culled = useRef({ pos: new THREE.Vector3(1e9, 1e9, 1e9), quat: new THREE.Quaternion(), proj: new THREE.Matrix4(), dirty: true });
+  const cullFor = useMemo(() => (cam: THREE.Camera) => {
+    cam.updateMatrixWorld();
+    _vp.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse);
+    _frustum.setFromProjectionMatrix(_vp);
+    const eye = _eye.setFromMatrixPosition(cam.matrixWorld);
+    fillVisible(near, cand.near, bounds.near, trees, eye);
+    fillVisible(close, cand.close, bounds.close, trees, eye);
+  }, [near, close, cand, bounds, trees]);
+  useEffect(() => {
+    forestCull.run = cullFor;
+    forestCull.dirty = () => { culled.current.dirty = true; };
+    return () => { forestCull.run = null; forestCull.dirty = () => {}; };
+  }, [cullFor]);
+  // after the camera has been moved this frame, before the frame is drawn (the render runs at priority 1)
+  useFrame(() => {
+    const c = culled.current;
+    const turned = c.quat.angleTo(camera.quaternion) > CULL_TURN;
+    const moved = c.pos.distanceToSquared(camera.position) > CULL_MOVE * CULL_MOVE;
+    const reshaped = !c.proj.equals(camera.projectionMatrix);
+    if (!c.dirty && !turned && !moved && !reshaped) return;
+    c.dirty = false;
+    c.pos.copy(camera.position);
+    c.quat.copy(camera.quaternion);
+    c.proj.copy(camera.projectionMatrix);
+    cullFor(camera);
+  }, 0.5);
+
   // the cleared trees: few, always 3D
   const cleared = useMemo(() => {
     const idx: number[][] = [[], [], [], []];
@@ -305,7 +355,8 @@ export const TwinForest = forwardRef<THREE.Group, { month: number; day?: number;
     if (c.distanceToSquared(last.current) < 144) return;
     last.current.copy(c);
     cardU.uNear.value = nearR * kn;
-    fillNear(near, close, trees, c, nearR * kn, closeR * k);
+    fillNear(cand.near, cand.close, trees, c, nearR * kn, closeR * k);
+    culled.current.dirty = true;
   });
 
   return (
@@ -337,39 +388,105 @@ function writeTree(mesh: THREE.InstancedMesh, slot: number, t: Trees, i: number)
   }
 }
 
-function fillNear(meshes: THREE.InstancedMesh[], close: THREE.InstancedMesh[], t: Trees, cam: THREE.Vector3, R: number, closeR: number) {
+// scratch for the cells around the camera, nearest first (reused: a refill allocates nothing)
+let cellKey = new Float64Array(4096), cellIdx = new Int32Array(4096), cellOrder = new Uint32Array(4096);
+
+type Cand = { idx: Int32Array; n: number };
+
+/** The trees within reach of the camera for each mesh, nearest cells first (the candidates the view picks from). */
+function fillNear(meshes: Cand[], close: Cand[], t: Trees, cam: THREE.Vector3, R: number, closeR: number) {
+  const span = Math.ceil((2 * R) / t.grid.cell) + 2;
+  if (span * span > cellKey.length) { cellKey = new Float64Array(span * span); cellIdx = new Int32Array(span * span); cellOrder = new Uint32Array(span * span); }
   const counts = [0, 0, 0, 0];
-  const cap = meshes.map((m) => m.instanceMatrix.count);
+  const cap = meshes.map((m) => m.idx.length);
   const ccounts = close.map(() => 0);
-  const ccap = close.map((m) => m.instanceMatrix.count);
+  const ccap = close.map((m) => m.idx.length);
   const C2 = closeR * closeR;
   const { half, cell, n, starts } = t.grid;
   const R2 = R * R;
   const i0 = Math.max(0, Math.floor((cam.x - R + half) / cell)), i1 = Math.min(n - 1, Math.floor((cam.x + R + half) / cell));
   const j0 = Math.max(0, Math.floor((cam.z - R + half) / cell)), j1 = Math.min(n - 1, Math.floor((cam.z + R + half) / cell));
+  // the cells nearest the camera first: the trees are drawn front to back, so the GPU skips the leaves behind leaves
+  // it has already drawn (the same trees are chosen, there are fewer than the meshes hold; only their order changes)
+  let m = 0;
   for (let j = j0; j <= j1; j++) {
     for (let i = i0; i <= i1; i++) {
-      const a = starts[j * n + i], b = starts[j * n + i + 1];
-      for (let k = a; k < b; k++) {
-        const dx = t.x[k] - cam.x, dy = t.y[k] + t.h[k] * 0.6 - cam.y, dz = t.z[k] - cam.z;
-        const d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 > R2) continue;
-        const sp = t.sp[k];
-        const j = sp * 2 + (k & 1);
-        if (d2 < C2 && ccounts[j] < ccap[j]) { writeTree(close[j], ccounts[j]++, t, k); continue; }
-        if (counts[sp] >= cap[sp]) continue;
-        writeTree(meshes[sp], counts[sp]++, t, k);
-      }
+      const dx = (i + 0.5) * cell - half - cam.x, dz = (j + 0.5) * cell - half - cam.z;
+      cellKey[m] = dx * dx + dz * dz;
+      cellIdx[m++] = j * n + i;
     }
   }
-  [...meshes, ...close].forEach((m, k) => {
-    m.count = k < meshes.length ? counts[k] : ccounts[k - meshes.length];
+  const order = cellOrder.subarray(0, m);
+  for (let q = 0; q < m; q++) order[q] = q;
+  order.sort((a, b) => cellKey[a] - cellKey[b]);
+  for (let q = 0; q < m; q++) {
+    const c = cellIdx[order[q]];
+    const a = starts[c], b = starts[c + 1];
+    for (let k = a; k < b; k++) {
+      const dx = t.x[k] - cam.x, dy = t.y[k] + t.h[k] * 0.6 - cam.y, dz = t.z[k] - cam.z;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      if (d2 > R2) continue;
+      const sp = t.sp[k];
+      const j = sp * 2 + (k & 1);
+      if (d2 < C2 && ccounts[j] < ccap[j]) { close[j].idx[ccounts[j]++] = k; continue; }
+      if (counts[sp] >= cap[sp]) continue;
+      meshes[sp].idx[counts[sp]++] = k;
+    }
+  }
+  meshes.forEach((m, k) => { m.n = counts[k]; });
+  close.forEach((m, k) => { m.n = ccounts[k]; });
+}
+
+// how far the camera may turn or move before the trees in view are picked again (the test below leaves room for it)
+const CULL_TURN = (2 * Math.PI) / 180;
+const CULL_MOVE = 1;
+const _vp = new THREE.Matrix4();
+const _frustum = new THREE.Frustum();
+const _eye = new THREE.Vector3();
+
+/** A tree model's extent in its own units: the widest reach round the trunk, and the height span. */
+function boundsOf(g: THREE.BufferGeometry) {
+  const p = g.getAttribute("position");
+  let rxz = 0, y0 = Infinity, y1 = -Infinity;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    rxz = Math.max(rxz, Math.hypot(x, z));
+    y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+  }
+  return { rxz, ymid: (y0 + y1) / 2, yhalf: (y1 - y0) / 2 };
+}
+
+/**
+ * Writes into each mesh the candidates the camera can see, in their order (nearest first). A tree is left out only
+ * when its sphere, made 5 % bigger, plus half a metre for the wind, plus what a turn of 2 degrees or a step of a
+ * metre can bring into view at its distance, lies wholly beyond one side of the picture. Near and far are not tested.
+ */
+function fillVisible(meshes: THREE.InstancedMesh[], cand: Cand[], bounds: { rxz: number; ymid: number; yhalf: number }[], t: Trees, eye: THREE.Vector3) {
+  const planes = _frustum.planes;
+  const turn = Math.sin(CULL_TURN);
+  meshes.forEach((m, k) => {
+    const c = cand[k], b = bounds[k];
+    let n = 0;
+    for (let q = 0; q < c.n; q++) {
+      const i = c.idx[q];
+      const sx = t.crown[i], sy = t.h[i];
+      const cx = t.x[i], cy = t.y[i] + b.ymid * sy, cz = t.z[i];
+      const dist = Math.hypot(cx - eye.x, cy - eye.y, cz - eye.z);
+      const r = Math.hypot(b.rxz * sx, b.yhalf * sy) * 1.05 + 0.5 + dist * turn + CULL_MOVE;
+      let inside = true;
+      for (let pi = 0; pi < 4; pi++) {
+        const pl = planes[pi];
+        if (pl.normal.x * cx + pl.normal.y * cy + pl.normal.z * cz + pl.constant < -r) { inside = false; break; }
+      }
+      if (inside) writeTree(m, n++, t, i);
+    }
+    m.count = n;
     m.instanceMatrix.clearUpdateRanges();
-    m.instanceMatrix.addUpdateRange(0, m.count * 16);
+    m.instanceMatrix.addUpdateRange(0, n * 16);
     m.instanceMatrix.needsUpdate = true;
     if (m.instanceColor) {
       m.instanceColor.clearUpdateRanges();
-      m.instanceColor.addUpdateRange(0, m.count * 3);
+      m.instanceColor.addUpdateRange(0, n * 3);
       m.instanceColor.needsUpdate = true;
     }
   });

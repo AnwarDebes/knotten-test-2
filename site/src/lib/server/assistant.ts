@@ -36,7 +36,7 @@ export async function answer(question: string, lang: L): Promise<Answer> {
       text: T(lang,
         `Tomt ${plotNo(id)} ligger i rekke ${p.row_label ?? p.row}, om lag ${nf(p.local.z_ground, lang)} moh. Den får ${nf(p.sun.dec21.hours, lang, 1)} timer direkte sol på taket 21. desember og ${nf(p.sun.jun21.hours, lang, 1)} timer 21. juni. Vannet er i sikt over ${p.view.water_visible_deg} grader av horisonten${p.view.open_sea_visible ? ", med åpent hav" : ""}. Tomten er ${status}${c.price_nok ? `, pris ${nf(c.price_nok, lang)} kr` : ""}. Utlegget er modellens forslag, ikke en vedtatt plan.`,
         `Plot ${plotNo(id)} is in row ${p.row_label ?? p.row}, about ${nf(p.local.z_ground, lang)} m above sea level. It gets ${nf(p.sun.dec21.hours, lang, 1)} hours of direct sun on the roof on 21 December and ${nf(p.sun.jun21.hours, lang, 1)} hours on 21 June. Water is in view over ${p.view.water_visible_deg} degrees of the horizon${p.view.open_sea_visible ? ", with open sea" : ""}. The plot is ${status}${c.price_nok ? `, price ${nf(c.price_nok, lang)} kr` : ""}. The layout is the model's proposal, not an adopted plan.`),
-      links: [{ href: `${base}/tomter/${id}`, label: T(lang, `Se tomt ${plotNo(id)}`, `See plot ${plotNo(id)}`) }, { href: `${base}/interesse?tomt=${id}`, label: T(lang, "Meld interesse", "Register interest") }],
+      links: [{ href: `${base}/tomter/${id}`, label: T(lang, `Se tomt ${plotNo(id)}`, `See plot ${plotNo(id)}`) }, { href: `${base}/interesse?plot=${id}`, label: T(lang, "Meld interesse", "Register interest") }],
       source: "data", intent: "plot",
     };
   }

@@ -7,6 +7,7 @@ import type { Plot } from "@/lib/types";
 import { houseUniforms, MAX_HOUSES, MODULE } from "./TwinHouses";
 import { groundHeight } from "./twinData";
 import { twinUniforms } from "./materials";
+import { markShadowsDirty } from "./shadowState";
 
 /** One moment of the simulation, as the 3D shows it. */
 export type SimFrame = {
@@ -64,6 +65,11 @@ totalEmissiveRadiance += diffuseColor.rgb * 0.22;`);
     const shell = new THREE.InstancedMesh(new THREE.BoxGeometry(0.55, 1, 0.55).translate(0, 0.5, 0), new THREE.MeshStandardMaterial({ color: "#1d2a33", transparent: true, opacity: 0.35, depthWrite: false }), n);
     return { mesh, shell };
   }, [n]);
+  useEffect(() => () => {
+    for (const x of [bars.mesh, bars.shell]) { x.geometry.dispose(); (x.material as THREE.Material).dispose(); x.dispose(); }
+  }, [bars]);
+  // the grid point, the plant's tables and the turbines throw shadows: draw the shadow map again as they come and go
+  useEffect(() => { markShadowsDirty(); return () => markShadowsDirty(); }, [showPark, showWind, park]);
   useEffect(() => {
     const m4 = new THREE.Matrix4(), c = new THREE.Color();
     for (let k = 0; k < n; k++) {
@@ -120,7 +126,10 @@ totalEmissiveRadiance += diffuseColor.rgb * 0.22;`);
     g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(Math.max(1, flows.length * PER) * 3), 3));
     return g;
   }, [flows]);
+  // (a new set of points with each moment of the simulation: the old one is let go, or the GPU keeps every one)
+  useEffect(() => () => pts.dispose(), [pts]);
   const ptsMat = useMemo(() => new THREE.PointsMaterial({ size: 2.6, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false }), []);
+  useEffect(() => () => ptsMat.dispose(), [ptsMat]);
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
     const pos = pts.attributes.position.array as Float32Array, col = pts.attributes.color.array as Float32Array;
@@ -199,6 +208,8 @@ function SolarPark({ park, power }: { park: { x: number; y: number }; power: num
     t.colorSpace = THREE.SRGBColorSpace;
     return new THREE.MeshPhysicalMaterial({ map: t, roughness: 0.2, metalness: 0.1, clearcoat: 0.5, side: THREE.DoubleSide, emissive: new THREE.Color("#ffb347"), emissiveIntensity: 0 });
   }, []);
+  useEffect(() => () => geo.dispose(), [geo]);
+  useEffect(() => () => { mat.map?.dispose(); mat.dispose(); }, [mat]);
   useEffect(() => { mat.emissiveIntensity = 0.5 * Math.min(1, power); }, [mat, power]);
   // the trees on the site of the plant are cleared in this scenario
   useEffect(() => {

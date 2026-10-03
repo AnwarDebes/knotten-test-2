@@ -81,9 +81,10 @@ normal = normalize(normal + tilt * 0.6 * hAlong(normal));`);
   });
 }
 
-/** Plain painted or coated surfaces: trim, frames, metal. */
+/** Plain painted or coated surfaces: trim, frames, metal (one shader program for all three: only uniforms differ). */
 export function paintMaterial(roughness: number, metalness = 0, key = "paint") {
-  return houseAware(new THREE.MeshStandardMaterial({ vertexColors: true, roughness, metalness, envMapIntensity: 0.7 }), `house-${key}-v1`);
+  void key;
+  return houseAware(new THREE.MeshStandardMaterial({ vertexColors: true, roughness, metalness, envMapIntensity: 0.7 }), "house-paint-v1");
 }
 
 /** Standing-seam steel: a raised seam every 0.6 m down the slope. */

@@ -34,7 +34,7 @@ export default async function Investor({ params }: { params: Promise<{ locale: s
         lede={no
           ? `Rundt ${FACT.plots} boliger på et eget eid felt, med ambisjon om å bli et nasjonalt referanseprosjekt for energi. Tallene står med kilde og dato. Investorer med tilgang finner tallene, scenarioene og dokumentene i datarommet i prosjektportalen.`
           : `About ${FACT.plots} homes on a self-owned field, with the ambition of becoming a national reference project for energy. The figures carry a source and a date. Investors with access find the figures, the scenarios and the documents in the data room of the project portal.`}
-        action={<><Link className="btn btn-amber" href={`/${locale}/interesse`}>{no ? "Be om investormateriale" : "Request investor material"}</Link><Link className="btn btn-ghost" href={`/${locale}/portal/investor`}>{no ? "Logg inn i datarommet" : "Log in to the data room"}</Link></>}
+        action={<><Link className="btn btn-amber" href={`/${locale}/interesse?purpose=invest`}>{no ? "Be om investormateriale" : "Request investor material"}</Link><Link className="btn btn-ghost" href={`/${locale}/portal/investor`}>{no ? "Logg inn i datarommet" : "Log in to the data room"}</Link></>}
       />
       <section className="wrap pb-16 grid gap-x-10 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
         <Figure a={assumption("homes")} locale={locale} size="md" />

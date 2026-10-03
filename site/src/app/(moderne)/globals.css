@@ -74,7 +74,9 @@
   --font-body: var(--font-geist), system-ui, sans-serif;
 }
 
-html { color-scheme: light; scroll-behavior: smooth; }
+/* scroll padding: a focused control or an anchor never lands under the sticky header or behind the Knotten AI pill */
+html { color-scheme: light; scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 12px); scroll-padding-bottom: 88px; }
+html:has(.pt) { scroll-padding-top: 70px; scroll-padding-bottom: 16px; }
 body {
   background: var(--bg);
   color: var(--ink);
@@ -115,6 +117,11 @@ body {
 .provenance { color: var(--muted); font-size: 13px; line-height: 1.4; }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--fjord); outline-offset: 3px; border-radius: 6px; }
+/* on navy and on the glass over the model the fjord ring all but disappears: white there */
+.dark :focus-visible, .glass :focus-visible { outline-color: #ffffff; }
+/* skip link: the first stop for the keyboard, out of sight until focused */
+.skip { position: absolute; left: 12px; top: -64px; z-index: 100; padding: 10px 14px; border-radius: 10px; background: #ffffff; color: var(--ink); font-weight: 500; box-shadow: 0 6px 24px rgba(23, 40, 58, .2); transition: top .15s ease; }
+.skip:focus { top: 12px; }
 
 /* surfaces */
 .dark { background: var(--ink); color: #ffffff; }
@@ -138,9 +145,12 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 .paper { background: #ffffff; color: var(--ink); border-radius: var(--radius-lg); box-shadow: 0 1px 0 rgba(23,40,58,.06), 0 18px 50px -24px rgba(23, 40, 58, .25); }
 .sky { background: var(--sky); border-radius: var(--radius-lg); }
 .frame { border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-2); border: 1px solid var(--line); }
-.glass { background: rgba(23, 40, 58, 0.66); color: #fff; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, .16); border-radius: 18px; }
-.glass .provenance, .glass .lede { color: rgba(255, 255, 255, .72); }
-.glass .chip { background: rgba(255, 255, 255, .16); color: #fff; }
+/* (backdrop-filter alone: the CSS minifier adds the -webkit- copy for Safari; written after the standard one it
+   replaced it, and Chrome and Firefox got no blur at all) */
+/* .78: small white text on it keeps 4.5:1 or better even over a white sky */
+.glass { background: rgba(23, 40, 58, 0.78); color: #fff; backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, .16); border-radius: 18px; }
+.glass .provenance, .glass .lede { color: rgba(255, 255, 255, .82); }
+.glass .chip { background: rgba(255, 255, 255, .12); color: #fff; }
 .hairline { height: 1px; background: var(--line); }
 
 /* rhythm */
@@ -177,12 +187,14 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 .lang-seg > a:hover { color: var(--ink); background: #ffffff; }
 .lang-seg > .on { background: var(--ink); color: #ffffff; }
 
+/* field borders 3:1 or better against the white field and the page (WCAG 1.4.11), a focus ring that shows */
 .input {
   width: 100%; padding: .85rem 1rem; border-radius: var(--radius);
-  border: 1px solid var(--line-strong); background: #ffffff; color: var(--ink); font-size: 16px;
+  border: 1px solid #7f8c99; background: #ffffff; color: var(--ink); font-size: 16px;
 }
-.input::placeholder { color: rgba(23, 40, 58, .4); }
-.input:focus { border-color: var(--fjord); outline: none; box-shadow: 0 0 0 3px rgba(47, 102, 136, .18); }
+.input::placeholder { color: var(--muted); }
+.input:focus { border-color: var(--fjord); outline: none; box-shadow: 0 0 0 2px var(--fjord); }
+.dark .input:focus { border-color: #ffffff; box-shadow: 0 0 0 2px #ffffff; }
 
 .seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(23, 40, 58, .08); gap: 2px; }
 .seg > button { padding: .5rem .9rem; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--ink-2); transition: background .18s ease, color .18s ease; white-space: nowrap; }
@@ -220,10 +232,11 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 @media (max-width: 480px) { .facts { grid-template-columns: 1fr; } .fact { border-right: 0; padding-left: 0 !important; border-top: 1px solid var(--line); } .fact:first-child { border-top: 0; } }
 .journey { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
 .jsteps { display: grid; }
-.jstep { padding: clamp(28px, 6vh, 64px) 0; border-top: 1px solid var(--line); opacity: .38; transition: opacity .5s ease; }
-.jstep.on { opacity: 1; }
+/* the step being shown is marked by its rule; the others are only a little dimmer, so their text still reads (4.5:1) */
+.jstep { padding: clamp(28px, 6vh, 64px) 0; border-top: 1px solid var(--line); opacity: .82; transition: opacity .5s ease, border-color .5s ease; }
+.jstep.on { opacity: 1; border-top-color: var(--fjord); }
 .jstep h3 { font-family: var(--font-display); font-weight: 600; letter-spacing: -.02em; font-size: clamp(22px, 2.2vw, 30px); line-height: 1.1; margin: 6px 0 10px; }
-.jnum { font-size: 12.5px; color: var(--muted); letter-spacing: .04em; }
+.jnum { font-size: 12.5px; color: var(--ink-2); letter-spacing: .04em; }
 .jstage { position: sticky; top: calc(var(--nav-h) + 16px); }
 .jframe { position: relative; aspect-ratio: 4 / 3.4; border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-2); border: 1px solid var(--line); }
 .jimg { position: absolute; inset: 0; opacity: 0; transition: opacity .6s ease; display: grid; place-items: center; background: #fff; }
@@ -258,6 +271,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 .table th, .table td { text-align: left; padding: .65rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
 .table th { font-weight: 500; color: var(--muted); font-size: 13px; }
 .table td.n, .table th.n { text-align: right; font-variant-numeric: tabular-nums; }
+@media (min-width: 1024px) { .table-sticky thead th { position: sticky; top: var(--nav-h); z-index: 2; background: var(--bg); box-shadow: 0 1px 0 var(--line); } }
 .table tr:hover td { background: rgba(23, 40, 58, .03); }
 
 .prose p { max-width: var(--measure); margin-bottom: 1rem; color: var(--ink-2); }
@@ -268,6 +282,8 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 
 .marks { display: flex; justify-content: space-between; align-items: center; padding: 14px 6px 0; font-size: 12.5px; letter-spacing: .04em; color: var(--muted); }
 .marks span::before { content: "+"; font-size: 18px; line-height: 1; opacity: .6; }
+/* on a phone the caption needs the whole width: the corner marks would crowd into it */
+@media (max-width: 640px) { .marks { justify-content: center; text-align: center; } .marks span { display: none; } }
 
 .marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .marquee > div { display: flex; gap: 3rem; width: max-content; animation: marquee 52s linear infinite; }
@@ -280,12 +296,18 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 .strip > figure { scroll-snap-align: start; }
 
 /* motion: things come in as they scroll into view (Motion.tsx adds .in) */
-.rise { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
+.rise { transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
 .rise-late { transition-delay: .15s; }
-.rise.in { opacity: 1; transform: none; }
 .words .w { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .08em; margin-bottom: -.08em; }
-.words .w > span { display: inline-block; transform: translateY(110%); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
-.words.in .w > span { transform: none; }
+.words .w > span { display: inline-block; transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+/* waiting to come in only where scripts run (Motion.tsx adds .in): without them everything is simply there */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .rise:not(.in) { opacity: 0; transform: translateY(26px); }
+  .words:not(.in):not(.words-now) .w > span { transform: translateY(110%); }
+}
+/* the front page's headline does not wait for the scripts: its words rise as soon as the page paints */
+.words-now .w > span { animation: word-in .8s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes word-in { from { transform: translateY(110%); } to { transform: none; } }
 .progress-bar { position: fixed; left: 0; top: 0; height: 3px; width: 100%; background: linear-gradient(90deg, var(--fjord), var(--amber)); transform-origin: 0 50%; transform: scaleX(0); z-index: 70; pointer-events: none; }
 .pointer-ring { position: fixed; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--fjord); pointer-events: none; z-index: 80; opacity: 0; transition: opacity .3s ease, border-color .25s ease, background .25s ease; will-change: transform; mix-blend-mode: multiply; }
 .pointer-ring.on { opacity: .9; }
@@ -295,7 +317,9 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 
 .drift-wrap { overflow: hidden; }
 .drift-wrap > img { width: 100%; height: 112%; object-fit: cover; margin-top: -6%; }
-@keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+/* (from 0.01, not 0: a picture first painted wholly transparent is not counted as painted by the browser until it is
+   painted again, so the stage's still in the hero counted as the page's main picture only when the model was ready) */
+@keyframes rise-in { from { opacity: 0.01; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .rise-in { animation: rise-in .9s cubic-bezier(.2,.7,.2,1) both; }
 .rise-in-2 { animation-delay: .12s; }
 .rise-in-3 { animation-delay: .24s; }
@@ -303,7 +327,9 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 .pulse-dot { animation: pulse-dot 2.4s ease-in-out infinite; }
 
 canvas { display: block; outline: none; }
-img { max-width: 100%; height: auto; }
+/* in the base layer, so a utility such as h-full wins (outside any layer this rule beat every utility and
+   component rule, and the stage's still stopped at its natural height on phones) */
+@layer base { img { max-width: 100%; height: auto; } }
 
 /* the project portal (components/portal/PortalFrame.tsx): an application frame, quieter than the website */
 @layer components {
@@ -324,7 +350,7 @@ img { max-width: 100%; height: auto; }
 .pt-badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--amber); color: var(--ink); font-size: 11.5px; font-weight: 600; display: inline-grid; place-items: center; }
 .pt-me { margin-top: auto; border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 2px; }
 .pt-me > *, .pt-side nav > *, .pt-group > * { min-width: 0; }
-.pt-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 32px; background: rgba(245, 248, 250, .88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.pt-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 32px; background: rgba(245, 248, 250, .88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .pt-top-link { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--ink-2); text-decoration: none; padding: 6px 10px; border-radius: 999px; }
 .pt-top-link:hover { background: #fff; color: var(--ink); }
 .pt-icon-btn { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: var(--ink); }
@@ -347,8 +373,9 @@ img { max-width: 100%; height: auto; }
 .table-tight th, .table-tight td { padding: .5rem .55rem; font-size: 14px; }
 @media (max-width: 1023px) {
   .pt { grid-template-columns: minmax(0, 1fr); }
-  .pt-side { position: fixed; inset: 0 auto 0 0; width: min(86vw, 300px); transform: translateX(-102%); transition: transform .25s ease; box-shadow: 0 0 40px rgba(23, 40, 58, .18); }
-  .pt-side.open { transform: none; }
+  /* hidden (after it has slid away) while closed, so Tab never walks through links that are off the screen */
+  .pt-side { position: fixed; inset: 0 auto 0 0; width: min(86vw, 300px); transform: translateX(-102%); visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s; box-shadow: 0 0 40px rgba(23, 40, 58, .18); }
+  .pt-side.open { transform: none; visibility: visible; transition: transform .25s ease, visibility 0s; }
   .pt-scrim { position: fixed; inset: 0; background: rgba(23, 40, 58, .32); z-index: 55; }
   .pt-top { padding: 0 12px 0 8px; gap: 6px; }
   .pt-preview-bar { padding: 10px 16px; }

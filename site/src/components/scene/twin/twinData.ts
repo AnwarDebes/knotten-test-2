@@ -58,21 +58,47 @@ export function loadTwin(): Promise<Twin> {
   return cached;
 }
 
+/**
+ * The rings are meshed in up to three workers side by side (the largest ring alone, the others shared out by size),
+ * so the terrain is ready in the time of its largest ring instead of all six one after another. The same code builds
+ * the same meshes; only the order they arrive in changes, and they are matched by name.
+ */
 async function ringsInWorker(manifest: TwinManifest): Promise<RingMesh[]> {
+  const list = jobs(manifest);
+  const cores = typeof navigator !== "undefined" && navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 2;
+  const count = Math.max(1, Math.min(3, cores - 1, list.length));
+  const groups: RingDesc[][] = Array.from({ length: count }, () => []);
+  const load = new Array(count).fill(0);
+  for (const r of [...list].sort((a, b) => b.n * b.n - a.n * a.n)) {
+    const k = load.indexOf(Math.min(...load));
+    groups[k].push(r);
+    load[k] += r.n * r.n;
+  }
+  const base = new URL(TWIN_BASE, location.href).href;
+  const outermost = manifest.rings[manifest.rings.length - 1].name;
+  const parts = await Promise.all(groups.map((rings) => meshInWorker(base, rings, manifest.height.offset, outermost)));
+  return parts.flat();
+}
+
+function meshInWorker(base: string, rings: RingDesc[], offset: number, outermost: string): Promise<RingMesh[]> {
   return new Promise((resolve, reject) => {
     let worker: Worker;
     try {
       worker = new Worker(new URL("./terrain.worker.ts", import.meta.url), { type: "module" });
     } catch (e) { reject(e); return; }
     const out: RingMesh[] = [];
-    const timer = setTimeout(() => { worker.terminate(); reject(new Error("terrain worker timed out")); }, 60000);
+    // given up only when the worker has said nothing for a minute (a slow connection still downloads the heights)
+    let timer = 0;
+    const quiet = () => { clearTimeout(timer); timer = window.setTimeout(() => { worker.terminate(); reject(new Error("terrain worker timed out")); }, 60000); };
+    quiet();
     worker.onmessage = (e: MessageEvent<{ type: string; mesh?: RingMesh; message?: string }>) => {
+      quiet();
       if (e.data.type === "ring" && e.data.mesh) out.push(e.data.mesh);
       if (e.data.type === "done") { clearTimeout(timer); worker.terminate(); resolve(out); }
       if (e.data.type === "error") { clearTimeout(timer); worker.terminate(); reject(new Error(e.data.message)); }
     };
     worker.onerror = (e) => { clearTimeout(timer); worker.terminate(); reject(new Error(e.message)); };
-    worker.postMessage({ base: new URL(TWIN_BASE, location.href).href, rings: jobs(manifest), offset: manifest.height.offset, outermost: manifest.rings[manifest.rings.length - 1].name });
+    worker.postMessage({ base, rings, offset, outermost });
   });
 }
 

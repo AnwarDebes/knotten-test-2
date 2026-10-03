@@ -17,8 +17,8 @@ export default function MeterChart({ b }: { b: Building }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${b.name.no}: målt forbruk per måned, ${rows[0]?.month} til ${rows[rows.length - 1]?.month}`}>
       <g stroke="#E3E9EF" strokeWidth="1"><path d={`M${left} ${top}H${W - 4}M${left} ${(top + H - bottom) / 2}H${W - 4}M${left} ${H - bottom}H${W - 4}`} /></g>
-      <text x="2" y={top + 4} fontSize="9" fill="#7C8A9B">{nf(max)}</text>
-      <text x="2" y={H - bottom} fontSize="9" fill="#7C8A9B">kWh</text>
+      <text x="2" y={top + 4} fontSize="9" fill="#5C6979">{nf(max)}</text>
+      <text x="2" y={H - bottom} fontSize="9" fill="#5C6979">kWh</text>
       {rows.map((r, i) => {
         const h = ((H - top - bottom) * r.kwh) / max;
         const m = Number(r.month.slice(5, 7)) - 1;
@@ -27,7 +27,7 @@ export default function MeterChart({ b }: { b: Building }) {
             <rect x={left + i * bw + bw * 0.15} y={H - bottom - h} width={bw * 0.7} height={h} rx="1.5" fill={ups.has(r.month) ? "var(--sun)" : "var(--fjord-deep)"}>
               <title>{`${MONTHS[m]} ${r.month.slice(0, 4)}: ${nf(r.kwh)} kWh`}</title>
             </rect>
-            {(m === 0 || i === 0) && <text x={left + i * bw} y={H - 6} fontSize="9" fill="#7C8A9B">{`${MONTHS[m]} ${r.month.slice(2, 4)}`}</text>}
+            {(m === 0 || i === 0) && <text x={left + i * bw} y={H - 6} fontSize="9" fill="#5C6979">{`${MONTHS[m]} ${r.month.slice(2, 4)}`}</text>}
           </g>
         );
       })}

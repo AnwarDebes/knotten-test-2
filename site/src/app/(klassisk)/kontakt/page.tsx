@@ -6,8 +6,8 @@ import { CONTACT } from "@/lib/facts";
 
 export const metadata: Metadata = { title: "Meld interesse" };
 
-export default async function Kontakt({ searchParams }: { searchParams: Promise<{ tomt?: string }> }) {
-  const { tomt } = await searchParams;
+export default async function Kontakt({ searchParams }: { searchParams: Promise<{ tomt?: string; rolle?: string }> }) {
+  const { tomt, rolle } = await searchParams;
   return (
     <>
       <PageHead title="Meld interesse" crumb="Kontakt">
@@ -26,7 +26,7 @@ export default async function Kontakt({ searchParams }: { searchParams: Promise<
             </div>
             <p className="small measure">{`Opplysningene du sender lagres av ${CONTACT.company} for å følge opp interessen din, og for ingenting annet.`} Du kan be om innsyn eller sletting når som helst.</p>
           </div>
-          <InterestForm plot={tomt} />
+          <InterestForm plot={tomt} role={rolle === "investor" ? "Investor eller partner" : undefined} />
         </div>
       </section>
     </>

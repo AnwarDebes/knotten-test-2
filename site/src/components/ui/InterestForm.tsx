@@ -1,12 +1,18 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { track } from "@/components/Track";
 import type { Locale } from "@/lib/i18n";
 import { plotNo } from "@/lib/format";
 
-export default function InterestForm({ locale, plots, preselect }: { locale: Locale; plots: string[]; preselect?: string }) {
+const PURPOSES = ["buy", "invest", "partner", "curious"];
+
+export default function InterestForm({ locale, plots, preselect, purpose }: { locale: Locale; plots: string[]; preselect?: string; purpose?: string }) {
   const no = locale === "no";
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
+  // the thank-you replaces the form: the keyboard and the screen reader are taken to it
+  const thanks = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (state === "done") thanks.current?.focus(); }, [state]);
+  const chosen = purpose && PURPOSES.includes(purpose) ? purpose : "buy";
   const [err, setErr] = useState("");
   const started = useRef(false);
   const start = () => { if (!started.current) { started.current = true; track("form_start"); } };
@@ -32,21 +38,22 @@ export default function InterestForm({ locale, plots, preselect }: { locale: Loc
   }
   if (state === "done") {
     return (
-      <div className="panel p-6 max-w-[60ch]" role="status">
+      <div ref={thanks} tabIndex={-1} className="panel p-6 max-w-[60ch] outline-none" role="status">
         <div className="display text-[30px]">{no ? "Registrert." : "Registered."}</div>
         <p className="mt-2">{no ? "Interessen din er lagret. Du hører fra oss når det skjer noe med tomtene." : "Your interest is saved. You will hear from us when something happens with the plots."}</p>
       </div>
     );
   }
   return (
-    <form onSubmit={submit} onFocus={start} className="relative grid gap-4 max-w-[60ch]">
+    // (method post: before the page's script runs, a sent form never puts the email and phone in the address)
+    <form method="post" onSubmit={submit} onFocus={start} className="relative grid gap-4 max-w-[60ch]">
       <label className="grid gap-1 text-[14px]">{no ? "Navn" : "Name"}<input className="input" name="name" autoComplete="name" /></label>
-      <label className="grid gap-1 text-[14px]">E-post<input className="input" name="email" type="email" required autoComplete="email" /></label>
+      <label className="grid gap-1 text-[14px]">{no ? "E-post" : "Email"}<input className="input" name="email" type="email" required autoComplete="email" /></label>
       <label className="grid gap-1 text-[14px]">{no ? "Telefon (valgfritt)" : "Phone (optional)"}<input className="input" name="phone" type="tel" autoComplete="tel" /></label>
       <fieldset className="grid gap-1 text-[14px]">
         <legend className="mb-1">{no ? "Jeg er interessert i å" : "I am interested in"}</legend>
         {[["buy", no ? "kjøpe bolig" : "buying a home"], ["invest", no ? "investere" : "investing"], ["partner", no ? "samarbeide (kommune, leverandør, forskning)" : "partnering (municipality, supplier, research)"], ["curious", no ? "følge med" : "following along"]].map(([v, l]) => (
-          <label key={v} className="flex items-center gap-2"><input type="radio" name="purpose" value={v} defaultChecked={v === "buy"} /> {l}</label>
+          <label key={v} className="flex items-center gap-2"><input type="radio" name="purpose" value={v} defaultChecked={v === chosen} /> {l}</label>
         ))}
       </fieldset>
       <fieldset className="text-[14px]">
@@ -64,10 +71,10 @@ export default function InterestForm({ locale, plots, preselect }: { locale: Loc
         <label className="flex items-start gap-2"><input type="checkbox" name="consent_research" /> {no ? "Min interesse kan telles i anonym statistikk som deles med UiA." : "My interest may be counted in anonymous statistics shared with UiA."}</label>
       </fieldset>
       <label className="absolute -left-[9999px] w-px h-px overflow-hidden" aria-hidden>Nettside<input name="website" tabIndex={-1} autoComplete="off" /></label>
-      <button className="btn btn-amber justify-self-start" disabled={state === "sending"}>{state === "sending" ? "…" : no ? "Meld interesse" : "Register interest"}</button>
+      <button className="btn btn-amber justify-self-start" disabled={state === "sending"}>{state === "sending" ? (no ? "Sender …" : "Sending …") : no ? "Meld interesse" : "Register interest"}</button>
       {state === "error" && (
-        <div className="text-[14px] text-amber-ink" role="alert">
-          {err === "consent_required" ? (no ? "Kryss av for oppdateringer for å sende." : "Tick updates consent to send.")
+        <div className="text-[14px] text-[#8a2f1d]" role="alert">
+          {err === "consent_required" ? (no ? "Kryss av for oppdateringer for å sende." : "Please tick the box for updates to send.")
             : err === "invalid_email" ? (no ? "Sjekk e-postadressen." : "Check the email address.")
             : err === "too_many" ? (no ? "Mange registreringer fra denne adressen på kort tid. Vent noen minutter og prøv igjen." : "Many registrations from this address in a short time. Wait a few minutes and try again.")
             : (no ? "Det gikk ikke å sende. Prøv igjen om litt." : "It could not be sent. Try again shortly.")}

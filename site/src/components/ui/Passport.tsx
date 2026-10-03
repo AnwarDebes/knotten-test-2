@@ -3,17 +3,18 @@ import type { Plot } from "@/lib/types";
 import type { Locale } from "@/lib/i18n";
 import { t } from "@/lib/i18n";
 import { plotName, rowLabel, sunLabel } from "@/lib/format";
+import { fmt } from "@/lib/facts/core";
 
-function SunRow({ label, day, small = false }: { label: string; day: Plot["sun"]["dec21"]; small?: boolean }) {
+function SunRow({ label, day, small = false, summer = false, lang }: { label: string; day: Plot["sun"]["dec21"]; small?: boolean; summer?: boolean; lang: "no" | "en" }) {
   const pct = Math.max(0, Math.min(1, day.possible_hours ? day.hours / day.possible_hours : 0));
   return (
     <div className={`${small ? "py-1.5" : "py-2.5"} border-b line`}>
       <div className="grid grid-cols-[1fr_auto] items-baseline gap-3">
         <div>
           <div className={small ? "text-[12.5px]" : "text-[14.5px]"}>{label}</div>
-          <div className="provenance">{sunLabel(day.first_sun_cet)} til {sunLabel(day.last_sun_cet)}</div>
+          <div className="provenance">{sunLabel(day.first_sun_cet, summer)} {lang === "no" ? "til" : "to"} {sunLabel(day.last_sun_cet, summer)}</div>
         </div>
-        <div className={`num leading-none ${small ? "text-[19px]" : "text-[28px]"}`}>{day.hours.toFixed(1)}<span className="text-[12px] font-body opacity-70 ml-1">h</span></div>
+        <div className={`num leading-none ${small ? "text-[19px]" : "text-[28px]"}`}>{fmt(day.hours, lang, 1)}<span className="text-[12px] font-body opacity-70 ml-1">h</span></div>
       </div>
       <div className="mt-2 h-[3px] rounded bg-ink/10 overflow-hidden"><div className="h-full bg-amber" style={{ width: `${pct * 100}%` }} /></div>
     </div>
@@ -21,10 +22,11 @@ function SunRow({ label, day, small = false }: { label: string; day: Plot["sun"]
 }
 
 /** The sun passport: one plot, its measured sun and view, on a card that reads like a document. */
-export default function Passport({ plot, locale, compact = false }: { plot: Plot; locale: Locale; compact?: boolean }) {
+export default function Passport({ plot, locale, compact = false, here = false }: { plot: Plot; locale: Locale; compact?: boolean; here?: boolean }) {
   const d = t(locale);
   const P = d.passport;
   const no = locale === "no";
+  const lang = no ? "no" : "en";
   return (
     <div className={compact ? "paper p-3.5 text-[13px]" : "paper p-5 md:p-6"}>
       <div className="flex items-start justify-between gap-4">
@@ -39,9 +41,9 @@ export default function Passport({ plot, locale, compact = false }: { plot: Plot
       </div>
 
       <div className={compact ? "mt-1 text-[12.5px]" : "mt-3"}>
-        <SunRow label={P.sunDec} day={plot.sun.dec21} small={compact} />
-        {!compact && <SunRow label={P.sunMar} day={plot.sun.mar21} />}
-        <SunRow label={P.sunJun} day={plot.sun.jun21} small={compact} />
+        <SunRow label={P.sunDec} day={plot.sun.dec21} small={compact} lang={lang} />
+        {!compact && <SunRow label={P.sunMar} day={plot.sun.mar21} lang={lang} />}
+        <SunRow label={P.sunJun} day={plot.sun.jun21} small={compact} summer lang={lang} />
       </div>
 
       <div className={`grid grid-cols-3 gap-2 whitespace-nowrap ${compact ? "mt-2.5 text-[11.5px]" : "mt-4 text-[14px]"}`}>
@@ -57,7 +59,8 @@ export default function Passport({ plot, locale, compact = false }: { plot: Plot
       </div>
       {!compact && (
         <div className="mt-5 flex flex-wrap gap-2.5">
-          <Link className="btn btn-sm" href={`/${locale}/tomter/${plot.id}`}>{d.cta.passport}</Link>
+          {/* (on the plot's own page the passport is already open) */}
+          {!here && <Link className="btn btn-sm" href={`/${locale}/tomter/${plot.id}`}>{d.cta.passport}</Link>}
           <Link className="btn btn-ghost btn-sm" href={`/${locale}/interesse?plot=${plot.id}`}>{d.cta.register}</Link>
         </div>
       )}

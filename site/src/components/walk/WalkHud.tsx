@@ -74,7 +74,7 @@ export default function WalkHud({ locale, plots, fits, live, onExit }: { locale:
           key={id}
           ref={(el) => registerHot(id, el)}
           className="absolute left-0 top-0 -ml-[15px] -mt-[15px] w-[30px] h-[30px] rounded-full grid place-items-center pointer-events-auto transition-opacity duration-200"
-          style={{ opacity: 0, background: "rgba(23,40,58,0.72)", border: "2px solid #e2a23b", boxShadow: "0 0 0 4px rgba(226,162,59,0.25)" }}
+          style={{ opacity: 0, visibility: "hidden", background: "rgba(23,40,58,0.72)", border: "2px solid #e2a23b", boxShadow: "0 0 0 4px rgba(226,162,59,0.25)" }}
           aria-label={HOTSPOTS[id].title[locale]}
           title={HOTSPOTS[id].title[locale]}
           onPointerDown={(e) => e.stopPropagation()}

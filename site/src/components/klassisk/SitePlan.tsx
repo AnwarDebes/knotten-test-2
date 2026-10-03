@@ -35,7 +35,8 @@ export default function SitePlan({ numbered, selected, activeRow = "", onSelect,
   }, [revealOnView]);
 
   return (
-    <svg ref={ref} className={`plan${reveal ? " popin" : ""}`} data-mode={mode} viewBox="0 0 820 520" preserveAspectRatio={preserve} role="img" aria-label={`Situasjonsplan på det målte terrenget: ${word(FACT.rows)} rekker med ${FACT.plots} tomter langs en vei som svinger i hårnålssvinger oppover Knotten`}>
+    // as a picker the plan is a group of named buttons (inside role="img" they would be hidden from screen readers)
+    <svg ref={ref} className={`plan${reveal ? " popin" : ""}`} data-mode={mode} viewBox="0 0 820 520" preserveAspectRatio={preserve} role={onSelect ? "group" : "img"} aria-label={`Situasjonsplan på det målte terrenget: ${word(FACT.rows)} rekker med ${FACT.plots} tomter langs en vei som svinger i hårnålssvinger oppover Knotten`}>
       <rect width="820" height="520" fill="#F3F6F8" />
       <g className="layer layer-forest">
         <path d={P.forest} fill="#E4EDE7" fillRule="evenodd" />
@@ -54,7 +55,7 @@ export default function SitePlan({ numbered, selected, activeRow = "", onSelect,
       {P.street.map((d, i) => <path key={i} d={d} stroke="#C9D3DC" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" fill="none" />)}
       <text x={stX} y={stY} fontSize="10" fill="#4A5A6E" transform={`rotate(${stA} ${stX} ${stY})`}>Rødbergsveien</text>
       <g>
-        {P.buildings.filter((b) => b.status === "existing").map((b) => <path key={b.id} d={b.d} fill="#7C8A9B" />)}
+        {P.buildings.filter((b) => b.status === "existing").map((b) => <path key={b.id} d={b.d} fill="#6A7889" />)}
         {P.buildings.filter((b) => b.status === "planned").map((b) => <path key={b.id} d={b.d} fill="none" stroke="#3F6A52" strokeWidth="1.5" strokeDasharray="3 2" />)}
         {office && <text x={office.c[0]} y={office.c[1] + 3} fontSize="9" fill="#fff" textAnchor="middle" transform={`rotate(${office.angle} ${office.c[0]} ${office.c[1]})`}>Kontorbygg</text>}
         {house && <text x={house.c[0]} y={house.c[1] + 3} fontSize="9" fill="#fff" textAnchor="middle" transform={`rotate(${house.angle} ${house.c[0]} ${house.c[1]})`}>Bolighus</text>}
@@ -68,7 +69,7 @@ export default function SitePlan({ numbered, selected, activeRow = "", onSelect,
           {PLOTS.map((p, i) => {
             const dim = activeRow && p.row !== activeRow;
             return (
-              <g key={p.n} className={`plot${selected === p.n ? " sel" : ""}${dim ? " dim" : ""}`} data-n={p.n} style={{ animationDelay: `${i * 35}ms` }} onClick={() => onSelect?.(p.n)} role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined} onKeyDown={(e) => e.key === "Enter" && onSelect?.(p.n)}>
+              <g key={p.n} className={`plot${selected === p.n ? " sel" : ""}${dim ? " dim" : ""}`} data-n={p.n} style={{ animationDelay: `${i * 35}ms` }} onClick={() => onSelect?.(p.n)} role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined} aria-label={onSelect ? `Tomt ${p.n}, rekke ${p.row}` : undefined} aria-pressed={onSelect ? selected === p.n : undefined} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect?.(p.n); } }}>
                 <g transform={`translate(${p.x} ${p.y}) rotate(${p.rot})`}>
                   <path className="sight" d="M0 8.3v40" stroke="#2F5F85" strokeWidth="1" strokeDasharray="3 3" />
                   <rect x="-10.7" y="-8.3" width="21.4" height="16.5" rx="2" fill="#3F6A52" />

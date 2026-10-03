@@ -54,7 +54,13 @@ export function WalkRig({ plots, start, onSwitch, interactive }: { plots: Plot[]
   useEffect(() => {
     if (!interactive) return;
     const keys = walkState.keys;
+    // typing (the Knotten AI chat, a form) and the sliders (the sun dial) keep their own keys
+    const own = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      return !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.getAttribute("role") === "slider");
+    };
     const down = (e: KeyboardEvent) => {
+      if (own(e)) return;
       const k = e.key.toLowerCase();
       if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright", "shift"].includes(k)) {
         keys.add(k);
@@ -274,7 +280,7 @@ export function WalkRig({ plots, start, onSwitch, interactive }: { plots: Plot[]
     // ---- the hotspots follow their objects on screen, hidden behind walls and on other floors
     for (const [id, el] of w.hotEls) {
       const pos = w.hotPos.get(id);
-      if (!pos) { el.style.opacity = "0"; continue; }
+      if (!pos) { showHot(el, false); continue; }
       _v.copy(pos).project(cam);
       const hp = fromScene(p, fit.mirror, pos.x, pos.y, pos.z);
       const lvl = w.hotLevel.get(id);
@@ -282,12 +288,27 @@ export function WalkRig({ plots, start, onSwitch, interactive }: { plots: Plot[]
       const dist = Math.hypot(hp.u - w.u, hp.v - w.v);
       let seen = !w.flying && sameLevel && _v.z < 1 && Math.abs(_v.x) < 1.05 && Math.abs(_v.y) < 1.05 && dist < 9;
       if (seen) seen = !world.walls.some((wl) => !wl.door && wl.t > 0.08 && wl.z0 < w.z + 1.5 && wl.z1 > w.z + 1.0 && segCross(w.u, w.v, hp.u, hp.v, wl.a, wl.b));
-      el.style.transform = `translate(${((_v.x + 1) / 2) * size.width}px, ${((1 - _v.y) / 2) * size.height}px)`;
-      el.style.opacity = seen ? "1" : "0";
-      el.style.pointerEvents = seen ? "auto" : "none";
+      // (written only when it changes: a style write each frame costs a style pass each frame)
+      const tf = `translate(${(((_v.x + 1) / 2) * size.width).toFixed(1)}px, ${(((1 - _v.y) / 2) * size.height).toFixed(1)}px)`;
+      if (el.style.transform !== tf) el.style.transform = tf;
+      showHot(el, seen);
     }
   });
   return null;
+}
+
+/**
+ * A hotspot fades in where its object is in sight and out where it is not. Out of sight it is also hidden
+ * from the keyboard and screen readers (visibility, after the fade), so Tab never lands on an invisible spot.
+ */
+function showHot(el: HTMLElement, seen: boolean) {
+  const v = seen ? "1" : "0";
+  if (el.dataset.seen === v) return;
+  el.dataset.seen = v;
+  el.style.transition = seen ? "opacity 0.2s" : "opacity 0.2s, visibility 0s linear 0.2s";
+  el.style.visibility = seen ? "visible" : "hidden";
+  el.style.opacity = v;
+  el.style.pointerEvents = seen ? "auto" : "none";
 }
 
 function segDist(x: number, y: number, a: [number, number], b: [number, number]) {

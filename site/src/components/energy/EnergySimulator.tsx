@@ -21,6 +21,8 @@ import { cloudsAt, frameAt } from "@/lib/sim/frame";
 import { BUDGET, SHARED_PANELS, fmt } from "@/lib/facts";
 import type { SimFrame } from "../scene/twin/SimLayer";
 import { MODULE } from "../scene/twin/TwinHouses";
+import { useTapFocus } from "../scene/tapFocus";
+import { has3d } from "../scene/has3d";
 import { DayChart, FlowBars, MonthChart, YearStrip, COLORS } from "./simCharts";
 import s from "./EnergySimulator.module.css";
 
@@ -95,13 +97,17 @@ export default function EnergySimulator({ plots, locale, variant = "moderne" }: 
   const [visible, setVisible] = useState(true);
   const [ready, setReady] = useState(false);
   const [focus, setFocus] = useState(false);
+  // phones, tablets and data saving get the still and a button, as on the front page: the model is opened, not pushed
   useEffect(() => {
     const el = root.current;
     if (!el) return;
-    const io = new IntersectionObserver((es) => es.forEach((e) => { setVisible(e.isIntersecting); if (e.isIntersecting) setArmed(true); if (!e.isIntersecting) setFocus(false); }), { threshold: 0.1 });
+    const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+    const capable = !window.matchMedia("(pointer: coarse)").matches && !nav.connection?.saveData;
+    const io = new IntersectionObserver((es) => es.forEach((e) => { setVisible(e.isIntersecting); if (e.isIntersecting && capable) setArmed(true); if (!e.isIntersecting) setFocus(false); }), { threshold: 0.1 });
     io.observe(el);
     return () => io.disconnect();
   }, []);
+  const takeFocus = useTapFocus(() => setFocus(true));
   useEffect(() => {
     if (!focus) return;
     const key = (e: KeyboardEvent) => { if (e.key === "Escape") setFocus(false); };
@@ -111,6 +117,10 @@ export default function EnergySimulator({ plots, locale, variant = "moderne" }: 
     return () => { window.removeEventListener("keydown", key); window.removeEventListener("pointerdown", down); };
   }, [focus]);
   const onReady = useCallback(() => setReady(true), []);
+  // the model could not be loaded or lost its graphics context ("load", worth another try), or this browser cannot draw it
+  const [failed, setFailed] = useState<"load" | "no3d" | null>(null);
+  const [sceneKey, setSceneKey] = useState(0);
+  const onFailed = useCallback(() => { setReady(false); setFailed(has3d() ? "load" : "no3d"); }, []);
 
   const frame: SimFrame | undefined = useMemo(() => (r ? frameAt(r, h, inCut ? cutResult : null, cut ? h - cut.start : -1) : undefined), [r, h, cut, inCut, cutResult]);
   const simDate = useMemo(() => new Date(hourDate(YEAR, 0).getTime() + t * 3600 * 1000), [t]);
@@ -167,9 +177,10 @@ export default function EnergySimulator({ plots, locale, variant = "moderne" }: 
       </div>
 
       <div className={s.main} style={{ marginTop: 14 }}>
-        <div className={s.stage} onPointerDown={() => setFocus(true)}>
-          {armed && r && (
+        <div className={s.stage} onPointerDown={takeFocus} onPointerUp={takeFocus} onPointerCancel={takeFocus}>
+          {armed && r && !failed && (
             <KnottenScene
+              key={sceneKey} onFailed={onFailed} onContextLost={onFailed}
               state="lived" wipe={null} month={loc.month} hour={loc.hour} plots={plots} selectedPlot={null} preset="site"
               quality="full" paused={!visible} interactive={focus} onReady={onReady}
               simDate={simDate} weather={weather} sim={frame} simPark={out?.info.park ?? null} showPark={c.park} showWind={c.wind}
@@ -178,10 +189,22 @@ export default function EnergySimulator({ plots, locale, variant = "moderne" }: 
           )}
           {/* eslint-disable-next-line @next/next/no-img-element -- a plain still that fades out over the canvas */}
           <img src="/renders/web/site_after.webp" alt="" className={s.poster} style={{ opacity: ready ? 0 : 1 }} />
-          {ready && !focus && <div className={s.hint}>{no ? "Klikk i modellen for å styre den" : "Click the model to take control"}</div>}
+          {!armed && <div className={s.open}><button className={s.btn} onClick={() => setArmed(true)}>{no ? "Åpne 3D-modellen" : "Open the 3D model"}</button></div>}
+          {failed && (
+            <div className={s.open} role="alert">
+              <div className={s.failed}>
+                <p>{failed === "load"
+                  ? (no ? "Modellen kunne ikke vises. Tallene til høyre og under gjelder fortsatt." : "The model could not be shown. The figures beside and below still apply.")
+                  : (no ? "Denne nettleseren viser ikke 3D-grafikk. Tallene til høyre og under gjelder fortsatt." : "This browser does not show 3D graphics. The figures beside and below still apply.")}</p>
+                {failed === "load" && <button className={s.btn} onClick={() => { setFailed(null); setSceneKey((k) => k + 1); }}>{no ? "Prøv igjen" : "Try again"}</button>}
+              </div>
+            </div>
+          )}
+          {ready && !focus && <div className={s.hint}>{no ? "Klikk eller trykk i modellen for å styre den" : "Click or tap the model to take control"}</div>}
           {inCut && cut && <div className={s.outageTag}>{no ? `Strømbrudd, time ${h - cut.start + 1} av ${cut.hours}` : `Power cut, hour ${h - cut.start + 1} of ${cut.hours}`}</div>}
           {busy && <div className={s.busy}>{no ? "Regner ut året ..." : "Computing the year ..."}</div>}
-          <div className={s.clock} aria-live="polite">
+          {/* read out when it stops or is moved, not 24 times a second while the year plays */}
+          <div className={s.clock} aria-live={playing ? "off" : "polite"}>
             <div className={s.clockTime}>{String(loc.hour).padStart(2, "0")}:00</div>
             <div className={s.clockDate}>{weekdays[loc.weekday]} {loc.day}. {months[loc.month - 1]}</div>
           </div>

@@ -14,7 +14,7 @@ export default function EnergyFlow() {
           <text x="120" y="142" textAnchor="middle" fontSize="10" fill="#4A5A6E">tak på boligene + felles anlegg</text>
           <g transform="translate(120 240)"><path d="M0 26V-2M0 -2l-14-20M0 -2l14-20" stroke="#7C8A9B" strokeWidth="2" fill="none" strokeDasharray="3 3" /><circle r="4" fill="#7C8A9B" /></g>
           <text x="120" y="292" textAnchor="middle" fontWeight="600" fill="#4A5A6E">Vind</text>
-          <text x="120" y="308" textAnchor="middle" fontSize="10" fill="#7C8A9B">vurderes, krever lokale målinger</text>
+          <text x="120" y="308" textAnchor="middle" fontSize="10" fill="#5C6979">vurderes, krever lokale målinger</text>
           <rect x="300" y="52" width="150" height="56" rx="8" fill="#EDF1F5" stroke="#D4DCE4" />
           <text x="375" y="76" textAnchor="middle" fontWeight="600">Batteri i hver bolig</text><text x="375" y="94" textAnchor="middle" fontSize="10" fill="#4A5A6E">med lokal energistyring</text>
           <rect x="300" y="212" width="150" height="56" rx="8" fill="#EDF1F5" stroke="#D4DCE4" />
@@ -33,7 +33,7 @@ export default function EnergyFlow() {
             <path className="flow" d="M624 154H696" /><path className="flow" d="M600 132C640 90 660 68 696 64" /><path className="flow" d="M600 176C640 210 660 226 696 236" /><path className="flow" d="M600 176C650 250 660 300 696 316" />
           </g>
           <path d="M700 320C620 330 560 330 454 264" stroke="#7C8A9B" strokeWidth="1.2" fill="none" strokeDasharray="3 4" />
-          <text x="560" y="343" textAnchor="middle" fontSize="10" fill="#7C8A9B">overskudd selges, underskudd kjøpes</text>
+          <text x="560" y="343" textAnchor="middle" fontSize="10" fill="#5C6979">overskudd selges, underskudd kjøpes</text>
         </g>
       </svg>
     </div>

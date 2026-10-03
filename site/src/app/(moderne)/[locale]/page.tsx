@@ -54,7 +54,7 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
       {/* 1. the journey is the front page */}
       <section id="modell" className="wrap pt-3 md:pt-6">
         <div className="grid gap-5 lg:grid-cols-[1fr_auto] items-end mb-5 md:mb-7">
-          <Words as="h1" className="display text-[clamp(40px,6.6vw,104px)] max-w-[13ch]" text={no ? "Norges mest energivennlige boligfelt." : "Norway's most energy-friendly housing field."} />
+          <Words as="h1" className="words-now display text-[clamp(40px,6.6vw,104px)] max-w-[13ch]" text={no ? "Norges mest energivennlige boligfelt." : "Norway's most energy-friendly housing field."} />
           <p className="lede max-w-[38ch] lg:pb-3 rise-in rise-in-2">
             {no
               ? `Rundt ${FACT.plots} boliger på Knotten over Sniksfjorden i Lindesnes, i modellen lagt i ${word(FACT.rows)} rekker over sørhellingen og på knausen. Ønsket er sjøutsikt fra alle tomtene, men det er ikke sikkert at det går fra alle. Reisen under går fra fjorden og helt inn i stua.`
@@ -79,7 +79,10 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
             </div>
           </aside>
         </div>
-        <div className="marks"><span /><span /><em className="not-italic">{no ? "Reisen starter av seg selv. Klikk i modellen for å styre den, Escape gir siden tilbake." : "The journey starts on its own. Click the model to take control, Escape hands the page back."}</em><span /><span /></div>
+        <div className="marks"><span /><span /><em className="not-italic">
+          <span className="pointer-coarse:hidden">{no ? "Reisen starter av seg selv. Klikk i modellen for å styre den, Escape gir siden tilbake." : "The journey starts on its own. Click the model to take control, Escape hands the page back."}</span>
+          <span className="hidden pointer-coarse:inline">{no ? "Trykk «Start reisen». Trykk i modellen for å styre den, og utenfor for å bla videre." : "Tap «Start the journey». Tap the model to take control, and outside it to scroll on."}</span>
+        </em><span /><span /></div>
       </section>
 
       {/* 2. the facts, each with its source */}
@@ -148,7 +151,7 @@ export default async function Landing({ params }: { params: Promise<{ locale: st
         <div className="marquee py-2">
           <div>
             {[...facts, ...facts].map((f, i) => (
-              <span key={i} className="display text-[clamp(28px,3.6vw,52px)] whitespace-nowrap text-bone/80">{f}<span className="inline-block w-2.5 h-2.5 rounded-full bg-amber ml-12 align-middle" /></span>
+              <span key={i} aria-hidden={i >= facts.length || undefined} className="display text-[clamp(28px,3.6vw,52px)] whitespace-nowrap text-bone/80">{f}<span aria-hidden className="inline-block w-2.5 h-2.5 rounded-full bg-amber ml-12 align-middle" /></span>
             ))}
           </div>
         </div>

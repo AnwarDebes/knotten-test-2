@@ -12,6 +12,9 @@
  */
 import * as THREE from "three";
 
+/** With ?twindebug the clock can be held (DebugHook's freeze): stills of the moving water, clouds and trees then come out the same every time. */
+export const twinClock = { frozen: null as number | null };
+
 export const twinUniforms = {
   uTime: { value: 0 },
   uWinter: { value: 0 },      // 0 summer .. 1 deep winter

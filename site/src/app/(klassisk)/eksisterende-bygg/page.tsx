@@ -13,7 +13,7 @@ function EmptyChart({ title }: { title: string }) {
     <svg viewBox="0 0 420 150" aria-label={`${title}: måledata er ikke hentet ennå`}>
       <g stroke="#E3E9EF" strokeWidth="1"><path d="M40 20H410M40 55H410M40 90H410M40 125H410" /></g>
       <path className="ghostline" d="M40 110C80 100 100 70 140 78 180 86 200 40 240 52 280 64 300 95 340 88 380 81 395 60 410 58" fill="none" stroke="#C9D3DC" strokeWidth="2" strokeDasharray="4 5" />
-      <g fontSize="9" fill="#7C8A9B"><text x="40" y="142">jan</text><text x="220" y="142">jul</text><text x="396" y="142">des</text><text x="4" y="24">kWh</text></g>
+      <g fontSize="9" fill="#5C6979"><text x="40" y="142">jan</text><text x="220" y="142">jul</text><text x="396" y="142">des</text><text x="4" y="24">kWh</text></g>
       <rect x="150" y="40" width="130" height="34" rx="6" fill="#fff" stroke="#D4DCE4" />
       <text x="215" y="61" textAnchor="middle" fontSize="10" fill="#4A5A6E" fontWeight="600">Måledata ikke hentet ennå</text>
     </svg>

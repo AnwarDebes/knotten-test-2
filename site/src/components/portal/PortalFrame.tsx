@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/ui/Logo";
@@ -26,7 +26,14 @@ export default function PortalFrame({ locale, groups, me, children, preview, can
   const no = locale === "no";
   const other = locale === "no" ? "en" : "no";
   const current = groups.flatMap((g) => g.items.flatMap((i) => [...(i.sub ?? []).filter((s) => isOn(path, s.href, s.exact)).map((s) => s.label), ...(isOn(path, i.href, i.exact) ? [i.label] : [])]))[0];
+  const menuButton = useRef<HTMLButtonElement>(null);
   const close = () => setOpen(false);
+  useEffect(() => {
+    if (!open) return;
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); menuButton.current?.focus(); } };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [open]);
   return (
     <div className="pt">
       {open && <div className="pt-scrim" onClick={close} aria-hidden />}
@@ -87,14 +94,14 @@ export default function PortalFrame({ locale, groups, me, children, preview, can
           </div>
         )}
         <header className="pt-top">
-          <button type="button" className="pt-icon-btn lg:hidden" onClick={() => setOpen(true)} aria-label={no ? "Åpne menyen" : "Open menu"} aria-expanded={open}><Icon name="menu" /></button>
+          <button ref={menuButton} type="button" className="pt-icon-btn lg:hidden" onClick={() => setOpen(true)} aria-label={no ? "Åpne menyen" : "Open menu"} aria-expanded={open}><Icon name="menu" /></button>
           <div className="min-w-0 flex-1 truncate text-[14.5px]">
             <span className="text-muted hidden sm:inline">{no ? "Prosjektportal" : "Project portal"}</span>
             {current && <><span className="text-muted hidden sm:inline mx-2">/</span><span className="font-medium">{current}</span></>}
           </div>
           {canPreview && !preview && (
             <details className="pt-menu">
-              <summary className="pt-top-link list-none cursor-pointer"><Icon name="user" size={16} /><span className="hidden sm:inline">{no ? "Se som" : "View as"}</span></summary>
+              <summary className="pt-top-link list-none cursor-pointer"><Icon name="user" size={16} /><span className="sr-only sm:not-sr-only">{no ? "Se som" : "View as"}</span></summary>
               <div className="pt-menu-panel">
                 <div className="text-[12.5px] text-muted px-3 pt-1 pb-2">{no ? "Se portalen slik andre ser den. Bare det de har tilgang til vises, og ingenting kan endres." : "See the portal as others see it. Only what they can open is shown, and nothing can be changed."}</div>
                 {PREVIEWS.map((p) => (
@@ -115,7 +122,7 @@ export default function PortalFrame({ locale, groups, me, children, preview, can
             </details>
           )}
           <Link href={path.replace(/^\/(no|en)(?=\/|$)/, `/${other}`)} className="pt-top-link" hrefLang={other} lang={other}>{other === "en" ? "English" : "Norsk"}</Link>
-          <Link href="/" className="pt-top-link"><Icon name="external" size={16} /><span className="hidden sm:inline">{no ? "Til nettsiden" : "To the website"}</span></Link>
+          <Link href="/" className="pt-top-link"><Icon name="external" size={16} /><span className="sr-only sm:not-sr-only">{no ? "Til nettsiden" : "To the website"}</span></Link>
         </header>
         <div className="pt-body"><PreviewContext.Provider value={preview}>{children}</PreviewContext.Provider></div>
       </div>

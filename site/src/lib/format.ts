@@ -5,9 +5,13 @@ export function fmtHours(h: number) {
   return `${hh}:${mm.toString().padStart(2, "0")}`;
 }
 
-export function sunLabel(v: number | null) {
+/**
+ * A sun time as the clock on the wall shows it. The data's times are standard time (CET); from the end of March to
+ * the end of October the clock is an hour ahead (summer time), so the June times are shown an hour later.
+ */
+export function sunLabel(v: number | null, summer = false) {
   if (v === null) return "";
-  return fmtHours(v);
+  return fmtHours(summer ? v + 1 : v);
 }
 
 /** "plot-07" -> "7": the plot number both designs show. */

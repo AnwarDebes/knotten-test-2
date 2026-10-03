@@ -89,7 +89,7 @@ export default async function Energy({ params }: { params: Promise<{ locale: str
             </div>
           </div>
           <figure className="paper p-4 md:p-6">
-            <img src="/assets/energy/eed_fluid_temperatures.webp" alt="EED" className="w-full rounded-[10px]" loading="lazy" />
+            <img src="/assets/energy/eed_fluid_temperatures.webp" alt={no ? `Væsketemperaturen i brønnparken over ${EED.years} år, simulert i Earth Energy Designer: den stabiliserer seg, og siste år ligger den mellom ${nb(EED.fluid_min_c)} og ${nb(EED.fluid_max_c)} °C` : `The fluid temperature in the borehole field over ${EED.years} years, simulated in Earth Energy Designer: it settles, and in the last year it stays between ${nb(EED.fluid_min_c)} and ${nb(EED.fluid_max_c)} °C`} className="w-full rounded-[10px]" loading="lazy" />
             <figcaption className="provenance !text-granite mt-3">{no ? `Væsketemperatur i brønnene gjennom ${EED.years} år, månedlig simulering i EED. Energisporet.` : `Fluid temperature in the boreholes over ${EED.years} years, monthly simulation in EED. The energy track.`}</figcaption>
           </figure>
         </div>

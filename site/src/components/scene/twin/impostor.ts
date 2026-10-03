@@ -48,6 +48,9 @@ function bakeMaterial(kind: "albedo" | "normal", leaf: boolean) {
 
 export type Atlas = { albedo: THREE.WebGLRenderTarget; normal: THREE.WebGLRenderTarget };
 
+// the bake's four materials live as long as the page: a change of month bakes again with the programs already built
+let bakeMats: { albedo: THREE.ShaderMaterial[]; normal: THREE.ShaderMaterial[] } | null = null;
+
 /** The atlas's two render targets (colour and normals), empty until bakeAtlas paints them. */
 export function createAtlas(): Atlas {
   const make = () => {
@@ -61,10 +64,11 @@ export function createAtlas(): Atlas {
 /** Paint the atlas with each species' foliage cards, leaf colour, twig colour and leaf density. */
 export function bakeAtlas(gl: THREE.WebGLRenderer, geoms: THREE.BufferGeometry[], maps: THREE.Texture[], fol: { leaf: THREE.Color[]; twig: THREE.Color[]; density: number[] }, atlas: Atlas) {
   const scene = new THREE.Scene();
-  const mats = {
+  bakeMats ??= {
     albedo: [bakeMaterial("albedo", false), bakeMaterial("albedo", true)],
     normal: [bakeMaterial("normal", false), bakeMaterial("normal", true)],
   };
+  const mats = bakeMats;
   const mesh = new THREE.Mesh(geoms[0], mats.albedo);
   scene.add(mesh);
   const side = new THREE.OrthographicCamera(-1.02, 1.02, 1.02, -0.02, 0.1, 10);
@@ -79,8 +83,9 @@ export function bakeAtlas(gl: THREE.WebGLRenderer, geoms: THREE.BufferGeometry[]
   gl.autoClear = false;
   for (const kind of ["albedo", "normal"] as const) {
     const rt = atlas[kind];
+    rt.viewport.set(0, 0, rt.width, rt.height);
+    rt.scissorTest = false;
     gl.setRenderTarget(rt);
-    gl.setScissorTest(false);
     // transparent, but with a crown-like colour so mip levels do not darken the edges
     gl.setClearColor(kind === "albedo" ? 0x0e140c : 0x8080ff, 0);
     gl.clear(true, true, true);
@@ -93,13 +98,20 @@ export function bakeAtlas(gl: THREE.WebGLRenderer, geoms: THREE.BufferGeometry[]
       (u.uTwigColor.value as THREE.Color).copy(fol.twig[k]);
       u.uDensity.value = fol.density[k];
       for (let v = 0; v < 2; v++) {
-        gl.setViewport(k * CELL, v * CELL, CELL, CELL);
-        gl.setScissor(k * CELL, v * CELL, CELL, CELL);
-        gl.setScissorTest(true);
+        // each cell through the target's own viewport and scissor, in the target's pixels: the renderer's
+        // setViewport and setScissor multiply by the screen's pixel ratio, which on a screen scaled above 100 %
+        // drew the cells shifted and too large, over each other and partly outside the atlas
+        rt.viewport.set(k * CELL, v * CELL, CELL, CELL);
+        rt.scissor.set(k * CELL, v * CELL, CELL, CELL);
+        rt.scissorTest = true;
+        gl.setRenderTarget(rt);
         gl.clearDepth();
         gl.render(scene, v === 0 ? side : top);
       }
     }
+    rt.viewport.set(0, 0, rt.width, rt.height);
+    rt.scissor.set(0, 0, rt.width, rt.height);
+    rt.scissorTest = false;
   }
   gl.setScissorTest(prev.scissor);
   gl.setRenderTarget(prev.target);
@@ -107,7 +119,6 @@ export function bakeAtlas(gl: THREE.WebGLRenderer, geoms: THREE.BufferGeometry[]
   gl.autoClear = prev.autoClear;
   const size = gl.getSize(new THREE.Vector2());
   gl.setViewport(0, 0, size.x, size.y);
-  Object.values(mats).flat().forEach((m) => m.dispose());
 }
 
 /** The card mesh: two quads per tree (upright, flat), positioned in the vertex shader. */
@@ -173,9 +184,16 @@ vCardFade *= smoothstep(uNear - 45.0, uNear, cDist);
 if (uClearOn > 0.5 && cBase.x > uClear.x && cBase.x < uClear.z && cBase.z > uClear.y && cBase.z < uClear.w) vCardFade = 0.0;
 if (vCardFade < 0.004) cardPos = vec3(0.0, -9999.0, 0.0);
 vCardInfo = iInfo; vCardKind = position.z;
-vec3 cardAerialRaw = twinAerialAt(vec2(cBase.x, -cBase.z)) * uAerialGain;
-vCardAerialW = twinAerialWeight(iInfo.x) * twinAerialTrust(cardAerialRaw);
-vCardAerial = twinAerialFit(cardAerialRaw, iInfo.x);
+// a folded card (the other one of the pair is the one seen from here, or the tree is near enough to be 3D) has
+// no area and draws nothing: its photo colour is not looked up (two texture reads for half the cards)
+if (vCardFade >= 0.004) {
+  vec3 cardAerialRaw = twinAerialAt(vec2(cBase.x, -cBase.z)) * uAerialGain;
+  vCardAerialW = twinAerialWeight(iInfo.x) * twinAerialTrust(cardAerialRaw);
+  vCardAerial = twinAerialFit(cardAerialRaw, iInfo.x);
+} else {
+  vCardAerialW = 0.0;
+  vCardAerial = vec3(0.0);
+}
 objectNormal = vCardF;`)
       .replace("#include <begin_vertex>", "vec3 transformed = cardPos;");
     shader.fragmentShader = shader.fragmentShader
@@ -203,6 +221,6 @@ vec3 cardNW = normalize(vCardR * cardN.x + vCardU * cardN.y + vCardF * max(cardN
 normal = normalize((viewMatrix * vec4(cardNW, 0.0)).xyz);`)
       .replace("#include <lights_fragment_end>", "#include <lights_fragment_end>\nreflectedLight.indirectSpecular *= 0.15;\nreflectedLight.directSpecular *= 0.35;");
   };
-  m.customProgramCacheKey = () => "twin-cards-v2";
+  m.customProgramCacheKey = () => "twin-cards-v3";
   return m;
 }

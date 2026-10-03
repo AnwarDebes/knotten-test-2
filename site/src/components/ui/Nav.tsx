@@ -45,6 +45,15 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
     document.documentElement.style.overflow = open ? "hidden" : "";
     return () => { document.documentElement.style.overflow = ""; };
   }, [open]);
+  // the sheet covers the page: Escape closes it and the focus goes back to the button that opened it
+  const toggle = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); toggle.current?.focus(); } };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [open]);
+  const here = usePathname() ?? "";
 
   const links: [string, string, string][] = [
     [p("/tomter"), d.nav.plots, no ? `Rundt ${FACT.plots} tomter, solpass for hver` : `About ${FACT.plots} plots, a sun passport for each`],
@@ -59,6 +68,8 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
   ];
 
   return (
+    <>
+    <a className="skip" href="#innhold">{no ? "Hopp til innholdet" : "Skip to content"}</a>
     <header ref={header} className="sticky top-0 z-50 text-bone" style={{ height: "var(--nav-h)" }}>
       <div className={`absolute inset-0 transition-opacity duration-300 ${scrolled && !open ? "opacity-100" : "opacity-0"} bg-bg/85`} style={{ backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }} />
       <div className="wrap relative h-full grid grid-cols-[auto_1fr_auto] items-center gap-6">
@@ -76,7 +87,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
               l === locale ? (
                 <span key={l} className="on" aria-current="true" lang={l}>{l.toUpperCase()}</span>
               ) : (
-                <Link key={l} href={otherHref} onClick={switchLang} hrefLang={l} lang={l} aria-label={l === "en" ? "Read this page in English" : "Les denne siden på norsk"}>{l.toUpperCase()}</Link>
+                <Link key={l} href={otherHref} onClick={switchLang} hrefLang={l} lang={l} aria-label={l === "en" ? "EN, read this page in English" : "NO, les denne siden på norsk"}>{l.toUpperCase()}</Link>
               ),
             )}
           </span>
@@ -86,7 +97,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
             <Link href={p("/login")} className="btn btn-ghost btn-sm no-underline hidden sm:inline-flex">{d.nav.login}</Link>
           )}
           <Link className="btn btn-sm no-underline hidden sm:inline-flex" href={p("/interesse")}>{d.nav.interest}</Link>
-          <button className={`btn btn-sm btn-plain ${open ? "" : "btn-ghost"}`} onClick={() => { setSheetTop(header.current?.getBoundingClientRect().bottom); setOpen((o) => !o); }} aria-expanded={open} aria-controls="menu">
+          <button ref={toggle} className={`btn btn-sm btn-plain ${open ? "" : "btn-ghost"}`} onClick={() => { setSheetTop(header.current?.getBoundingClientRect().bottom); setOpen((o) => !o); }} aria-expanded={open} aria-controls={open ? "menu" : undefined}>
             {open ? d.nav.close : d.nav.menu}
             <span className="inline-flex gap-[3px] ml-1" aria-hidden>
               <span className="w-[5px] h-[5px] rounded-full bg-current" /><span className="w-[5px] h-[5px] rounded-full bg-current" />
@@ -100,7 +111,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
           <nav className="wrap py-8 md:py-12 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
             <div className="grid">
               {links.map(([href, label, hint], i) => (
-                <Link key={href} href={href} onClick={() => setOpen(false)} className="no-underline group grid sm:grid-cols-[1fr_auto] items-baseline gap-x-6 py-2 border-b line rise-in" style={{ animationDelay: `${i * 35}ms` }}>
+                <Link key={href} href={href} onClick={() => setOpen(false)} aria-current={here === href ? "page" : undefined} className="no-underline group grid sm:grid-cols-[1fr_auto] items-baseline gap-x-6 py-2 border-b line rise-in" style={{ animationDelay: `${i * 35}ms` }}>
                   <span className="display text-[clamp(30px,4.6vw,60px)] group-hover:text-fjord transition-colors">{label}</span>
                   <span className="text-[14px] text-granite">{hint}</span>
                 </Link>
@@ -122,5 +133,7 @@ export default function Nav({ locale }: { locale: Locale; dark?: boolean }) {
         </div>
       )}
     </header>
+    <div id="innhold" tabIndex={-1} className="outline-none" />
+    </>
   );
 }

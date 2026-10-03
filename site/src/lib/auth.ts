@@ -99,11 +99,23 @@ export async function clientIp() {
   return (h.get("x-forwarded-for")?.split(",")[0] || h.get("x-real-ip") || "local").trim().slice(0, 64);
 }
 
-/** A same-site path to continue to after logging in; anything else, or a login page, falls back to the portal. */
+/**
+ * A same-site path to continue to after logging in; anything else, or a login page, falls back to the portal.
+ * The path is parsed the way the browser will read it: a tab or a newline in "/\t/evil.example" is dropped
+ * by the URL parser and leaves "//evil.example", another site, so control characters are refused outright
+ * and only a path that stays on this site is kept.
+ */
 export function safeNext(next: string | null | undefined, locale: string) {
+  const fallback = `/${locale}/portal`;
   const n = String(next ?? "");
-  const ok = n.startsWith("/") && !n.startsWith("//") && !n.includes("\\") && !/^\/((no|en)\/login|logg-inn)(\/|\?|$)/.test(n);
-  return ok ? n : `/${locale}/portal`;
+  if (!n.startsWith("/") || n.startsWith("//") || /[\u0000-\u001f\u007f\\]/.test(n)) return fallback;
+  const base = "https://knotten.invalid";
+  let u: URL;
+  try { u = new URL(n, base); } catch { return fallback; }
+  if (u.origin !== base) return fallback;
+  const path = u.pathname + u.search + u.hash;
+  if (/^\/((no|en)\/login|logg-inn)(\/|\?|#|$)/.test(path)) return fallback;
+  return path;
 }
 
 /**

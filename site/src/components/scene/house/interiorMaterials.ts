@@ -218,7 +218,9 @@ ${pattern}`)
   reflectedLight.indirectDiffuse += BRDF_Lambert(material.diffuseColor) * (vLamp * uLampsOn + vLampS * uSensorOn) * uLampGain * uLampColor * mix(0.55, 1.0, ao);
 }`);
   };
-  m.customProgramCacheKey = () => `interior-${key}-v1`;
+  // the plain surfaces (no pattern of their own) share one program: their differences are uniforms, or settings
+  // three keys on anyway (transparency, sides)
+  m.customProgramCacheKey = () => (pattern || fragPre ? `interior-${key}-v1` : "interior-plain-v1");
   return m;
 }
 

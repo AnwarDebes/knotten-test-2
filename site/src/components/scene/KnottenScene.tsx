@@ -1,9 +1,9 @@
 "use client";
 /* eslint-disable react-hooks/immutability -- react-three-fiber's own pattern: the camera, the controls and the renderer are three.js objects, changed in useFrame outside React's render */
-import { Suspense, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Component, memo, Suspense, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
+import { Canvas, events as r3fEvents, useFrame, useThree } from "@react-three/fiber";
+import { OrbitControls, useGLTF } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { EnergyFrame, Plot, SceneState } from "@/lib/types";
 import { Powerlines } from "./layers";
@@ -12,10 +12,10 @@ import { TwinRoads } from "./twin/TwinRoads";
 import { TwinTerrain } from "./twin/TwinTerrain";
 import { Atmosphere, type Weather } from "./twin/Atmosphere";
 import { SimLayer, type SimFrame } from "./twin/SimLayer";
-import { twinUniforms } from "./twin/materials";
+import { twinClock, twinUniforms } from "./twin/materials";
 import { TwinLabels } from "./twin/TwinLabels";
-import { takeShadowsDirty } from "./twin/shadowState";
-import { groundHeight } from "./twin/twinData";
+import { markShadowsDirty, sunLight, takeShadowsDirty } from "./twin/shadowState";
+import { groundHeight, TWIN_BASE } from "./twin/twinData";
 import { knottenTime } from "@/lib/solar";
 import { TwinHouses, modulesFor, type PlotRegistry } from "./twin/TwinHouses";
 import { PV_KWP_PER_HOME } from "@/lib/facts";
@@ -24,9 +24,21 @@ import { HouseInterior } from "./house/HouseInterior";
 import { WalkRig } from "./house/WalkRig";
 import { loadHouses } from "./house/frame";
 import { walkState, type WalkStart } from "./house/walkState";
-import { TwinForest } from "./twin/TwinForest";
+import { forestCull, TwinForest } from "./twin/TwinForest";
 import { EnergyOverlay } from "./Overlay";
 import { ViewCorridor } from "./ViewCorridor";
+
+// The heavy parts of the model, memoised: the page re-renders the scene for every change of its own state (each move of
+// the wipe, each hour of a playback), and these parts take none of it (their props stay the same), so React skips them.
+// (The place names especially: each is its own React root, rendered again on every pass otherwise.)
+const Terrain = memo(TwinTerrain);
+const Buildings = memo(TwinBuildings);
+const Roads = memo(TwinRoads);
+const Lines = memo(Powerlines);
+const Forest = memo(TwinForest);
+const Houses = memo(TwinHouses);
+const PlannedBuildings = memo(Planned);
+const Labels = memo(TwinLabels);
 
 export type CameraPreset = "fjord" | "site" | "drone" | "knoll" | "plan";
 
@@ -44,9 +56,12 @@ export type SceneProps = {
   quality?: "full" | "lite";
   paused?: boolean;              // stop the render loop when the stage is off screen
   interactive?: boolean;         // wheel and drag only after the visitor has clicked in
+  calm?: boolean;                // reduced motion: no slow turn of the camera while it waits
   onPick?: (id: string) => void;
   onReady?: () => void;
   onContextLost?: () => void;
+  /** Part of the model could not be loaded, or the browser cannot draw it: the page says so instead of failing. */
+  onFailed?: () => void;
   /** The energy simulation drives the scene: its moment (sun), its weather (clouds, wind) and its flows. */
   simDate?: Date;
   weather?: Weather;
@@ -160,12 +175,29 @@ function CameraRig({ preset, plot, inside, controls, presets, idle, frozen }: { 
   return null;
 }
 
-/** Owns the render loop: per-state visibility, one shadow update per frame, scissor split for the wipe. */
-function StateRenderer({ state, wipe, cleared, proposal, ground }: { state: SceneState; wipe: number | null; cleared: React.RefObject<THREE.Group | null>; proposal: React.RefObject<THREE.Group | null>; ground: { today: React.RefObject<THREE.Group | null>; graded: React.RefObject<THREE.Group | null> } }) {
+/**
+ * Owns the render loop: per-state visibility, the shadow map only when something that casts shadows has changed,
+ * scissor split for the wipe. Nothing is drawn until the shader programs are built (WarmUp), behind the still.
+ */
+function StateRenderer({ state, wipe, cleared, proposal, ground, warm }: { state: SceneState; wipe: number | null; cleared: React.RefObject<THREE.Group | null>; proposal: React.RefObject<THREE.Group | null>; ground: { today: React.RefObject<THREE.Group | null>; graded: React.RefObject<THREE.Group | null> }; warm: React.RefObject<boolean> }) {
   const { gl, scene, camera, size } = useThree();
   useEffect(() => { gl.shadowMap.autoUpdate = false; }, [gl]);
   const last = useRef<string>("");
+  // The wipe shows two states side by side, and their shadows differ (the trees the plan clears, the houses).
+  // Each side keeps its own shadow map, rendered again only when the shadows are dirty, instead of both being
+  // rendered twice every frame. A directional light's shadow map depends only on the light and what casts
+  // shadows, never on the view, so the picture is the same.
+  const sides = useRef<{ maps: (THREE.RenderTarget | null)[]; stale: boolean[] }>({ maps: [null, null], stale: [true, true] });
+  const freeSecond = useCallback(() => {
+    const S = sides.current, L = sunLight();
+    if (L && S.maps[0]) L.shadow.map = S.maps[0];
+    if (S.maps[1] && S.maps[1] !== S.maps[0]) { S.maps[1].depthTexture?.dispose(); S.maps[1].dispose(); }
+    S.maps = [null, null];
+    S.stale = [true, true];
+  }, []);
+  useEffect(() => freeSecond, [freeSecond]);
   useFrame(() => {
+    if (!warm.current) return;
     const c = cleared.current;
     const p = proposal.current;
     const showCleared = state === "today";
@@ -173,7 +205,7 @@ function StateRenderer({ state, wipe, cleared, proposal, ground }: { state: Scen
     const key = `${state}|${wipe === null}`;
     const changed = key !== last.current;
     last.current = key;
-    gl.shadowMap.needsUpdate = takeShadowsDirty() || changed || wipe !== null;
+    const dirty = takeShadowsDirty() || changed;
     // today's ground or the graded ground of the plan (pads, roads), whichever this pass shows
     const groundFor = (today: boolean) => {
       const t = ground.today.current, g = ground.graded.current;
@@ -181,6 +213,8 @@ function StateRenderer({ state, wipe, cleared, proposal, ground }: { state: Scen
       if (g) g.visible = !today;
     };
     if (wipe === null) {
+      if (sides.current.maps[1]) freeSecond();
+      gl.shadowMap.needsUpdate = dirty;
       if (c) c.visible = showCleared;
       if (p) p.visible = showProposal;
       groundFor(state === "today");
@@ -188,31 +222,72 @@ function StateRenderer({ state, wipe, cleared, proposal, ground }: { state: Scen
       gl.render(scene, camera);
       return;
     }
-    const w = Math.round(size.width * gl.getPixelRatio());
-    const h = Math.round(size.height * gl.getPixelRatio());
-    const split = Math.round(w * Math.min(0.999, Math.max(0.001, wipe)));
+    const S = sides.current, L = sunLight();
+    if (dirty) S.stale = [true, true];
+    const pass = (k: 0 | 1) => {
+      const own = !!L && L.castShadow;
+      if (own) {
+        if (k === 0 && !S.maps[0]) S.maps[0] = L!.shadow.map;
+        // (null: three makes this side's map in this pass)
+        L!.shadow.map = S.maps[k];
+        gl.shadowMap.needsUpdate = S.stale[k] || !S.maps[k];
+      } else gl.shadowMap.needsUpdate = dirty;
+      gl.render(scene, camera);
+      if (own) { S.maps[k] = L!.shadow.map; S.stale[k] = false; }
+    };
+    // (the scissor is given in CSS pixels: three multiplies it by the pixel ratio itself)
+    const w = size.width, h = size.height;
+    const split = w * Math.min(0.999, Math.max(0.001, wipe));
     gl.setScissorTest(true);
+    // left: the field today
     if (c) c.visible = true;
     if (p) p.visible = false;
     groundFor(true);
     gl.setScissor(0, 0, split, h);
-    gl.render(scene, camera);
-    gl.shadowMap.needsUpdate = false;
+    pass(0);
+    // right: the chosen state (cleared shows neither today's trees nor the houses)
     if (c) c.visible = false;
-    if (p) p.visible = true;
+    if (p) p.visible = showProposal;
     groundFor(false);
     gl.setScissor(split, 0, w - split, h);
-    gl.shadowMap.needsUpdate = true;
-    gl.render(scene, camera);
+    pass(1);
     gl.setScissorTest(false);
   }, 1);
   return null;
 }
 
-function Ready({ onReady }: { onReady?: () => void }) {
-  useEffect(() => { onReady?.(); }, [onReady]);
+/**
+ * Builds every shader program the first frame needs before anything is drawn (in parallel where the driver
+ * allows it, KHR_parallel_shader_compile), then draws one frame, and only then says the model is ready, so the
+ * still fades over a finished picture instead of a frame that stalls while dozens of programs compile.
+ */
+function WarmUp({ onReady, warm }: { onReady?: () => void; warm: React.RefObject<boolean> }) {
+  const { gl, scene, camera } = useThree();
+  useEffect(() => {
+    let alive = true;
+    let id = 0;
+    const done = () => {
+      if (!alive) return;
+      warm.current = true;
+      // one frame drawn, then ready
+      id = requestAnimationFrame(() => { id = requestAnimationFrame(() => { if (alive) onReady?.(); }); });
+    };
+    gl.compileAsync(scene, camera).then(done, done);
+    return () => { alive = false; cancelAnimationFrame(id); };
+  }, [gl, scene, camera, onReady, warm]);
   return null;
 }
+
+/** Pointer events for picking a house only: no hit test on every wheel tick, right click or double click (nothing listens to them). */
+const pickEvents: typeof r3fEvents = (store) => {
+  const e = r3fEvents(store);
+  if (e.handlers) {
+    const { onWheel, onContextMenu, onDoubleClick, ...used } = e.handlers;
+    void onWheel; void onContextMenu; void onDoubleClick;
+    e.handlers = used as typeof e.handlers;
+  }
+  return e;
+};
 
 export default function KnottenScene(props: SceneProps) {
   // ?twindebug can override the date from the console (for checking seasons and light)
@@ -220,15 +295,19 @@ export default function KnottenScene(props: SceneProps) {
   const month = dateOverride?.month ?? props.month;
   const hour = dateOverride?.hour ?? props.hour;
   const weather = dateOverride?.clouds !== undefined ? { clouds: dateOverride.clouds, wind: 2 } : props.weather;
-  const { state, wipe, plots, selectedPlot, inside = false, preset, frame, outage, quality = "full", paused = false, interactive = true, onPick, onReady, onContextLost } = props;
+  const { state, wipe, plots, selectedPlot, inside = false, preset, frame, outage, quality = "full", paused = false, interactive = true, calm = false, onPick, onReady, onContextLost } = props;
   const controls = useRef<OrbitControlsImpl | null>(null);
   const clearedGroup = useRef<THREE.Group>(null);
   const proposalGroup = useRef<THREE.Group>(null);
   const todayGround = useRef<THREE.Group>(null);
   const gradedGround = useRef<THREE.Group>(null);
   const registry = useRef<PlotRegistry>(new Map());
+  // false until WarmUp has built the shader programs: nothing is drawn before (the still covers the canvas)
+  const warm = useRef(false);
   // the scene only renders in the browser (Stage loads it with ssr: false), so the screen can be read directly
-  const shadows = useMemo(() => quality === "full" && !(window.innerWidth < 900 || navigator.maxTouchPoints > 1), [quality]);
+  // shadows everywhere but on phones and tablets (a narrow screen, or a finger as the main pointer); a laptop with
+  // a touch screen as well as a touchpad is a laptop (asking for touch points at all took its shadows away)
+  const shadows = useMemo(() => quality === "full" && !(window.innerWidth < 900 || window.matchMedia("(pointer: coarse)").matches), [quality]);
   const plot = useMemo(() => plots.find((p) => p.id === selectedPlot) ?? null, [plots, selectedPlot]);
   const presets = useMemo(() => framePresets(plots), [plots]);
   const showOverlay = state === "lived" && !!frame;
@@ -249,8 +328,12 @@ export default function KnottenScene(props: SceneProps) {
   useEffect(() => { twinUniforms.uWind.value = weather?.wind ?? 3; }, [weather?.wind]);
 
   return (
+    <SceneBoundary onFailed={props.onFailed}>
     <Canvas
-      shadows={shadows}
+      // (percentage: the filtered shadow three r186 draws anyway; asking for the removed "soft" type made every lit
+      // shader compile twice, once before and once after three switched the type in the first shadow pass)
+      shadows={shadows ? "percentage" : false}
+      events={pickEvents}
       dpr={[1, quality === "lite" ? 1 : 1.5]}
       frameloop={paused ? "never" : "always"}
       gl={{ alpha: false, antialias: quality !== "lite", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.92, powerPreference: "high-performance", logarithmicDepthBuffer: false }}
@@ -259,34 +342,51 @@ export default function KnottenScene(props: SceneProps) {
     >
       <Atmosphere date={date} weather={weather} shadows={shadows} quality={quality} />
       <Suspense fallback={null}>
-        <TwinTerrain shadows={shadows} todayRef={todayGround} gradedRef={gradedGround} />
-        <TwinBuildings shadows={shadows} />
-        <TwinRoads shadows={shadows} quality={quality} />
-        <Powerlines />
-        <TwinForest ref={clearedGroup} month={month} quality={quality} shadows={shadows} />
+        <Terrain shadows={shadows} todayRef={todayGround} gradedRef={gradedGround} />
+        <Buildings shadows={shadows} />
+        <Roads shadows={shadows} quality={quality} />
+        <Lines />
+        <Forest ref={clearedGroup} month={month} quality={quality} shadows={shadows} />
         <group ref={proposalGroup}>
           <group onClick={(e) => { const a = (e.object as THREE.Mesh).geometry?.getAttribute("aHouse"); const idx = a && e.face ? Math.round(a.getX(e.face.a)) : -1; if (idx >= 0 && plots[idx]) { e.stopPropagation(); onPick?.(plots[idx].id); } }}>
-            <TwinHouses plots={plots} shadows={shadows} modules={modulesFor(PV_KWP_PER_HOME)} registry={registry} visit={visitId} />
+            <Houses plots={plots} shadows={shadows} modules={modulesFor(PV_KWP_PER_HOME)} registry={registry} visit={visitId} />
           </group>
-          <Planned />
+          <PlannedBuildings />
           {interiorIndex >= 0 && <HouseInterior plots={plots} index={interiorIndex} locale={props.locale ?? "no"} />}
           {props.sim ? (
             <SimLayer plots={plots} frame={props.sim} park={props.simPark ?? null} showPark={!!props.showPark} showWind={!!props.showWind} />
           ) : showOverlay && frame && <EnergyOverlay frame={frame} plots={plots} outage={!!outage} registry={registry} />}
         </group>
         {plot && !inside && !walking && <ViewCorridor plot={plot} />}
-        {props.labels && props.labels !== "off" && !plot && !walking && <TwinLabels locale={props.locale ?? "no"} wide={props.labels === "wide"} />}
+        {props.labels && props.labels !== "off" && !plot && !walking && <Labels locale={props.locale ?? "no"} wide={props.labels === "wide"} />}
         {walking && visitIndex >= 0 && <Walker plots={plots} start={walkProp!.start} onSwitch={onSwitch} interactive={interactive || walkOverride !== undefined} />}
-        <Ready onReady={onReady} />
+        <WarmUp onReady={onReady} warm={warm} />
       </Suspense>
       <ContextGuard onLost={onContextLost} />
       <DepthRange walking={walking || inside} />
       <DebugHook controls={controls} setDate={setDateOverride} setWalk={setWalkOverride} groups={{ cleared: clearedGroup, proposal: proposalGroup, today: todayGround, graded: gradedGround }} />
       <OrbitControls ref={controls} makeDefault enabled={!walking} enableDamping dampingFactor={0.08} enablePan={!plot && interactive} enableZoom={interactive && !inside} enableRotate={interactive} />
-      <CameraRig preset={preset} plot={plot} inside={inside} controls={controls} presets={presets} idle={!interactive} frozen={walking} />
-      <StateRenderer state={state} wipe={wipe} cleared={clearedGroup} proposal={proposalGroup} ground={{ today: todayGround, graded: gradedGround }} />
+      <TouchScroll interactive={interactive} />
+      <CameraRig preset={preset} plot={plot} inside={inside} controls={controls} presets={presets} idle={!interactive && !calm} frozen={walking} />
+      <StateRenderer state={state} wipe={wipe} cleared={clearedGroup} proposal={proposalGroup} ground={{ today: todayGround, graded: gradedGround }} warm={warm} />
     </Canvas>
+    </SceneBoundary>
   );
+}
+
+/**
+ * Whatever goes wrong inside the canvas (a file that did not come through on a weak connection, a browser that
+ * cannot make a WebGL context) arrives here instead of taking the whole page down; the page shows its still and a
+ * way on. The models are forgotten, so trying again fetches them anew (the other files forget a failure by themselves).
+ */
+class SceneBoundary extends Component<{ onFailed?: () => void; children: React.ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch() {
+    for (const f of ["buildings.glb", "buildings_far.glb", "roads.glb"]) useGLTF.clear(TWIN_BASE + f);
+    this.props.onFailed?.();
+  }
+  render() { return this.state.failed ? null : this.props.children; }
 }
 
 /** The walk, once the houses' fit to their plots is known (the house's own world is set by HouseInterior). */
@@ -328,6 +428,8 @@ function DebugHook({ controls, setDate, setWalk, groups }: { controls: React.Ref
       /** Walk from the console: __twin.walk("plot-12", "door"); __twin.walk(null) stops; __twin.walk() hands back to the page. */
       walk(plot?: string | null, start: WalkStart = "door") { setWalk(plot === undefined ? undefined : plot === null ? null : { plot, start }); },
       walkState,
+      /** Hold the clock of the water, the clouds and the wind at `t` seconds (null lets it run): stills that compare exactly. */
+      freeze(t: number | null) { twinClock.frozen = t; twinUniforms.uTime.value = t ?? twinUniforms.uTime.value; },
       /** A still at any size, for one state of the field, read straight back as a PNG data URL. */
       still(o: { w: number; h: number; state: "today" | "cleared" | "built" }) {
         const cam = camera as THREE.PerspectiveCamera;
@@ -343,8 +445,12 @@ function DebugHook({ controls, setDate, setWalk, groups }: { controls: React.Ref
         cam.updateProjectionMatrix();
         gl.setScissorTest(false);
         gl.shadowMap.needsUpdate = true;
+        // the trees this picture can see (its shape is not the page's)
+        forestCull.run?.(cam);
         gl.render(scene, cam);
         const url = gl.domElement.toDataURL("image/png");
+        markShadowsDirty();
+        forestCull.dirty();
         gl.setPixelRatio(ratio);
         gl.setSize(size.x, size.y, false);
         cam.aspect = aspect;
@@ -362,6 +468,24 @@ function DebugHook({ controls, setDate, setWalk, groups }: { controls: React.Ref
     };
     return () => { delete w.__twin; };
   }, [camera, gl, scene, controls, setDate, setWalk, groups]);
+  return null;
+}
+
+/**
+ * The orbit controls claim every touch on the model (touch-action: none on the element they listen on).
+ * Until the visitor has tapped into the model, a vertical swipe over it scrolls the page instead: the
+ * page is never trapped. Re-applied a frame later, after the controls have connected in the same commit.
+ */
+function TouchScroll({ interactive }: { interactive: boolean }) {
+  const { gl, events } = useThree();
+  useEffect(() => {
+    const el = (events.connected as HTMLElement | null | undefined) ?? gl.domElement;
+    if (!el) return;
+    const apply = () => { el.style.touchAction = interactive ? "none" : "pan-y"; };
+    apply();
+    const id = requestAnimationFrame(apply);
+    return () => cancelAnimationFrame(id);
+  }, [gl, events.connected, interactive]);
   return null;
 }
 

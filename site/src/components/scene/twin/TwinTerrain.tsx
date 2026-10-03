@@ -3,7 +3,7 @@ import { use, useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { loadTwin } from "./twinData";
-import { oceanMaterial, terrainMaterial, twinUniforms } from "./materials";
+import { oceanMaterial, terrainMaterial, twinClock, twinUniforms } from "./materials";
 
 /**
  * The open sea beyond the outermost ring, out to 220 km: four strips running outward from the ring's
@@ -67,7 +67,7 @@ export function TwinTerrain({ shadows, todayRef, gradedRef }: { shadows: boolean
   }, [twin]);
 
   useFrame(({ clock, camera, size }) => {
-    twinUniforms.uTime.value = clock.getElapsedTime();
+    twinUniforms.uTime.value = twinClock.frozen ?? clock.getElapsedTime();
     const cam = camera as THREE.PerspectiveCamera;
     twinUniforms.uPixelAngle.value = ((cam.fov ?? 48) * Math.PI) / 180 / Math.max(1, size.height);
   });

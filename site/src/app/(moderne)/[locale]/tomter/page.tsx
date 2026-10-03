@@ -3,7 +3,7 @@ import type { Locale } from "@/lib/i18n";
 import { isLocale, t } from "@/lib/i18n";
 import { loadPlots, loadCommercial } from "@/lib/data";
 import { plotName, rowLabel, sunLabel } from "@/lib/format";
-import { FACT, word } from "@/lib/facts";
+import { FACT, fmt, word } from "@/lib/facts";
 import Nav from "@/components/ui/Nav";
 import PageHead from "@/components/ui/PageHead";
 import Stage from "@/components/Stage";
@@ -45,11 +45,12 @@ export default async function Plots({ params, searchParams }: { params: Promise<
         <div className="flex flex-wrap items-center gap-2 text-[14px]">
           <span className="text-granite mr-1">{no ? "Sorter etter" : "Sort by"}</span>
           {sorts.map(([k, label]) => (
-            <Link key={k} href={`?sort=${k}`} className={`chip no-underline ${sort === k ? "chip-amber" : ""}`}>{label}</Link>
+            <Link key={k} href={`?sort=${k}`} scroll={false} aria-current={sort === k ? "true" : undefined} className={`chip no-underline ${sort === k ? "chip-amber" : ""}`}>{label}</Link>
           ))}
         </div>
-        <div className="overflow-x-auto mt-6">
-          <table className="table">
+        {/* on a wide screen the table fits, and its headings stay in view under the header while the rows scroll */}
+        <div className="overflow-x-auto lg:overflow-visible mt-6">
+          <table className="table table-sticky">
             <thead>
               <tr>
                 <th>{no ? "Tomt" : "Plot"}</th>
@@ -68,12 +69,13 @@ export default async function Plots({ params, searchParams }: { params: Promise<
             <tbody>
               {sorted.map((p) => (
                 <tr key={p.id}>
-                  <td><Link href={`/${locale}/tomter/${p.id}`} className="font-medium">{plotName(p.id, no)}</Link></td>
+                  {/* (no prefetch: thirty plot pages in view would otherwise be fetched before anyone chooses one) */}
+                  <td><Link href={`/${locale}/tomter/${p.id}`} prefetch={false} className="font-medium">{plotName(p.id, no)}</Link></td>
                   <td>{p.zone === "flat" ? (no ? "flaten" : "flat") : rowLabel(p)}</td>
                   <td className="n">{p.local.z_ground.toFixed(0)} m</td>
-                  <td className="n">{p.sun.dec21.hours.toFixed(1)} h</td>
+                  <td className="n">{fmt(p.sun.dec21.hours, no ? "no" : "en", 1)} h</td>
                   <td>{sunLabel(p.sun.dec21.first_sun_cet)} {no ? "til" : "to"} {sunLabel(p.sun.dec21.last_sun_cet)}</td>
-                  <td className="n">{p.sun.jun21.hours.toFixed(1)} h</td>
+                  <td className="n">{fmt(p.sun.jun21.hours, no ? "no" : "en", 1)} h</td>
                   <td className="n">{p.view.water_visible_deg}°</td>
                   <td>{p.view.open_sea_visible ? (no ? "ja" : "yes") : (no ? "nei" : "no")}</td>
                   <td className="n">{p.terrain.slope_deg.toFixed(0)}°</td>

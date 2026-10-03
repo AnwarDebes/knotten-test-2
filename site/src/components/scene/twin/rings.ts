@@ -38,6 +38,15 @@ export function decodeHeights(rgba: Uint8ClampedArray, n: number, offset: number
   return h;
 }
 
+// one mesher per grid size: building its table of triangles costs 0.15 s (513 posts) to 0.6 s (1025 posts), and
+// it is only read afterwards (errors() and mesh() make their own arrays), so the rings of one size share it
+const martinis = new Map<number, Martini>();
+function martiniFor(n: number) {
+  let m = martinis.get(n);
+  if (!m) { m = new Martini(n); martinis.set(n, m); }
+  return m;
+}
+
 export function buildRing(desc: RingDesc, heights: Float32Array, outermost: boolean): RingMesh {
   const { n, half, post_m: post, hole, tex_half: th } = desc;
   const h = heights;
@@ -50,7 +59,7 @@ export function buildRing(desc: RingDesc, heights: Float32Array, outermost: bool
       if (d < ramp) h[j * n + i] *= Math.pow(d / ramp, 1.5);
     }
   }
-  const martini = new Martini(n);
+  const martini = martiniFor(n);
   const holeIdx = hole > 0 ? hole / post : -1;      // hole edge in posts from the centre
   const c = (n - 1) / 2;
   const onHoleEdge = (x: number, y: number) => {

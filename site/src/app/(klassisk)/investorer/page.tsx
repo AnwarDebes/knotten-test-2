@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Investorer og kommune" };
 export default function Investorer() {
   return (
     <>
-      <PageHead title="Investorer og kommune" crumb="Investorer og kommune" aside={<Link className="btn" href="/kontakt">Be om investormateriale</Link>}>
+      <PageHead title="Investorer og kommune" crumb="Investorer og kommune" aside={<Link className="btn" href="/kontakt?rolle=investor">Be om investormateriale</Link>}>
         <p>Ambisjonen er at Knotten blir et nasjonalt referanseprosjekt. Det krever at alt som sies kan dokumenteres. Her er hva vi kan vise i dag, og hva som kommer.</p>
       </PageHead>
       <section className="sec">

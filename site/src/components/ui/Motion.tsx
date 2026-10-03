@@ -89,7 +89,7 @@ export function Words({ text, className = "", as: Tag = "span" }: { text: string
   return (
     <Tag className={`words ${className}`} aria-label={text}>
       {words.map((w, i) => (
-        <span key={i} className="w" aria-hidden><span style={{ transitionDelay: `${Math.min(i, 14) * 45}ms` }}>{w}{i < words.length - 1 ? " " : ""}</span></span>
+        <span key={i} className="w" aria-hidden><span style={{ transitionDelay: `${Math.min(i, 14) * 45}ms`, animationDelay: `${Math.min(i, 14) * 45}ms` }}>{w}{i < words.length - 1 ? " " : ""}</span></span>
       ))}
     </Tag>
   );

@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { solarPosition } from "@/lib/solar";
-import { markShadowsDirty } from "./shadowState";
+import { markShadowsDirty, setSunLight } from "./shadowState";
 import { twinUniforms } from "./materials";
 import { cloudDome, cloudUniforms } from "./clouds";
 import { houseUniforms } from "../house/materials";
@@ -73,7 +73,9 @@ export function Atmosphere({ date, weather, shadows, quality = "full" }: { date:
   // the light aims at the middle of the field; the target must be in the scene to update its matrix
   const target = useMemo(() => { const o = new THREE.Object3D(); o.position.set(60, 40, 0); return o; }, []);
 
-  const sky = useMemo(() => makeSky(450000), []);
+  // drawn after the solid ground and buildings (it writes no depth and sits on the far plane): its sky model is then
+  // worked out only where the sky is seen, not first under everything that covers it
+  const sky = useMemo(() => { const s = makeSky(450000); s.renderOrder = 10; return s; }, []);
   const dome = useMemo(() => cloudDome(), []);
   // the camera's exposure: the sky's own (set below with the sun) times the eye's adaptation indoors
   const baseExposure = useRef(0.92);
@@ -177,6 +179,8 @@ export function Atmosphere({ date, weather, shadows, quality = "full" }: { date:
   }, [sun, clouds, sky, env, scene, gl, shadows, dome]);
 
   useEffect(() => () => { env.rt?.dispose(); env.pmrem.dispose(); scene.environment = null; scene.fog = null; }, [env, scene]);
+  // the renderer keeps a shadow map per side of the wipe, on this light
+  useEffect(() => { setSunLight(light.current); return () => setSunLight(null); }, []);
 
   const size = quality === "full" ? 4096 : 2048;
   return (

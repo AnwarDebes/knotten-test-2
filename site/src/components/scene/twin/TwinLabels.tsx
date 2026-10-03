@@ -11,6 +11,17 @@ const LIFT: Record<Name["kind"], number> = { hill: 22, water: 8, place: 14, road
 const RANK: Record<Name["kind"], number> = { project: 0, hill: 1, water: 2, place: 3, road: 4 };
 const EN: Record<string, string> = { Kontorbygget: "The office building", Boligen: "The house", "Lindesnes fyr": "Lindesnes lighthouse" };
 
+// the label chips: white text keeps 4.5:1 or better on their own backgrounds over the brightest sky
+const CHIP = { display: "inline-block", whiteSpace: "nowrap", font: "600 12px/1.2 system-ui, sans-serif", letterSpacing: "0.01em", padding: "3px 8px", borderRadius: 999, transition: "opacity 0.25s", boxShadow: "0 2px 8px rgba(0,0,0,0.18)" } as const;
+const STYLE: Record<Name["kind"], React.CSSProperties> = {
+  project: { ...CHIP, color: "#17283a", background: "rgba(233,180,90,0.95)", fontStyle: "normal" },
+  water: { ...CHIP, color: "#ffffff", background: "rgba(47,102,136,0.92)", fontStyle: "italic" },
+  hill: { ...CHIP, color: "#ffffff", background: "rgba(23,40,58,0.75)", fontStyle: "normal" },
+  place: { ...CHIP, color: "#ffffff", background: "rgba(23,40,58,0.75)", fontStyle: "normal" },
+  road: { ...CHIP, color: "#ffffff", background: "rgba(23,40,58,0.75)", fontStyle: "normal" },
+};
+const HTML_STYLE: React.CSSProperties = { pointerEvents: "none" };
+
 /** True while the ground stands between the camera and a point (three.js axes), sampled along the sight line. */
 function behindGround(cam: THREE.Vector3, p: THREE.Vector3, steps = 48) {
   for (let k = 1; k < steps; k++) {
@@ -43,6 +54,8 @@ export function TwinLabels({ locale, wide }: { locale: "no" | "en"; wide: boolea
   const shown = names.filter((n) => n.tier === 1 || wide);
 
   // declutter a few times a second: project every label, keep those that do not overlap a kept one
+  // (a label's size never changes while it is shown: measured once, since reading it forces a layout)
+  const sizes = useRef(new Map<string, [number, number]>());
   const last = useRef(0);
   const v = new THREE.Vector3(), at = new THREE.Vector3();
   useFrame(({ clock }) => {
@@ -55,10 +68,14 @@ export function TwinLabels({ locale, wide }: { locale: "no" | "en"; wide: boolea
       at.set(n.x, n.z + LIFT[n.kind], -n.y);
       v.copy(at).project(camera);
       const x = (v.x * 0.5 + 0.5) * size.width, y = (-v.y * 0.5 + 0.5) * size.height;
-      const w = el.offsetWidth || 80, h = el.offsetHeight || 20;
+      const id = n.name + n.x;
+      let wh = sizes.current.get(id);
+      if (!wh && el.offsetWidth > 0) { wh = [el.offsetWidth, el.offsetHeight]; sizes.current.set(id, wh); }
+      const [w, h] = wh ?? [80, 20];
       const box: [number, number, number, number] = [x - w / 2 - 4, y - h / 2 - 3, x + w / 2 + 4, y + h / 2 + 3];
       const clash = v.z > 1 || kept.some((k) => box[0] < k[2] && box[2] > k[0] && box[1] < k[3] && box[3] > k[1]) || behindGround(camera.position, at);
-      el.style.opacity = clash ? "0" : "1";
+      const op = clash ? "0" : "1";
+      if (el.style.opacity !== op) el.style.opacity = op;
       if (!clash) kept.push(box);
     });
   });
@@ -66,15 +83,8 @@ export function TwinLabels({ locale, wide }: { locale: "no" | "en"; wide: boolea
   return (
     <group>
       {shown.map((n, i) => (
-        <Html key={n.name + n.x} position={[n.x, n.z + LIFT[n.kind], -n.y]} center zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
-          <span ref={(el) => { els.current[i] = el; }} style={{
-            display: "inline-block", whiteSpace: "nowrap", font: "600 12px/1.2 system-ui, sans-serif", letterSpacing: "0.01em",
-            padding: "3px 8px", borderRadius: 999, transition: "opacity 0.25s",
-            color: n.kind === "project" ? "#17283a" : n.kind === "water" ? "#e9f3fa" : "#ffffff",
-            background: n.kind === "project" ? "rgba(233,180,90,0.95)" : n.kind === "water" ? "rgba(47,102,136,0.72)" : "rgba(23,40,58,0.55)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-            fontStyle: n.kind === "water" ? "italic" : "normal",
-          }}>
+        <Html key={n.name + n.x} position={[n.x, n.z + LIFT[n.kind], -n.y]} center zIndexRange={[20, 0]} style={HTML_STYLE}>
+          <span ref={(el) => { els.current[i] = el; }} style={STYLE[n.kind]}>
             {locale === "en" ? EN[n.name] ?? n.name : n.name}
           </span>
         </Html>

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import * as THREE from "three";
+import { markShadowsDirty } from "./twin/shadowState";
 
 /**
  * The buildings that are planned next to the existing ones: the extension of the office and the
@@ -26,6 +27,9 @@ export function Planned() {
   }), [list]);
   const mat = useMemo(() => new THREE.MeshStandardMaterial({ color: new THREE.Color("#c9d3c6"), roughness: 0.85, transparent: true, opacity: 0.85 }), []);
   useEffect(() => () => geos.forEach((x) => x.g.dispose()), [geos]);
+  useEffect(() => () => mat.dispose(), [mat]);
+  // they arrive after the rest of the model: their shadows are drawn as they come
+  useEffect(() => { if (geos.length) markShadowsDirty(); }, [geos]);
   return (
     <group>
       {geos.map((x) => <mesh key={x.id} geometry={x.g} material={mat} castShadow receiveShadow />)}

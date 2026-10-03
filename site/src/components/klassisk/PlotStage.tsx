@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import SitePlan from "./SitePlan";
@@ -25,6 +25,9 @@ export default function PlotStage() {
   const [note, setNote] = useState(true);
   const visible = PLOTS.filter((p) => !row || p.row === row);
   const p = sel ? PLOTS[sel - 1] : null;
+  // on a narrow screen the chosen plot's details open above the list: bring them into view
+  const detail = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (sel && window.innerWidth < 900) detail.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [sel]);
 
   const go = (s: Scene, r: Plot["row"] | "") => {
     setScene(s);
@@ -34,15 +37,16 @@ export default function PlotStage() {
   return (
     <div className="stage">
       <div className="scenes">
-        <div className={`scene${scene === "plan" ? " on" : ""}`} data-scene="plan">
+        {/* (inert while hidden: the keyboard never lands on a scene that is not shown) */}
+        <div className={`scene${scene === "plan" ? " on" : ""}`} data-scene="plan" inert={scene !== "plan"}>
           <SitePlan mode="plan" numbered showPills selected={sel} activeRow={row} onSelect={setSel} onRow={(r) => go("plan", row === r ? "" : r)} />
         </div>
-        <div className={`scene${scene === "utsikt" ? " on" : ""}`} data-scene="utsikt">
+        <div className={`scene${scene === "utsikt" ? " on" : ""}`} data-scene="utsikt" inert={scene !== "utsikt"}>
           <Image src={PHOTOS.view.src} alt={PHOTOS.view.alt} width={PHOTOS.view.w} height={PHOTOS.view.h} sizes="100vw" quality={85} />
           <div className="pin" style={{ left: "58%", top: "36%" }}><i />Sikt mot åpent hav</div>
           <div className="hero-cap">Fra nabotomten, litt lavere enn feltet. Foto: {PHOTOS.view.credit}</div>
         </div>
-        <div className={`scene${scene === "omgivelser" ? " on" : ""}`} data-scene="omgivelser">
+        <div className={`scene${scene === "omgivelser" ? " on" : ""}`} data-scene="omgivelser" inert={scene !== "omgivelser"}>
           <Image src={PHOTOS.sniksfjorden.src} alt={PHOTOS.sniksfjorden.alt} width={PHOTOS.sniksfjorden.w} height={PHOTOS.sniksfjorden.h} sizes="100vw" quality={85} />
           <div className="pin" style={{ left: "30%", top: "31%" }}><i />Åpent hav</div>
           <div className="hero-cap">{PHOTOS.sniksfjorden.caption}. Foto: {PHOTOS.sniksfjorden.credit}, {PHOTOS.sniksfjorden.license}</div>
@@ -75,7 +79,7 @@ export default function PlotStage() {
         <header>
           <div className="crumb"><Link href="/">Forside</Link> / Tomtene</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-            <h2 style={{ fontSize: "1.7rem" }}>Tomtevelger</h2>
+            <h1 style={{ fontSize: "1.7rem", lineHeight: 1.08 }}>Tomtevelger</h1>
             <span className="small">{visible.length} tomter</span>
           </div>
           <div className="filters" style={{ marginTop: 12 }} role="group" aria-label="Velg rekke">
@@ -85,9 +89,10 @@ export default function PlotStage() {
             ))}
           </div>
         </header>
+        <p className="sr" role="status">{p ? `Tomt ${p.n}, rekke ${p.row}, valgt` : ""}</p>
         {p && (
-          <div className="detail">
-            <button type="button" className="back" onClick={() => setSel(null)}>‹ Alle tomter</button>
+          <div className="detail" ref={detail}>
+            <button type="button" className="back" onClick={() => setSel(null)}><span aria-hidden>‹ </span>Alle tomter</button>
             <div className="eyebrow" style={{ margin: "6px 0 2px" }}>Valgt tomt</div>
             <h3>Tomt {p.n}, rekke {p.row}</h3>
             <p className="small" style={{ marginTop: 8 }}>Ønsket er sjøutsikt mot sør, ut Sniksfjorden, men det er ikke sikkert for alle tomtene. Størrelse, pris og byggegrense oppgis når reguleringen er vedtatt.</p>
@@ -104,7 +109,7 @@ export default function PlotStage() {
         )}
         <div className="cards">
           {visible.map((q) => (
-            <button key={q.n} type="button" className={`card${sel === q.n ? " sel" : ""}`} onClick={() => setSel(q.n)}>
+            <button key={q.n} type="button" aria-pressed={sel === q.n} className={`card${sel === q.n ? " sel" : ""}`} onClick={() => setSel(q.n)}>
               <span className="ico"><i /></span>
               <b>Tomt {q.n}</b>
               <span className="m">Rekke {q.row}</span>
